@@ -329,8 +329,17 @@ the ordered list from the cross-directory request index
 root, resolved through the global sessions store) and from the global sessions
 list, where `lib/sessionAttention.ts` `isSessionUnseen(session, now)` reads
 OpenCode's own stamps: a root, unarchived session whose `time.idle` is newer
-than `time.viewed` (never viewed = 0) and inside the 48 h
-`SESSION_ATTENTION_WINDOW_MS`. A session whose
+than `time.viewed` (never viewed = 0) and inside the attention window, 48 h
+by default (`sidebarAttentionWindowHours`). The window is a setting: whole
+hours, 1 to 720, profile scope and per surface like the zone toggles, held in
+`useSessionDisplayStore` (`lib/sidebarTimeWindows.ts` has the default, the
+limits and the normaliser shared by the store, the settings registry and the
+input). Settings → Sessions → Needs attention window
+(`components/sections/openchamber/SidebarWindowsSettings.tsx`) edits it; the
+Display mode menu only toggles the zones. `isSessionUnseen` takes the window in
+milliseconds and defaults to the shipped constant (`SESSION_ATTENTION_WINDOW_MS`);
+the hook, `SessionNodeItem.tsx` and `sync/attention-sticky.ts` pass the store
+value. A session whose
 turn is still open (running, a subagent below it running, or a background
 command, see `useSessionTurnActivity`) is not unseen; it reappears once the
 turn ends. Within a kind the newest need comes first (`time.idle` for unseen,

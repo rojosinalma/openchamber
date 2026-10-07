@@ -40,8 +40,16 @@ describe('isSessionUnseen', () => {
     expect(isSessionUnseen(session({ created: 1, updated: 1, idle: NOW - HOUR }, { parentID: 'ses_parent' }), NOW)).toBe(false);
   });
 
-  test('an idle older than 48 hours has expired', () => {
+  test('an idle older than 48 hours has expired by default', () => {
     expect(isSessionUnseen(session({ created: 1, updated: 1, idle: NOW - 49 * HOUR }), NOW)).toBe(false);
     expect(isSessionUnseen(session({ created: 1, updated: 1, idle: NOW - 47 * HOUR }), NOW)).toBe(true);
+  });
+
+  test('a custom window moves the expiry', () => {
+    const idleTwoDaysAgo = session({ created: 1, updated: 1, idle: NOW - 49 * HOUR });
+    expect(isSessionUnseen(idleTwoDaysAgo, NOW, 72 * HOUR)).toBe(true);
+    expect(isSessionUnseen(idleTwoDaysAgo, NOW, 24 * HOUR)).toBe(false);
+    expect(isSessionUnseen(session({ created: 1, updated: 1, idle: NOW - HOUR }), NOW, HOUR)).toBe(true);
+    expect(isSessionUnseen(session({ created: 1, updated: 1, idle: NOW - HOUR - 1 }), NOW, HOUR)).toBe(false);
   });
 });

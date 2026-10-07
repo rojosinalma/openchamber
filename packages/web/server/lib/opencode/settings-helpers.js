@@ -96,6 +96,9 @@ export const createSettingsHelpers = (dependencies) => {
   const SIDEBAR_PROJECT_SORT_ORDER_VALUES = new Set(['manual', 'a-z', 'z-a', 'date-added', 'recent']);
   const SIDEBAR_WORKTREE_SORT_ORDER_VALUES = new Set(['recent', 'manual', 'a-z']);
   const SIDEBAR_ZONE_KEYS = new Set(['pinned', 'attention', 'work', 'chats', 'projects']);
+  // Whole hours, 1 h to 30 days; mirrors `lib/sidebarTimeWindows.ts` in the UI.
+  const SIDEBAR_WINDOW_HOURS_MIN = 1;
+  const SIDEBAR_WINDOW_HOURS_MAX = 720;
   const HIDDEN_MODELS_MAX = 1024;
   const RECENT_EFFORTS_MAX_KEYS = 128;
   const RECENT_EFFORTS_MAX_VARIANTS_PER_KEY = 5;
@@ -379,6 +382,9 @@ export const createSettingsHelpers = (dependencies) => {
       result.sidebarZoneOrder = [
         ...new Set(candidate.sidebarZoneOrder.filter((entry) => SIDEBAR_ZONE_KEYS.has(entry))),
       ];
+    }
+    if (typeof candidate.sidebarAttentionWindowHours === 'number' && Number.isFinite(candidate.sidebarAttentionWindowHours)) {
+      result.sidebarAttentionWindowHours = Math.max(SIDEBAR_WINDOW_HOURS_MIN, Math.min(SIDEBAR_WINDOW_HOURS_MAX, Math.round(candidate.sidebarAttentionWindowHours)));
     }
 
     if (Array.isArray(candidate.securityScopedBookmarks)) {

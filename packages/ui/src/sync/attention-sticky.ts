@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session } from '@/lib/opencode/model';
 import { isSessionUnseen } from '@/lib/sessionAttention';
+import { sidebarWindowHoursToMs } from '@/lib/sidebarTimeWindows';
 import { subscribeRuntimeEndpointWillChange } from '@/lib/runtime-switch';
 import { resolveGlobalSessionDirectory, useGlobalSessionsStore } from '@/stores/useGlobalSessionsStore';
 import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
@@ -58,7 +59,8 @@ const sameSticky = (left: AttentionSticky | null, right: AttentionSticky | null)
 export function captureAttentionSticky(sessionId: string | null, previousSessionId: string | null, now = Date.now()): void {
   if (sessionId && sessionId === previousSessionId) return;
   const session = sessionId ? findKnownSession(sessionId) : null;
-  const next = session && session.time.idle !== undefined && isSessionUnseen(session, now)
+  const attentionWindowMs = sidebarWindowHoursToMs(useSessionDisplayStore.getState().sidebarAttentionWindowHours);
+  const next = session && session.time.idle !== undefined && isSessionUnseen(session, now, attentionWindowMs)
     ? { sessionId: session.id, directory: resolveGlobalSessionDirectory(session) ?? session.directory, idle: session.time.idle }
     : null;
   if (sameSticky(useAttentionStickyStore.getState().sticky, next)) return;

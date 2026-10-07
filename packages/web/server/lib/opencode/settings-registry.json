@@ -311,6 +311,10 @@
     "sidebarZoneOrder": {
       "scope": "profile"
     },
+    "sidebarAttentionWindowHours": {
+      "scope": "profile",
+      "perSurface": true
+    },
     "workStatusSectionOrder": {
       "scope": "profile"
     },

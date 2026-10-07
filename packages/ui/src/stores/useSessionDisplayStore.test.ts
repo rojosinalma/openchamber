@@ -5,6 +5,7 @@ const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'window');
 const testWindow = new Window();
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
 const { DEFAULT_SIDEBAR_ZONE_ORDER, migrateSessionDisplayState, moveSidebarZone, moveSidebarZoneTo, normalizeSidebarZoneOrder, useSessionDisplayStore } = await import('./useSessionDisplayStore');
+const { DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS } = await import('@/lib/sidebarTimeWindows');
 afterAll(() => {
   testWindow.close();
   if (previousStorage) Object.defineProperty(globalThis, 'window', previousStorage);
@@ -125,8 +126,48 @@ describe('useSessionDisplayStore attention zone', () => {
     useSessionDisplayStore.getState().setShowAttentionSection(before);
   });
 
-  test('persists at version 11', () => {
-    expect(useSessionDisplayStore.persist.getOptions().version).toBe(11);
+  test('persists at version 12', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(12);
+  });
+});
+
+describe('useSessionDisplayStore attention window', () => {
+  test('defaults to the 48 h attention window that was a constant before', () => {
+    expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
+    expect(DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS).toBe(48);
+  });
+
+  test('v11→v12 fills the window with the default and keeps the rest', () => {
+    const migrated = migrateSessionDisplayState({ showPinnedSection: true, sidebarZoneOrder: ['projects'] }, 11);
+
+    expect(migrated.sidebarAttentionWindowHours).toBe(48);
+    expect(migrated.showPinnedSection).toBe(true);
+    expect(migrated.sidebarZoneOrder).toEqual(['projects']);
+  });
+
+  test('v11→v12 keeps a usable stored value and normalises the rest', () => {
+    expect(migrateSessionDisplayState({ sidebarAttentionWindowHours: 'bogus' }, 11).sidebarAttentionWindowHours).toBe(48);
+    expect(migrateSessionDisplayState({ sidebarAttentionWindowHours: 72 }, 11).sidebarAttentionWindowHours).toBe(72);
+    expect(migrateSessionDisplayState({ sidebarAttentionWindowHours: 0 }, 11).sidebarAttentionWindowHours).toBe(1);
+    expect(migrateSessionDisplayState({ sidebarAttentionWindowHours: 9999 }, 11).sidebarAttentionWindowHours).toBe(720);
+  });
+
+  test('a v1 snapshot migrates through every step and lands on the default', () => {
+    expect(migrateSessionDisplayState({ displayMode: 'grouped' }, 1).sidebarAttentionWindowHours).toBe(48);
+  });
+
+  test('the setter stores whole hours within the limits and falls back to the default otherwise', () => {
+    const { setSidebarAttentionWindowHours } = useSessionDisplayStore.getState();
+
+    setSidebarAttentionWindowHours(12.4);
+    expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(12);
+    setSidebarAttentionWindowHours(1000);
+    expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(720);
+
+    setSidebarAttentionWindowHours(Number.NaN);
+    expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
+    setSidebarAttentionWindowHours(undefined);
+    expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
   });
 });
 
@@ -219,7 +260,8 @@ describe('useSessionDisplayStore animated activity', () => {
       expect(useSessionDisplayStore.getState().animatedActivityIndicators).toBe(false);
       expect(useSessionDisplayStore.getState().sidebarViewMode).toBe('timeline');
       expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['pinned', 'attention', 'work', 'chats', 'projects']);
-      expect(useSessionDisplayStore.persist.getOptions().version).toBe(11);
+      expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
+      expect(useSessionDisplayStore.persist.getOptions().version).toBe(12);
       useSessionDisplayStore.getState().setAnimatedActivityIndicators(true);
       const enabledSnapshot = stored;
       useSessionDisplayStore.setState({ animatedActivityIndicators: false });

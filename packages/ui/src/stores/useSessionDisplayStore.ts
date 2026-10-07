@@ -1,5 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS, normalizeSidebarWindowHours } from '@/lib/sidebarTimeWindows';
+
+export {
+  DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS,
+  SIDEBAR_WINDOW_HOURS_MAX,
+  SIDEBAR_WINDOW_HOURS_MIN,
+  normalizeSidebarWindowHours,
+} from '@/lib/sidebarTimeWindows';
 
 type ProjectSortOrder = 'manual' | 'a-z' | 'z-a' | 'date-added' | 'recent';
 // Worktree groups inside a project. 'recent' floats worktrees with the latest
@@ -105,6 +113,8 @@ type SessionDisplayStore = {
   worktreeSortOrder: WorktreeSortOrder;
   /** Top-to-bottom order of the sidebar zones; always complete (see `normalizeSidebarZoneOrder`). */
   sidebarZoneOrder: SidebarZoneKey[];
+  /** Hours a finished, not yet viewed turn counts for Needs attention and the unread check (`lib/sidebarTimeWindows.ts`). */
+  sidebarAttentionWindowHours: number;
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
   setShowAttentionSection: (show: boolean) => void;
@@ -118,6 +128,8 @@ type SessionDisplayStore = {
   setSidebarZoneOrder: (order: readonly SidebarZoneKey[]) => void;
   /** See the `moveSidebarZone` helper; `rendered` is the zones currently shown. */
   moveSidebarZone: (key: SidebarZoneKey, direction: 'up' | 'down', rendered?: readonly SidebarZoneKey[]) => void;
+  /** Both setters normalise: whole hours within the limits, the default for anything else. */
+  setSidebarAttentionWindowHours: (hours: unknown) => void;
 };
 
 export const migrateSessionDisplayState = (
@@ -170,6 +182,12 @@ export const migrateSessionDisplayState = (
     // always had; a value from a newer build that was downgraded is kept.
     state.sidebarZoneOrder = normalizeSidebarZoneOrder(state.sidebarZoneOrder);
   }
+  if (version < 12) {
+    // v12 adds the attention window. Everyone starts on the value that was a
+    // constant before (48 h); a value from a newer build that was downgraded
+    // is kept if it is usable.
+    state.sidebarAttentionWindowHours = normalizeSidebarWindowHours(state.sidebarAttentionWindowHours, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS);
+  }
   return state;
 };
 
@@ -212,10 +230,14 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       moveSidebarZone: (key, direction, rendered) => set((state) => ({
         sidebarZoneOrder: moveSidebarZone(state.sidebarZoneOrder, key, direction, rendered),
       })),
+      sidebarAttentionWindowHours: DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS,
+      setSidebarAttentionWindowHours: (hours) => set({
+        sidebarAttentionWindowHours: normalizeSidebarWindowHours(hours, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS),
+      }),
     }),
     {
       name: 'session-display-mode',
-      version: 11,
+      version: 12,
       // v1→v2 adds projectSortOrder using the canonical manual ordering.
       // v2→v3 replaces the previously shipped recent default with manual.
       // v3→v4 removes displayMode (single sidebar row layout).
@@ -227,6 +249,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // v9→v10 drops showRecentSection (Recent is gone) and adds
       // showAttentionSection (off by default).
       // v10→v11 adds sidebarZoneOrder (the fixed order the sidebar had before).
+      // v11→v12 adds sidebarAttentionWindowHours (48).
       migrate: migrateSessionDisplayState,
     },
   ),
