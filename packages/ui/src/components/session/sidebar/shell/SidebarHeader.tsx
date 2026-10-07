@@ -13,7 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Icon } from "@/components/icon/Icon";
-import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
+import { DEFAULT_SIDEBAR_ZONE_ORDER, useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import { useSessionMultiSelectStore } from '@/stores/useSessionMultiSelectStore';
 import { useI18n, type I18nKey } from '@/lib/i18n';
 import { updateDesktopSettings } from '@/lib/persistence';
@@ -165,6 +165,9 @@ export function SidebarHeader(props: Props): React.ReactNode {
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
   const setDetailedZoneRows = useSessionDisplayStore((state) => state.setDetailedZoneRows);
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
+  const sidebarZoneOrder = useSessionDisplayStore((state) => state.sidebarZoneOrder);
+  const setSidebarZoneOrder = useSessionDisplayStore((state) => state.setSidebarZoneOrder);
+  const zoneOrderIsDefault = sidebarZoneOrder.every((zone, index) => zone === DEFAULT_SIDEBAR_ZONE_ORDER[index]);
   const projectSortOrder = useSessionDisplayStore((state) => state.projectSortOrder);
   const setProjectSortOrder = useSessionDisplayStore((state) => state.setProjectSortOrder);
   const worktreeSortOrder = useSessionDisplayStore((state) => state.worktreeSortOrder);
@@ -297,6 +300,19 @@ export function SidebarHeader(props: Props): React.ReactNode {
         setDetailedZoneRows(!detailedZoneRows);
         void updateDesktopSettings({ sidebarDetailedZoneRows: !detailedZoneRows });
       }) : null}
+      {/* Zones are reordered by dragging their headers or from their menu;
+          this is the way back to the order the sidebar ships with. */}
+      <DropdownMenuItem
+        disabled={zoneOrderIsDefault}
+        onClick={() => {
+          setSidebarZoneOrder(DEFAULT_SIDEBAR_ZONE_ORDER);
+          void updateDesktopSettings({ sidebarZoneOrder: [...DEFAULT_SIDEBAR_ZONE_ORDER] });
+        }}
+        className="flex items-center gap-2"
+      >
+        <Icon name="arrow-go-back" className="h-4 w-4" />
+        <span>{t('sessions.sidebar.header.displayMode.resetZoneOrder')}</span>
+      </DropdownMenuItem>
     </>);
   }
   if (!isSingleProjectMode) {

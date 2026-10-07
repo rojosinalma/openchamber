@@ -4,7 +4,7 @@ import { Window } from 'happy-dom';
 const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'window');
 const testWindow = new Window();
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
-const { migrateSessionDisplayState, useSessionDisplayStore } = await import('./useSessionDisplayStore');
+const { DEFAULT_SIDEBAR_ZONE_ORDER, migrateSessionDisplayState, moveSidebarZone, moveSidebarZoneTo, normalizeSidebarZoneOrder, useSessionDisplayStore } = await import('./useSessionDisplayStore');
 afterAll(() => {
   testWindow.close();
   if (previousStorage) Object.defineProperty(globalThis, 'window', previousStorage);
@@ -125,8 +125,81 @@ describe('useSessionDisplayStore attention zone', () => {
     useSessionDisplayStore.getState().setShowAttentionSection(before);
   });
 
-  test('persists at version 10', () => {
-    expect(useSessionDisplayStore.persist.getOptions().version).toBe(10);
+  test('persists at version 11', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(11);
+  });
+});
+
+describe('useSessionDisplayStore zone order', () => {
+  const DEFAULT = ['pinned', 'attention', 'work', 'chats', 'projects'];
+
+  test('defaults to the order the sidebar always had', () => {
+    expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(DEFAULT);
+    expect([...DEFAULT_SIDEBAR_ZONE_ORDER]).toEqual(DEFAULT);
+  });
+
+  test('v10→v11 fills the order with the default and keeps the rest', () => {
+    const migrated = migrateSessionDisplayState({ showPinnedSection: true, projectSortOrder: 'a-z' }, 10);
+
+    expect(migrated.sidebarZoneOrder).toEqual(DEFAULT);
+    expect(migrated.showPinnedSection).toBe(true);
+    expect(migrated.projectSortOrder).toBe('a-z');
+  });
+
+  test('v10→v11 normalises an order already stored', () => {
+    const migrated = migrateSessionDisplayState({ sidebarZoneOrder: ['projects', 'bogus', 'chats', 'chats', 'active-now'] }, 10);
+
+    expect(migrated.sidebarZoneOrder).toEqual(['projects', 'chats', 'pinned', 'attention', 'work']);
+  });
+
+  test('normalizeSidebarZoneOrder keeps known keys in order, drops unknown and duplicate keys, appends missing ones', () => {
+    expect(normalizeSidebarZoneOrder(['chats', 'projects', 'chats', 'timeline', 'active-now', ''])).toEqual(['chats', 'projects', 'pinned', 'attention', 'work']);
+    expect(normalizeSidebarZoneOrder(undefined)).toEqual(DEFAULT);
+    expect(normalizeSidebarZoneOrder([])).toEqual(DEFAULT);
+  });
+
+  test('setSidebarZoneOrder stores the normalised order', () => {
+    useSessionDisplayStore.getState().setSidebarZoneOrder(['projects', 'chats']);
+
+    expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['projects', 'chats', 'pinned', 'attention', 'work']);
+
+    useSessionDisplayStore.getState().setSidebarZoneOrder(DEFAULT_SIDEBAR_ZONE_ORDER);
+  });
+
+  test('moveSidebarZone swaps with the adjacent zone and stops at the ends', () => {
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'chats', 'up')).toEqual(['pinned', 'attention', 'chats', 'work', 'projects']);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'chats', 'down')).toEqual(['pinned', 'attention', 'work', 'projects', 'chats']);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'pinned', 'up')).toEqual(DEFAULT);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'projects', 'down')).toEqual(DEFAULT);
+  });
+
+  test('moveSidebarZone skips zones that are not rendered', () => {
+    // Pinned, attention and work are off: Chats moving up has nothing above
+    // it on screen, and Projects moving up lands above Chats.
+    const rendered = ['chats', 'projects'] as const;
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'chats', 'up', rendered)).toEqual(DEFAULT);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'projects', 'up', rendered)).toEqual(['pinned', 'attention', 'work', 'projects', 'chats']);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'work', 'up', ['work', 'projects'])).toEqual(DEFAULT);
+    expect(moveSidebarZone(DEFAULT_SIDEBAR_ZONE_ORDER, 'projects', 'up', ['pinned', 'projects'])).toEqual(['projects', 'pinned', 'attention', 'work', 'chats']);
+  });
+
+  test('moveSidebarZoneTo drops a zone right above or below the target it was dropped on', () => {
+    // Dragging Projects (below) onto Pinned (above) lands above Pinned.
+    expect(moveSidebarZoneTo(DEFAULT_SIDEBAR_ZONE_ORDER, 'projects', 'pinned')).toEqual(['projects', 'pinned', 'attention', 'work', 'chats']);
+    // Dragging Pinned (above) onto Work (below) lands below Work.
+    expect(moveSidebarZoneTo(DEFAULT_SIDEBAR_ZONE_ORDER, 'pinned', 'work')).toEqual(['attention', 'work', 'pinned', 'chats', 'projects']);
+    // With Attention and Work hidden, Projects dropped on Chats lands above
+    // Chats and the hidden zones stay above both.
+    expect(moveSidebarZoneTo(DEFAULT_SIDEBAR_ZONE_ORDER, 'projects', 'chats', ['pinned', 'chats', 'projects'])).toEqual(['pinned', 'attention', 'work', 'projects', 'chats']);
+    expect(moveSidebarZoneTo(DEFAULT_SIDEBAR_ZONE_ORDER, 'chats', 'chats')).toEqual(DEFAULT);
+    expect(moveSidebarZoneTo(DEFAULT_SIDEBAR_ZONE_ORDER, 'chats', 'projects', ['chats'])).toEqual(DEFAULT);
+  });
+
+  test('the store action moves within the rendered zones and persists the result', () => {
+    useSessionDisplayStore.getState().moveSidebarZone('projects', 'up', ['chats', 'projects']);
+    expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['pinned', 'attention', 'work', 'projects', 'chats']);
+
+    useSessionDisplayStore.getState().setSidebarZoneOrder(DEFAULT_SIDEBAR_ZONE_ORDER);
   });
 });
 
@@ -145,7 +218,8 @@ describe('useSessionDisplayStore animated activity', () => {
       await useSessionDisplayStore.persist.rehydrate();
       expect(useSessionDisplayStore.getState().animatedActivityIndicators).toBe(false);
       expect(useSessionDisplayStore.getState().sidebarViewMode).toBe('timeline');
-      expect(useSessionDisplayStore.persist.getOptions().version).toBe(10);
+      expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['pinned', 'attention', 'work', 'chats', 'projects']);
+      expect(useSessionDisplayStore.persist.getOptions().version).toBe(11);
       useSessionDisplayStore.getState().setAnimatedActivityIndicators(true);
       const enabledSnapshot = stored;
       useSessionDisplayStore.setState({ animatedActivityIndicators: false });

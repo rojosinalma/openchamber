@@ -68,7 +68,7 @@ elapsed counters retain their existing precedence and behavior. A session
 row's title carries its state too: semibold at full strength while a finished
 turn is unseen or a permission or question waits on the user, full strength
 while it runs, muted otherwise; the active row keeps the selection colors. The display
-store is at version 10 (v10 dropped the Recent toggle): missing preferences inherit the default during hydration,
+store is at version 11 (v10 dropped the Recent toggle, v11 added the zone order): missing preferences inherit the default during hydration,
 while an explicitly saved choice survives reload.
 
 Full-app active records remain in the collection when their directory is no
@@ -272,7 +272,7 @@ compares `metadata` by reference and `time.idle`, so metadata-only changes
 
 The display menu's Show pinned section toggle (`showPinnedSection`,
 `sidebarShowPinnedSection`, per surface, off by default) adds a `pinned`
-activity zone between Chats and In work, in both views. It lists pinned
+activity zone in both views (first by default; see "Zone order"). It lists pinned
 top-level, unarchived project sessions in the shared lifecycle order; pinned
 chats stay pinned at the top of Chats. A pinned session in work is listed in
 Pinned only. Like In work, its sessions also stay in their projects, search
@@ -287,11 +287,25 @@ Tree, Detailed rows, and its Pinned and In work sections render
 shows no section toggles, so it has no Pinned zone and its In work rows stay on
 one line.
 
+## Zone order (`sidebarZoneOrder`)
+
+The zones (Pinned, Needs attention, In work, Chats, Projects) render in the order of
+`useSessionDisplayStore.sidebarZoneOrder` (default `DEFAULT_SIDEBAR_ZONE_ORDER`: pinned, attention,
+work, chats, projects; the same order in the Tree and the List view, where the `projects` slot holds
+the project tree or the per-project timeline lists). The row model iterates that order; hidden or
+empty zones are skipped. `normalizeSidebarZoneOrder` drops unknown or duplicate keys and appends
+missing ones, so a partial or stale value never loses a zone. The user reorders by dragging a zone
+header (its own dnd-kit sortable context, disabled during search or a rename), with "Move up / Move
+down" in the header menu or context menu, or "Reset section order" in the Display mode menu. The
+preference is the `sidebarZoneOrder` settings-registry field (profile scope, display store v11) and
+the mobile sheet renders its cross-project sections in the same order. Zones and projects are
+sections of equal weight, so the gap between them is the same whatever the order.
+
 ## Needs attention
 
-An optional `attention` zone ("Needs attention") sits above everything else:
-before Chats, Pinned, In work and the projects (as a tree or as the List
-view's project lists). It is a DUPLICATE zone: a session listed there keeps
+An optional `attention` zone ("Needs attention") sits with Pinned, In work
+and Chats above the projects (as a tree or as the List view's project lists),
+in the user's zone order (see "Zone order"; by default second, under Pinned). It is a DUPLICATE zone: a session listed there keeps
 its row in its project group, folder, the List view and in Pinned or In work,
 so `zoneSessionIds` never carries it and its rows add nothing to the search
 match count (the project group already counts the session). An empty zone

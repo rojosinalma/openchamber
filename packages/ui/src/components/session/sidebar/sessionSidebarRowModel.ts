@@ -2,6 +2,7 @@ import type { Session } from '@/lib/opencode/model';
 import type { SessionFolder, SessionFoldersMap } from '@/stores/useSessionFoldersStore';
 import { compareSessionsByLifecycleOrder, EMPTY_SESSION_ORDER_RANKS } from '@/sync/session-ordering';
 import { isSessionPinned } from '@/stores/useSessionPinnedStore';
+import { DEFAULT_SIDEBAR_ZONE_ORDER, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
 import type { GroupSearchData, SessionGroup, SessionNode } from './types';
 import type { ProjectSection } from './projects/sessionProjectRender';
 import { buildGroupRenderDescriptors } from './projects/sessionProjectRender';
@@ -24,7 +25,8 @@ export type SessionSidebarActivityItem = {
 
 // 'projects' is the zone header over the project sections, in both views;
 // collapsing it hides every project at once. It has no items of its own.
-export type SessionSidebarActivityKey = 'attention' | 'pinned' | 'work' | 'chats' | 'projects';
+// Every header is a slot of the user's zone order (`SidebarZoneKey`).
+export type SessionSidebarActivityKey = SidebarZoneKey;
 
 /** Activity sections; the display menu's Collapse all / Expand all drive them with the projects. */
 export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['attention', 'chats', 'pinned', 'work'];
@@ -148,6 +150,13 @@ export type SessionSidebarRowModelArgs = {
   zoneSessionIds?: ReadonlySet<string>;
   /** Needs attention, Pinned and In work rows in the Tree view: two lines when set, one otherwise. */
   detailedZoneRows?: boolean;
+  /**
+   * Top-to-bottom order of the zones (`useSessionDisplayStore.sidebarZoneOrder`,
+   * always complete). Zones that are off or empty are skipped; the 'projects'
+   * slot holds the project tree or the List view's project lists. Defaults to
+   * `DEFAULT_SIDEBAR_ZONE_ORDER`.
+   */
+  zoneOrder?: readonly SidebarZoneKey[];
   foldersMap: SessionFoldersMap;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
   normalizedQuery: string;
@@ -726,33 +735,33 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     }
   };
 
-  // Pinned, Needs attention and In work list sessions of every project
+  // Needs attention, Pinned and In work list sessions of every project
   // together: two-line rows with the project's icon in List, one-line rows in
   // Tree unless the user asked for detailed rows.
   const zoneRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
 
-  // Needs attention first, above everything. A duplicate zone: its sessions
-  // stay where they are elsewhere, so it never touches `inZone`, and its rows
-  // add nothing to the match count: the project group already counts them.
-  const attentionItems = args.attentionItems ?? [];
-  if (attentionItems.length > 0) {
+  // Needs attention is a duplicate zone: its sessions stay where they are
+  // elsewhere, so it never touches `inZone`, and its rows add nothing to the
+  // match count: the project group already counts them.
+  const appendAttentionZone = (): void => {
+    const items = args.attentionItems ?? [];
+    if (items.length === 0) return;
     const collapsed = appendActivityHeader('attention');
-    if (!collapsed) appendActivityItems(attentionItems, 'activity:attention', zoneRenderContext, () => 0);
-  }
+    if (!collapsed) appendActivityItems(items, 'activity:attention', zoneRenderContext, () => 0);
+  };
 
-  if (args.chatGroup) {
-    if (!search || groupSearchMatches(args.chatGroup) > 0) {
-      const collapsed = appendActivityHeader('chats');
-      if (!collapsed) {
-        // Chats are one-line rows in both views, on a short page that pinned
-        // chats do not spend; Tree gives them its state slot.
-        appendGroup(args.chatGroup, 'activity:chats', null, true, {
-          initial: CHATS_INITIAL_LIMIT, increment: CHATS_INCREMENT, pinnedAlwaysVisible: true,
-          renderContext: timelineMode ? 'timeline-chat' : 'tree-chat',
-        });
-      }
-    }
-  }
+  const appendChatsZone = (): void => {
+    if (!args.chatGroup) return;
+    if (search && groupSearchMatches(args.chatGroup) === 0) return;
+    const collapsed = appendActivityHeader('chats');
+    if (collapsed) return;
+    // Chats are one-line rows in both views, on a short page that pinned
+    // chats do not spend; Tree gives them its state slot.
+    appendGroup(args.chatGroup, 'activity:chats', null, true, {
+      initial: CHATS_INITIAL_LIMIT, increment: CHATS_INCREMENT, pinnedAlwaysVisible: true,
+      renderContext: timelineMode ? 'timeline-chat' : 'tree-chat',
+    });
+  };
 
   /**
    * A list that reveals `initial` entries, then `increment` more per Show
@@ -774,16 +783,13 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     else if (entries.length > initialLimit) push({ kind: 'show-control', key: `${containerKey}:fewer`, estimateSize: STATUS_ESTIMATE, control: 'fewer', containerKey, currentCount: visibleEntries.length, increment, flat: true });
   };
 
-  // Pinned and then In work sit under Chats and above the projects. A tree
-  // is listed for its matching subsession too; the ancestors around it are
-  // context, so only real matches count.
+  // Pinned and In work: a tree is listed for its matching subsession too;
+  // the ancestors around it are context, so only real matches count.
   const appendZone = (activityKey: 'pinned' | 'work', items: readonly SessionSidebarActivityItem[]): void => {
     if (items.length === 0) return;
     const collapsed = appendActivityHeader(activityKey);
     if (!collapsed) appendActivityItems(items, `activity:${activityKey}`, zoneRenderContext, (item) => item.searchMatchCount ?? countSessionTreeQueryMatches(item.node, args.normalizedQuery));
   };
-  appendZone('pinned', args.pinnedItems ?? []);
-  appendZone('work', args.workItems ?? []);
 
   // One zone header over the project list, in both views, so the projects
   // collapse together like Chats or In work do. The single-project and
@@ -791,7 +797,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
   // would only add a row.
   const projectsZone = !args.singleProjectMode && !args.showOnlyMainWorkspace;
 
-  if (timelineMode) {
+  const appendTimelineProjects = (): void => {
     // One header per project, in the user's manual order, over its root
     // sessions from every worktree in lifecycle order.
     const itemsByProject = new Map<string, SessionSidebarActivityItem[]>();
@@ -841,23 +847,24 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       const status = args.groupStatusByKey.get(groupKey);
       if (status && status.state !== 'ready') push({ kind: 'status', key: `${groupKey}:status`, estimateSize: STATUS_ESTIMATE, status, group: mainGroup, groupKey, flat: true });
     }
-  }
+  };
 
-  let projectSections = timelineMode ? [] : args.singleProjectMode
-    ? args.sections.filter((section) => section.project.id === args.singleProjectId)
-    : [...args.sections];
-  if (args.showOnlyMainWorkspace) {
-    const active = projectSections.find((section) => section.project.id === args.activeProjectId) ?? projectSections[0];
-    projectSections = active ? [active] : [];
-  }
-  const renderedSections = projectSections.flatMap((section) => {
-    const descriptors = buildGroupRenderDescriptors(section, { mainWorkspaceOnly: args.showOnlyMainWorkspace });
-    // A project whose only matches moved to a zone shows no empty header.
-    if (search && !descriptors.some((descriptor) => groupSearchMatches(descriptor.group) > 0)) return [];
-    return [{ section, descriptors }];
-  });
-  const projectsCollapsed = projectsZone && renderedSections.length > 0 && appendActivityHeader('projects');
-  if (!projectsCollapsed) {
+  const appendTreeProjects = (): void => {
+    let projectSections = args.singleProjectMode
+      ? args.sections.filter((section) => section.project.id === args.singleProjectId)
+      : [...args.sections];
+    if (args.showOnlyMainWorkspace) {
+      const active = projectSections.find((section) => section.project.id === args.activeProjectId) ?? projectSections[0];
+      projectSections = active ? [active] : [];
+    }
+    const renderedSections = projectSections.flatMap((section) => {
+      const descriptors = buildGroupRenderDescriptors(section, { mainWorkspaceOnly: args.showOnlyMainWorkspace });
+      // A project whose only matches moved to a zone shows no empty header.
+      if (search && !descriptors.some((descriptor) => groupSearchMatches(descriptor.group) > 0)) return [];
+      return [{ section, descriptors }];
+    });
+    const projectsCollapsed = projectsZone && renderedSections.length > 0 && appendActivityHeader('projects');
+    if (projectsCollapsed) return;
     for (const { section, descriptors } of renderedSections) {
       const projectCollapsed = !search && !args.singleProjectMode && !args.showOnlyMainWorkspace && args.collapsedProjects.has(section.project.id);
       if (!args.showOnlyMainWorkspace) {
@@ -867,6 +874,18 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       }
       if (projectCollapsed) continue;
       for (const descriptor of descriptors) appendGroup(descriptor.group, descriptor.groupKey, descriptor.projectId, descriptor.hideGroupLabel);
+    }
+  };
+
+  // The zones follow the user's order, the same in both views; a zone that is
+  // off or empty leaves no row behind.
+  for (const zone of args.zoneOrder ?? DEFAULT_SIDEBAR_ZONE_ORDER) {
+    switch (zone) {
+      case 'attention': appendAttentionZone(); break;
+      case 'pinned': appendZone('pinned', args.pinnedItems ?? []); break;
+      case 'chats': appendChatsZone(); break;
+      case 'work': appendZone('work', args.workItems ?? []); break;
+      case 'projects': if (timelineMode) appendTimelineProjects(); else appendTreeProjects(); break;
     }
   }
 

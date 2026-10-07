@@ -7,6 +7,7 @@ import {
   closestCenter,
   useSensor,
   useSensors,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { ScrollableOverlay } from '@/components/ui/ScrollableOverlay';
@@ -21,7 +22,8 @@ import { refreshGlobalSessions } from '@/stores/useGlobalSessionsStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useChildStoreManager } from '@/sync/sync-context';
 import { useRuntimeAPIs } from '@/hooks/useRuntimeAPIs';
-import type { ProjectSortOrder, WorktreeSortOrder } from '@/stores/useSessionDisplayStore';
+import { moveSidebarZoneTo, useSessionDisplayStore, type ProjectSortOrder, type SidebarZoneKey, type WorktreeSortOrder } from '@/stores/useSessionDisplayStore';
+import { updateDesktopSettings } from '@/lib/persistence';
 import { streamPerfCount } from '@/stores/utils/streamDebug';
 import { Icon } from '@/components/icon/Icon';
 import { SessionSidebarFolderItem } from '../folders/SessionSidebarFolderItem';
@@ -35,7 +37,7 @@ import { SessionSidebarRows } from '../SessionSidebarRows';
 import { sessionTreeTextInset } from '../sessions/sessionTreeGeometry';
 import { SessionSidebarActivityHeader } from '../sessionSidebarHeaderPresentation';
 import { resolveSessionSidebarStickyHeader, type SessionSidebarRow, type SessionSidebarRowModel } from '../sessionSidebarRowModel';
-import { SortableGroupItem, SortableProjectItem } from './sortableItems';
+import { SortableGroupItem, SortableProjectItem, SortableZoneItem } from './sortableItems';
 import { SessionGroupSection, type SessionGroupSectionProps } from './SessionGroupSection';
 import type { ProjectSection } from './sessionProjectRender';
 import { formatProjectLabel } from '../utils';
@@ -124,6 +126,18 @@ const getProjectLabel = (project: ProjectSection['project'], homeDirectory: stri
   project.label?.trim() || formatDirectoryName(project.normalizedPath, homeDirectory) || project.normalizedPath,
 );
 
+// Zone headers sort among themselves under their own ids, so a zone can never
+// land between two projects and a project never between two zones.
+const ZONE_DRAG_ID_PREFIX = 'zone:';
+const zoneDragId = (slot: SidebarZoneKey): string => `${ZONE_DRAG_ID_PREFIX}${slot}`;
+const ZONE_SORTABLE_CONTAINER_ID = 'sidebar-zones';
+
+// The zone order is a synced preference; every change goes to the server the
+// way the Display mode toggles do.
+const persistSidebarZoneOrder = (): void => {
+  void updateDesktopSettings({ sidebarZoneOrder: useSessionDisplayStore.getState().sidebarZoneOrder });
+};
+
 function SessionProjectScrollerComponent({ model, view, actions }: Props): React.ReactNode {
   streamPerfCount('ui.sidebar_projects_list.render');
   const { t } = useI18n();
@@ -144,8 +158,10 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
   // project moves among projects, a worktree among its own project's
   // worktrees. Mixing them shifted worktree headers under a dragged project
   // and let it drop on a worktree, which moved nothing.
-  const [activeDrag, setActiveDrag] = React.useState<{ kind: 'project' } | { kind: 'group'; projectId: string | null } | null>(null);
-  const isProjectDragging = activeDrag?.kind === 'project';
+  const [activeDrag, setActiveDrag] = React.useState<{ kind: 'project' } | { kind: 'zone' } | { kind: 'group'; projectId: string | null } | null>(null);
+  // Project and zone headers are sticky; the crossfade layer pauses while one
+  // of them is on the move.
+  const isProjectDragging = activeDrag?.kind === 'project' || activeDrag?.kind === 'zone';
   const scrollContainerRef = React.useRef<HTMLElement | null>(null);
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -278,18 +294,40 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
     </div>;
   }, [childStores, t]);
 
+  // The zones on screen, top to bottom, as zone-order slots. Move up / Move
+  // down and a drop step over hidden zones.
+  const renderedZoneSlots = React.useMemo(() => model.rowModel.rows
+    .flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : [])), [model.rowModel.rows]);
+  const zoneDragItems = React.useMemo(() => renderedZoneSlots.map(zoneDragId), [renderedZoneSlots]);
+  const zoneDragIds = React.useMemo(() => new Set(zoneDragItems), [zoneDragItems]);
+  const zonesReorderable = !view.hasSessionSearchQuery && model.state.editingId === null;
+
   const renderRow = React.useCallback((row: SessionSidebarRow): React.ReactNode => {
     if (row.kind === 'activity-header') {
-      return <CrossfadeZoneHeader
-        className="sticky top-0 z-20 bg-sidebar"
-        data-sidebar-sticky-header="true"
-      >
-        <SessionSidebarActivityHeader
-          activityKey={row.activityKey}
-          collapsed={row.collapsed}
-          forceExpanded={row.forceExpanded}
-          alwaysShowActions={view.alwaysShowActions}
-          onToggle={() => {
+      const slot = row.activityKey;
+      const slotIndex = renderedZoneSlots.indexOf(slot);
+      const reorder = zonesReorderable && renderedZoneSlots.length > 1 ? {
+        canMoveUp: slotIndex > 0,
+        canMoveDown: slotIndex >= 0 && slotIndex < renderedZoneSlots.length - 1,
+        onMove: (direction: 'up' | 'down') => {
+          useSessionDisplayStore.getState().moveSidebarZone(slot, direction, renderedZoneSlots);
+          persistSidebarZoneOrder();
+        },
+      } : undefined;
+      return <SortableContext id={ZONE_SORTABLE_CONTAINER_ID} items={zoneDragItems} strategy={verticalListSortingStrategy}>
+        <SortableZoneItem id={zoneDragId(slot)} disabled={!reorder}>
+          {(dragHandle) => <CrossfadeZoneHeader
+            className="sticky top-0 z-20 bg-sidebar"
+            data-sidebar-sticky-header="true"
+          >
+            <SessionSidebarActivityHeader
+              activityKey={row.activityKey}
+              collapsed={row.collapsed}
+              forceExpanded={row.forceExpanded}
+              alwaysShowActions={view.alwaysShowActions}
+              dragHandle={reorder ? dragHandle : undefined}
+              reorder={reorder}
+              onToggle={() => {
             // Collapsing a zone forgets its Show more state: reopening it
             // starts from the default reveal, like a group or project.
             if (!row.collapsed) {
@@ -308,13 +346,15 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
               return next;
             });
           }}
-          onNewChat={() => {
-            useUIStore.getState().closeMainSurfaces();
-            if (view.mobileVariant) actions.setSessionSwitcherOpen(false);
-            actions.openNewSessionDraft({ selectedProjectId: CHAT_DRAFT_PROJECT_ID, directoryOverride: null });
-          }}
-        />
-      </CrossfadeZoneHeader>;
+              onNewChat={() => {
+                useUIStore.getState().closeMainSurfaces();
+                if (view.mobileVariant) actions.setSessionSwitcherOpen(false);
+                actions.openNewSessionDraft({ selectedProjectId: CHAT_DRAFT_PROJECT_ID, directoryOverride: null });
+              }}
+            />
+          </CrossfadeZoneHeader>}
+        </SortableZoneItem>
+      </SortableContext>;
     }
     if (row.kind === 'project-header') {
       const project = row.section.project;
@@ -468,7 +508,7 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
     return <div className="py-1 text-start typography-micro text-muted-foreground" style={{ paddingInlineStart: rowTextInset }}>
       {t('sessions.sidebar.group.empty.noArchivedSessions')}
     </div>;
-  }, [actions, deleteFolder, files, model, openProjectFolder, projectPickerOptions, renameFolder, renderStatus, requestArchiveAll, showDeletionDialog, spacesPageAvailable, t, toggleFolderCollapse, view]);
+  }, [actions, deleteFolder, files, model, openProjectFolder, projectPickerOptions, renameFolder, renderStatus, renderedZoneSlots, requestArchiveAll, showDeletionDialog, spacesPageAvailable, t, toggleFolderCollapse, view, zoneDragItems, zonesReorderable]);
 
   const structuralIds = React.useMemo(() => model.rowModel.rows.flatMap((row) => {
     if (row.kind === 'project-header') return activeDrag?.kind === 'group' ? [] : [row.section.project.id];
@@ -478,6 +518,15 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
     return [row.groupKey];
   }), [activeDrag, model.rowModel.rows]);
   const projectDragIds = React.useMemo(() => new Set(model.sectionsForRender.map((section) => section.project.id)), [model.sectionsForRender]);
+  // A zone drag sees only zone headers and every other drag sees none, so the
+  // two sortable lists never shift each other's rows while something moves.
+  const collisionDetection = React.useCallback<CollisionDetection>((collisionArgs) => {
+    const zoneDrag = zoneDragIds.has(String(collisionArgs.active.id));
+    return closestCenter({
+      ...collisionArgs,
+      droppableContainers: collisionArgs.droppableContainers.filter((container) => zoneDragIds.has(String(container.id)) === zoneDrag),
+    });
+  }, [zoneDragIds]);
   const zoneLayoutKey = React.useMemo(() => model.rowModel.stickyHeaders
     .map(({ kind, id, rowIndex }) => `${kind}:${id}:${rowIndex}`)
     .join('\u0001'), [model.rowModel.stickyHeaders]);
@@ -493,10 +542,14 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
         ref={setScrollContainer} useScrollShadow hideTopScrollShadow scrollShadowSize={40}
         outerClassName="flex-1 min-h-0" className="oc-sidebar-scroller pb-1 ps-2.5 pe-2 [overflow-anchor:none]"
       >
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(event) => {
+        <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={(event) => {
           const activeId = String(event.active.id);
           if (projectDragIds.has(activeId)) {
             setActiveDrag({ kind: 'project' });
+            return;
+          }
+          if (zoneDragIds.has(activeId)) {
+            setActiveDrag({ kind: 'zone' });
             return;
           }
           const groupRow = model.rowModel.rows.find((row): row is Extract<SessionSidebarRow, { kind: 'group-header' }> => row.kind === 'group-header' && row.groupKey === activeId);
@@ -505,6 +558,18 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
         }} onDragCancel={() => setActiveDrag(null)} onDragEnd={(event) => {
           setActiveDrag(null);
           if (!event.over) return;
+          const activeDragId = String(event.active.id);
+          const overDragId = String(event.over.id);
+          if (zoneDragIds.has(activeDragId)) {
+            if (!zoneDragIds.has(overDragId) || activeDragId === overDragId || !zonesReorderable) return;
+            const activeSlot = renderedZoneSlots[zoneDragItems.indexOf(activeDragId)];
+            const overSlot = renderedZoneSlots[zoneDragItems.indexOf(overDragId)];
+            if (!activeSlot || !overSlot) return;
+            const store = useSessionDisplayStore.getState();
+            store.setSidebarZoneOrder(moveSidebarZoneTo(store.sidebarZoneOrder, activeSlot, overSlot, renderedZoneSlots));
+            persistSidebarZoneOrder();
+            return;
+          }
           // SAFETY: session and folder payloads are created by the sidebar's draggable and droppable row components.
           const activeData = event.active.data.current as { type?: string; sessionId?: string; ownerKey?: string | null; archivedBucket?: boolean } | undefined;
           // SAFETY: session and folder payloads are created by the sidebar's draggable and droppable row components.

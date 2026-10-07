@@ -830,6 +830,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   const setShowPinnedSection = useSessionDisplayStore((state) => state.setShowPinnedSection);
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
   const setDetailedZoneRows = useSessionDisplayStore((state) => state.setDetailedZoneRows);
+  const sidebarZoneOrder = useSessionDisplayStore((state) => state.sidebarZoneOrder);
   const togglePinnedSession = useSessionPinnedStore((state) => state.toggle);
     // Branch per directory, for the second line of timeline-style rows (In
   // work, the List view): worktree sessions read their worktree's
@@ -2243,8 +2244,20 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
             </div>
           ) : (
             <div className="flex flex-col">
-              {renderZoneSection(ATTENTION_SECTION_ID, 'notification-3', t('sessions.sidebar.attention.title'), attentionTimelineEntries)}
-              {(() => {
+              {/* The zones follow the shared order the desktop sidebar is
+                  arranged in (`sidebarZoneOrder`): Pinned, Needs attention, In
+                  work, Chats and the project tree. The phone has no gesture
+                  to reorder them. */}
+              {sidebarZoneOrder.map((zone) => {
+                switch (zone) {
+                  case 'pinned':
+                    return <React.Fragment key={zone}>{renderZoneSection(PINNED_SECTION_ID, 'pushpin', t('sessions.sidebar.activity.pinnedTitle'), pinnedTimelineEntries)}</React.Fragment>;
+                  case 'attention':
+                    return <React.Fragment key={zone}>{renderZoneSection(ATTENTION_SECTION_ID, 'notification-3', t('sessions.sidebar.attention.title'), attentionTimelineEntries)}</React.Fragment>;
+                  case 'work':
+                    return <React.Fragment key={zone}>{renderZoneSection(WORK_SECTION_ID, 'eye', t('sessions.sidebar.work.title'), workTimelineEntries)}</React.Fragment>;
+                  case 'chats':
+                    return <React.Fragment key={zone}>{(() => {
                 const chatsExpanded = projectExpandedMap[CHAT_DRAFT_PROJECT_ID] ?? true;
                 const chatsLabel = t('mobile.sessions.section.chats');
                 return (
@@ -2298,10 +2311,9 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                     )}</MobileDisclosure>
                   </section>
                 );
-              })()}
-              {renderZoneSection(PINNED_SECTION_ID, 'pushpin', t('sessions.sidebar.activity.pinnedTitle'), pinnedTimelineEntries)}
-              {renderZoneSection(WORK_SECTION_ID, 'eye', t('sessions.sidebar.work.title'), workTimelineEntries)}
-              {orderedNodes.map((node) => {
+              })()}</React.Fragment>;
+                  case 'projects':
+                    return <React.Fragment key={zone}>{orderedNodes.map((node) => {
                 const projectExpanded = isProjectExpanded(node);
                 const buckets = normalizedQuery
                   ? node.buckets.filter((bucket) =>
@@ -2445,6 +2457,8 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                     )}</MobileDisclosure>
                   </section>
                 );
+              })}</React.Fragment>;
+                }
               })}
             </div>
           )}

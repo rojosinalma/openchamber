@@ -32,7 +32,7 @@ import { isTerminalShell } from '@/lib/terminalShell';
 import { sanitizeWorkStatusHiddenSections, sanitizeWorkStatusSectionOrder } from '@/components/chat/work-status/sections';
 import { useInputHistoryStore } from '@/stores/useInputHistoryStore';
 import { useMessageQueueStore } from '@/stores/messageQueueStore';
-import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
+import { normalizeSidebarZoneOrder, useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import { useUIStore, type FileEditorKeymap, type LargeTextPasteBehavior } from '@/stores/useUIStore';
 import { isSessionGoalMaxAutoTurns } from '@/lib/sessionGoalTurnLimit';
 import { z } from 'zod';
@@ -371,6 +371,10 @@ export const SETTINGS_REGISTRY = {
   sidebarShowAttentionSection: field({ scope: 'profile', perSurface: true, parse: parseBoolean, ui: sessionDisplayField('showAttentionSection') }),
   sidebarShowPinnedSection: field({ scope: 'profile', perSurface: true, parse: parseBoolean, ui: sessionDisplayField('showPinnedSection') }),
   sidebarDetailedZoneRows: field({ scope: 'profile', perSurface: true, parse: parseBoolean, ui: sessionDisplayField('detailedZoneRows') }),
+  // One order for every surface, like the sort orders: the phone has no way
+  // to reorder, it follows what the desktop chose. Any stored list is
+  // completed on read, so a stale or partial value never hides a zone.
+  sidebarZoneOrder: field({ scope: 'profile', parse: mapParser(parseStringList, normalizeSidebarZoneOrder), ui: sessionDisplayField('sidebarZoneOrder') }),
 
   // ── Work status ──
   workStatusSectionOrder: field({

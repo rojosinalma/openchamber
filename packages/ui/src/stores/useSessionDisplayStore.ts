@@ -13,6 +13,66 @@ type WorktreeSortOrder = 'recent' | 'manual' | 'a-z';
 export type SidebarViewMode = 'projects' | 'timeline';
 type ProjectDisplayMode = 'all' | 'single';
 
+// The sidebar zones the user can reorder, one order for both views. Zones
+// that are off or empty keep their slot and are simply skipped.
+export type SidebarZoneKey = 'pinned' | 'attention' | 'work' | 'chats' | 'projects';
+export const DEFAULT_SIDEBAR_ZONE_ORDER: readonly SidebarZoneKey[] = Object.freeze(['pinned', 'attention', 'work', 'chats', 'projects']);
+const SIDEBAR_ZONE_KEYS: ReadonlySet<string> = new Set(DEFAULT_SIDEBAR_ZONE_ORDER);
+const isSidebarZoneKey = (value: string): value is SidebarZoneKey => SIDEBAR_ZONE_KEYS.has(value);
+
+/**
+ * Turns a stored or synced list into a complete order: known keys in the
+ * given order, unknown keys and duplicates dropped, missing keys appended in
+ * the default order. A stale or partial value therefore never hides a zone.
+ */
+export const normalizeSidebarZoneOrder = (input: readonly string[] | undefined): SidebarZoneKey[] => {
+  const order: SidebarZoneKey[] = [];
+  for (const entry of Array.isArray(input) ? input : []) {
+    if (isSidebarZoneKey(entry) && !order.includes(entry)) order.push(entry);
+  }
+  for (const key of DEFAULT_SIDEBAR_ZONE_ORDER) {
+    if (!order.includes(key)) order.push(key);
+  }
+  return order;
+};
+
+/**
+ * Moves `key` next to `target`: above it when `key` currently sits below it
+ * in `rendered` (the zones on screen right now, a subset of `order`), below
+ * it otherwise. Hidden zones keep their place relative to `target`, so a drop
+ * lands exactly where the user saw it land.
+ */
+export const moveSidebarZoneTo = (
+  order: readonly SidebarZoneKey[],
+  key: SidebarZoneKey,
+  target: SidebarZoneKey,
+  rendered: readonly SidebarZoneKey[] = order,
+): SidebarZoneKey[] => {
+  const from = rendered.indexOf(key);
+  const to = rendered.indexOf(target);
+  if (from < 0 || to < 0 || from === to || !order.includes(target)) return [...order];
+  const without = order.filter((entry) => entry !== key);
+  const anchor = without.indexOf(target);
+  const insertAt = from > to ? anchor : anchor + 1;
+  return [...without.slice(0, insertAt), key, ...without.slice(insertAt)];
+};
+
+/**
+ * Moves `key` one step past its nearest neighbour in `rendered`. Hidden zones
+ * in between are skipped, so one step always has a visible effect; at either
+ * end nothing changes.
+ */
+export const moveSidebarZone = (
+  order: readonly SidebarZoneKey[],
+  key: SidebarZoneKey,
+  direction: 'up' | 'down',
+  rendered: readonly SidebarZoneKey[] = order,
+): SidebarZoneKey[] => {
+  const renderedIndex = rendered.indexOf(key);
+  const neighbour = renderedIndex < 0 ? undefined : rendered[direction === 'up' ? renderedIndex - 1 : renderedIndex + 1];
+  return neighbour ? moveSidebarZoneTo(order, key, neighbour, rendered) : [...order];
+};
+
 type SessionDisplayStore = {
   projectDisplayMode: ProjectDisplayMode;
   singleProjectId: string | null;
@@ -43,6 +103,8 @@ type SessionDisplayStore = {
   showArchivedSessions: boolean;
   projectSortOrder: ProjectSortOrder;
   worktreeSortOrder: WorktreeSortOrder;
+  /** Top-to-bottom order of the sidebar zones; always complete (see `normalizeSidebarZoneOrder`). */
+  sidebarZoneOrder: SidebarZoneKey[];
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
   setShowAttentionSection: (show: boolean) => void;
@@ -53,6 +115,9 @@ type SessionDisplayStore = {
   toggleArchivedSessions: () => void;
   setProjectSortOrder: (order: ProjectSortOrder) => void;
   setWorktreeSortOrder: (order: WorktreeSortOrder) => void;
+  setSidebarZoneOrder: (order: readonly SidebarZoneKey[]) => void;
+  /** See the `moveSidebarZone` helper; `rendered` is the zones currently shown. */
+  moveSidebarZone: (key: SidebarZoneKey, direction: 'up' | 'down', rendered?: readonly SidebarZoneKey[]) => void;
 };
 
 export const migrateSessionDisplayState = (
@@ -100,6 +165,11 @@ export const migrateSessionDisplayState = (
     // already sit in the project groups.
     if (typeof state.showAttentionSection !== 'boolean') state.showAttentionSection = false;
   }
+  if (version < 11) {
+    // v11 adds the zone order. Everyone starts on the order the sidebar has
+    // always had; a value from a newer build that was downgraded is kept.
+    state.sidebarZoneOrder = normalizeSidebarZoneOrder(state.sidebarZoneOrder);
+  }
   return state;
 };
 
@@ -135,12 +205,17 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       setDetailedZoneRows: (detailed) => set({ detailedZoneRows: detailed }),
       setShowArchivedSessions: (show) => set({ showArchivedSessions: show }),
       toggleArchivedSessions: () => set((state) => ({ showArchivedSessions: !state.showArchivedSessions })),
+      sidebarZoneOrder: [...DEFAULT_SIDEBAR_ZONE_ORDER],
       setProjectSortOrder: (order) => set({ projectSortOrder: order }),
       setWorktreeSortOrder: (order) => set({ worktreeSortOrder: order }),
+      setSidebarZoneOrder: (order) => set({ sidebarZoneOrder: normalizeSidebarZoneOrder(order) }),
+      moveSidebarZone: (key, direction, rendered) => set((state) => ({
+        sidebarZoneOrder: moveSidebarZone(state.sidebarZoneOrder, key, direction, rendered),
+      })),
     }),
     {
       name: 'session-display-mode',
-      version: 10,
+      version: 11,
       // v1→v2 adds projectSortOrder using the canonical manual ordering.
       // v2→v3 replaces the previously shipped recent default with manual.
       // v3→v4 removes displayMode (single sidebar row layout).
@@ -151,6 +226,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // v8→v9 adds worktreeSortOrder (manual by default).
       // v9→v10 drops showRecentSection (Recent is gone) and adds
       // showAttentionSection (off by default).
+      // v10→v11 adds sidebarZoneOrder (the fixed order the sidebar had before).
       migrate: migrateSessionDisplayState,
     },
   ),
