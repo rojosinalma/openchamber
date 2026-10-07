@@ -4,12 +4,13 @@ import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
 import type { SessionSidebarActivityKey } from './sessionSidebarRowModel';
 
-const ACTIVITY_ICON = { attention: 'notification-3', pinned: 'pushpin', work: 'eye', chats: 'chat-4' } as const;
+const ACTIVITY_ICON = { attention: 'notification-3', pinned: 'pushpin', work: 'eye', chats: 'chat-4', projects: 'folders' } as const;
 const ACTIVITY_TITLE_KEY = {
   attention: 'sessions.sidebar.attention.title',
   pinned: 'sessions.sidebar.pinned.title',
   work: 'sessions.sidebar.work.title',
   chats: 'sessions.sidebar.activity.chatsTitle',
+  projects: 'sessions.sidebar.projects.title',
 } as const;
 
 export const SessionSidebarActivityHeader: React.FC<{

@@ -154,7 +154,7 @@ describe('buildSessionSidebarRowModel', () => {
     const headers = rows.flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []));
     const sessions = rows.flatMap((row) => (row.kind === 'session' ? [`${row.renderContext}:${row.node.session.id}`] : []));
 
-    expect(headers).toEqual(['work', 'project-a']);
+    expect(headers).toEqual(['work', 'projects', 'project-a']);
     expect(sessions).toEqual(['timeline-mixed:working', 'timeline:working', 'timeline:other']);
   });
 
@@ -180,7 +180,7 @@ describe('buildSessionSidebarRowModel', () => {
     input.timelineItems = [timelineItem('a')];
     input.collapsedProjects = new Set(['project-a']);
 
-    expect(buildSessionSidebarRowModel(input).rows).toMatchObject([{ kind: 'project-header', collapsed: true }]);
+    expect(buildSessionSidebarRowModel(input).rows).toMatchObject([{ kind: 'activity-header', activityKey: 'projects' }, { kind: 'project-header', collapsed: true }]);
   });
 
   test('keeps badge scopes for hidden timeline descendants without adding child rows', () => {
@@ -256,7 +256,7 @@ describe('buildSessionSidebarRowModel', () => {
       row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []
     ));
 
-    expect(headers).toEqual(['chats', 'work', 'project-a']);
+    expect(headers).toEqual(['chats', 'work', 'projects', 'project-a']);
   });
 
   test('no block while nothing is in work', () => {
@@ -408,7 +408,8 @@ describe('buildSessionSidebarRowModel', () => {
     expect(model.rows.filter((row) => row.kind === 'folder-header')).toHaveLength(1_250);
     expect(model.rows.filter((row) => row.kind === 'session')).toHaveLength(25_000);
     expect(model.selectionDescendantIds).toHaveLength(25_000);
-    expect(model.rows).toHaveLength(26_251);
+    // 1 Projects zone header + 1 project header + 1,250 folder headers + 25,000 sessions.
+    expect(model.rows).toHaveLength(26_252);
   });
 
   test('keeps normal activity state while search forces the same headers open', () => {
@@ -457,9 +458,10 @@ describe('buildSessionSidebarRowModel', () => {
     const model = buildSessionSidebarRowModel(input);
     const sessions = model.rows.filter((row) => row.kind === 'session');
 
-    expect(model.rows[0]).toMatchObject({ kind: 'project-header' });
-    expect(model.rows.some((row) => row.kind === 'group-header' || row.kind === 'activity-header')).toBe(false);
-    expect(model.stickyHeaders.map((header) => header.id)).toEqual(['project-a']);
+    expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'projects' });
+    expect(model.rows[1]).toMatchObject({ kind: 'project-header' });
+    expect(model.rows.some((row) => row.kind === 'group-header' || (row.kind === 'activity-header' && row.activityKey !== 'projects'))).toBe(false);
+    expect(model.stickyHeaders.map((header) => header.id)).toEqual(['projects', 'project-a']);
     expect(sessions.map((row) => row.node.session.id)).toEqual(['a', 'b']);
     expect(sessions.every((row) => row.renderContext === 'timeline' && row.depth === 0)).toBe(true);
     expect(model.rows.some((row) => row.kind === 'show-control')).toBe(false);
@@ -506,8 +508,8 @@ describe('buildSessionSidebarRowModel', () => {
     const input = args([project([group([])])]);
     input.viewMode = 'timeline';
 
-    expect(buildSessionSidebarRowModel(input).rows).toMatchObject([{ kind: 'project-header' }]);
-    expect(buildSessionSidebarRowModel(input).rows).toHaveLength(1);
+    expect(buildSessionSidebarRowModel(input).rows).toMatchObject([{ kind: 'activity-header', activityKey: 'projects' }, { kind: 'project-header' }]);
+    expect(buildSessionSidebarRowModel(input).rows).toHaveLength(2);
   });
 
   test('an empty worktree group is open whatever was saved, with no rows under it', () => {
@@ -679,7 +681,7 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     const model = buildSessionSidebarRowModel(input);
 
     expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'attention', key: 'activity:attention:header' });
-    expect(headersOf(input)).toEqual(['attention', 'chats']);
+    expect(headersOf(input)).toEqual(['attention', 'chats', 'projects']);
     const placements = placementsOf(input);
     expect(placements.slice(0, 2)).toEqual(['attention:urgent', 'chats:chat']);
     expect(placements.slice(2).sort()).toEqual(['project:other', 'project:urgent']);
@@ -693,7 +695,7 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     input.attentionItems = [timelineItem('urgent')];
     input.pinnedItems = [timelineItem('pinned')];
 
-    expect(headersOf(input)).toEqual(['attention', 'pinned', 'chats']);
+    expect(headersOf(input)).toEqual(['attention', 'pinned', 'chats', 'projects']);
     const placements = placementsOf(input);
     expect(placements.slice(0, 3)).toEqual(['attention:urgent', 'pinned:pinned', 'chats:chat']);
     expect(placements.slice(3).sort()).toEqual(['project:other', 'project:pinned', 'project:urgent']);
@@ -704,10 +706,10 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     input.attentionItems = [];
     input.pinnedItems = [];
 
-    expect(headersOf(input)).toEqual([]);
+    expect(headersOf(input)).toEqual(['projects']);
 
     const omitted = args([project([group([node('other')])])]);
-    expect(headersOf(omitted)).toEqual([]);
+    expect(headersOf(omitted)).toEqual(['projects']);
   });
 
   test('a collapsed zone keeps its header and hides its items', () => {
@@ -719,7 +721,7 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     const model = buildSessionSidebarRowModel(input);
     const headers = model.rows.filter((row) => row.kind === 'activity-header');
 
-    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['attention', true], ['pinned', true]]);
+    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['attention', true], ['pinned', true], ['projects', false]]);
     expect(placementsOf(input).sort()).toEqual(['project:pinned', 'project:urgent']);
   });
 
@@ -730,9 +732,108 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     input.workItems = [timelineItem('both')];
     input.workSessionIds = new Set(['both']);
 
-    expect(headersOf(input)).toEqual(['pinned', 'work']);
+    expect(headersOf(input)).toEqual(['pinned', 'work', 'projects']);
     const placements = placementsOf(input);
     expect(placements.slice(0, 2)).toEqual(['pinned:both', 'work:both']);
     expect(placements.slice(2).sort()).toEqual(['project:both', 'project:other']);
+  });
+});
+
+describe('buildSessionSidebarRowModel projects zone', () => {
+  const kindsOf = (input: SessionSidebarRowModelArgs) => buildSessionSidebarRowModel(input).rows
+    .map((row) => (row.kind === 'activity-header' ? `activity:${row.activityKey}` : row.kind === 'session' ? `session:${row.node.session.id}` : row.kind));
+
+  test('one Projects header sits above the project sections in the projects view', () => {
+    const input = args([project([group([node('a')])])]);
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'projects', key: 'activity:projects:header', collapsed: false, forceExpanded: false });
+    expect(kindsOf(input)).toEqual(['activity:projects', 'project-header', 'session:a']);
+    expect(model.stickyHeaders.map((header) => `${header.kind}:${header.id}`)).toEqual(['activity:projects', 'project:project-a']);
+  });
+
+  test('a collapsed Projects zone hides every project row and keeps the zones above it', () => {
+    const working = node('working');
+    const input = args([project([group([working, node('other')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.workItems = [timelineItem('working')];
+    input.workSessionIds = new Set(['working']);
+    input.collapsedActivities = new Set(['projects']);
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(kindsOf(input)).toEqual(['activity:chats', 'session:chat', 'activity:work', 'session:working', 'activity:projects']);
+    expect(model.rows.at(-1)).toMatchObject({ kind: 'activity-header', activityKey: 'projects', collapsed: true });
+    // Only project sessions are gone from selection; the zones keep theirs.
+    expect(model.selectionEntries.map((entry) => entry.id)).toEqual(['chat', 'working']);
+  });
+
+  test('a collapsed Projects zone alone is not an empty sidebar', () => {
+    const input = args([project([group([node('a')])])]);
+    input.collapsedActivities = new Set(['projects']);
+
+    expect(kindsOf(input)).toEqual(['activity:projects']);
+  });
+
+  test('no Projects header without a project section', () => {
+    expect(kindsOf(args([]))).toEqual(['empty']);
+  });
+
+  test('the timeline view has the Projects header over its project headers too', () => {
+    const input = args([project([group([node('a')])])]);
+    input.viewMode = 'timeline';
+    input.timelineItems = [timelineItem('a')];
+
+    expect(kindsOf(input)).toEqual(['activity:projects', 'project-header', 'session:a']);
+  });
+
+  test('a collapsed Projects zone hides the timeline project list', () => {
+    const input = args([project([group([node('a')])])]);
+    input.viewMode = 'timeline';
+    input.timelineItems = [timelineItem('a')];
+    input.collapsedActivities = new Set(['projects']);
+
+    expect(kindsOf(input)).toEqual(['activity:projects']);
+  });
+
+  test('single-project mode has no Projects header', () => {
+    const input = args([project([group([node('a')])])]);
+    input.singleProjectMode = true;
+    input.singleProjectId = 'project-a';
+
+    expect(kindsOf(input)).toEqual(['project-header', 'session:a']);
+  });
+
+  test('the main-workspace-only list has no Projects header', () => {
+    const input = args([project([group([node('a')])])]);
+    input.showOnlyMainWorkspace = true;
+
+    expect(kindsOf(input)).toEqual(['session:a']);
+  });
+
+  test('search forces a collapsed Projects zone open, like the project headers', () => {
+    const main = group([node('match')]);
+    const input = args([project([main])]);
+    input.mode = 'search';
+    input.normalizedQuery = 'match';
+    input.groupSearchDataByGroup.set(main, { filteredNodes: main.sessions, matchedSessionCount: 1, folderNameMatchCount: 0, groupMatches: false, hasMatch: true });
+    input.collapsedActivities = new Set(['projects']);
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'projects', collapsed: false, forceExpanded: true });
+    expect(model.rows[1]).toMatchObject({ kind: 'project-header', forceExpanded: true });
+    expect(kindsOf(input)).toEqual(['activity:projects', 'project-header', 'session:match']);
+  });
+
+  test('a search with no project match shows neither a Projects header nor a project header', () => {
+    const main = group([node('miss')]);
+    const input = args([project([main])]);
+    input.mode = 'search';
+    input.normalizedQuery = 'zzz';
+    input.groupSearchDataByGroup.set(main, { filteredNodes: [], matchedSessionCount: 0, folderNameMatchCount: 0, groupMatches: false, hasMatch: false });
+
+    expect(kindsOf(input)).toEqual(['empty']);
   });
 });

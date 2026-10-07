@@ -593,6 +593,7 @@ export const dict = {
   'sessions.sidebar.work.title': 'Devam eden',
   'sessions.sidebar.attention.title': 'İlgi bekleyen',
   'sessions.sidebar.pinned.title': 'Sabitlenmiş',
+  'sessions.sidebar.projects.title': 'Projeler',
   'sessions.sidebar.session.work.track': 'Devam eden iş olarak izle',
   'sessions.sidebar.session.work.markDone': 'Tamamlandı olarak işaretle',
   'sessions.sidebar.session.work.doneSuggested': 'Tamamlanmış görünüyor',

@@ -704,6 +704,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.work.title': '進行中',
   'sessions.sidebar.attention.title': '待處理',
   'sessions.sidebar.pinned.title': '已釘選',
+  'sessions.sidebar.projects.title': '專案',
   'sessions.sidebar.session.work.track': '作為進行中追蹤',
   'sessions.sidebar.session.work.markDone': '標記為完成',
   'sessions.sidebar.session.work.doneSuggested': '看起來已完成',

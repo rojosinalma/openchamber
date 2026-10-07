@@ -685,6 +685,7 @@ export const dict: Record<I18nKey, string> = {
   "sessions.sidebar.work.title": "Em andamento",
   "sessions.sidebar.attention.title": "Precisa de atenção",
   "sessions.sidebar.pinned.title": "Fixadas",
+  "sessions.sidebar.projects.title": "Projetos",
   "sessions.sidebar.session.work.track": "Acompanhar como em andamento",
   "sessions.sidebar.session.work.markDone": "Marcar como concluído",
   "sessions.sidebar.session.work.doneSuggested": "Parece concluído",

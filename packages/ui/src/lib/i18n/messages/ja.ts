@@ -684,6 +684,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.work.title': '作業中',
   'sessions.sidebar.attention.title': '要対応',
   'sessions.sidebar.pinned.title': 'ピン留め',
+  'sessions.sidebar.projects.title': 'プロジェクト',
   'sessions.sidebar.session.work.track': '作業中として追跡',
   'sessions.sidebar.session.work.markDone': '完了にする',
   'sessions.sidebar.session.work.doneSuggested': '完了したようです',

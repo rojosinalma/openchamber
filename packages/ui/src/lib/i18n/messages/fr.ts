@@ -507,6 +507,7 @@ export const dict = {
   'sessions.sidebar.work.title': 'En cours',
   'sessions.sidebar.attention.title': 'À traiter',
   'sessions.sidebar.pinned.title': 'Épinglées',
+  'sessions.sidebar.projects.title': 'Projets',
   'sessions.sidebar.session.work.track': 'Suivre comme en cours',
   'sessions.sidebar.session.work.markDone': 'Marquer comme terminé',
   'sessions.sidebar.session.work.doneSuggested': 'Semble terminé',
