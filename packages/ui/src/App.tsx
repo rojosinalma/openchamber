@@ -45,6 +45,7 @@ import { openSessionLink } from '@/lib/router/openSessionFromRoute';
 import { parseRoute } from '@/lib/router';
 import { beginLastSessionRestore, type LastSessionRestoreResult } from '@/sync/last-session-restore';
 import { markSessionViewed } from '@/sync/notification-store';
+import { markSessionViewedRemote } from '@/sync/session-viewed';
 import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { opencodeClient } from '@/lib/opencode/client';
 import { getRuntimeKey, subscribeRuntimeEndpointChanged } from '@/lib/runtime-switch';
@@ -616,7 +617,10 @@ function App({ apis }: AppProps) {
     if (typeof window === 'undefined') return;
     const onFocus = () => {
       const sessionId = useSessionUIStore.getState().currentSessionId;
-      if (sessionId) markSessionViewed(sessionId);
+      if (sessionId) {
+        markSessionViewed(sessionId);
+        markSessionViewedRemote(sessionId, useSessionUIStore.getState().currentSessionDirectory);
+      }
     };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);

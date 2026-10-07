@@ -158,11 +158,13 @@ export function SidebarHeader(props: Props): React.ReactNode {
   const setShowChatsSection = useSessionDisplayStore((state) => state.setShowChatsSection);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
   const setShowWorkSection = useSessionDisplayStore((state) => state.setShowWorkSection);
-  const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
-  const setShowPinnedSection = useSessionDisplayStore((state) => state.setShowPinnedSection);
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
   const setDetailedZoneRows = useSessionDisplayStore((state) => state.setDetailedZoneRows);
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
+  const showAttentionSection = useSessionDisplayStore((state) => state.showAttentionSection);
+  const toggleAttentionSection = useSessionDisplayStore((state) => state.toggleAttentionSection);
+  const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
+  const togglePinnedSection = useSessionDisplayStore((state) => state.togglePinnedSection);
   const projectSortOrder = useSessionDisplayStore((state) => state.projectSortOrder);
   const setProjectSortOrder = useSessionDisplayStore((state) => state.setProjectSortOrder);
   const worktreeSortOrder = useSessionDisplayStore((state) => state.worktreeSortOrder);
@@ -277,15 +279,21 @@ export function SidebarHeader(props: Props): React.ReactNode {
         setShowChatsSection(!showChatsSection);
         void updateDesktopSettings({ sidebarShowChatsSection: !showChatsSection });
       })}
-      {toggleItem('sessions.sidebar.header.displayMode.showPinned', showPinnedSection, () => {
-        setShowPinnedSection(!showPinnedSection);
-        void updateDesktopSettings({ sidebarShowPinnedSection: !showPinnedSection });
-      })}
       {sessionWorkEnabled ? toggleItem('sessions.sidebar.header.displayMode.showWork', showWorkSection, () => {
         setShowWorkSection(!showWorkSection);
         void updateDesktopSettings({ sidebarShowWorkSection: !showWorkSection });
       }) : null}
-      {/* List rows always carry two lines; Tree keeps Pinned and In work on one unless asked. */}
+      {/* Attention and Pinned zones exist in both views; both duplicate rows
+          that also sit in their project group, so they start off. */}
+      {toggleItem('sessions.sidebar.header.displayMode.showAttention', showAttentionSection, () => {
+        toggleAttentionSection();
+        void updateDesktopSettings({ sidebarShowAttentionSection: !showAttentionSection });
+      })}
+      {toggleItem('sessions.sidebar.header.displayMode.showPinned', showPinnedSection, () => {
+        togglePinnedSection();
+        void updateDesktopSettings({ sidebarShowPinnedSection: !showPinnedSection });
+      })}
+      {/* List rows always carry two lines; Tree keeps In work on one unless asked. */}
       {!timelineView ? toggleItem('sessions.sidebar.header.displayMode.detailedZoneRows', detailedZoneRows, () => {
         setDetailedZoneRows(!detailedZoneRows);
         void updateDesktopSettings({ sidebarDetailedZoneRows: !detailedZoneRows });

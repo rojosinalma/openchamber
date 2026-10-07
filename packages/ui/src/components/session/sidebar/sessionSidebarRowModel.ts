@@ -20,18 +20,18 @@ export type SessionSidebarActivityItem = {
   getSecondaryMeta?: (sessionId: string) => SessionSidebarActivityItem['secondaryMeta'];
 };
 
-export type SessionSidebarActivityKey = 'pinned' | 'work' | 'chats';
+export type SessionSidebarActivityKey = 'attention' | 'pinned' | 'work' | 'chats';
 
 /** Activity sections; the display menu's Collapse all / Expand all drive them with the projects. */
-export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['chats', 'pinned', 'work'];
+export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['attention', 'pinned', 'chats', 'work'];
 
 // 'project' is a one-line file tree row of the grouped view. Timeline rows
 // have no left gutter and carry their status on the right: 'timeline' is a
 // two-line row under its project header; 'timeline-mixed' is the same row in
-// Pinned and In work, where sessions of every project mix, so its second line
-// opens with the project's icon; 'mixed-compact' is that row on one line, the
-// Tree view's default for Pinned and In work; 'timeline-chat' is a one-line
-// Chats row.
+// Needs attention, Pinned and In work, where sessions of every project mix,
+// so its second line opens with the project's icon; 'mixed-compact' is that
+// row on one line, the Tree view's default for In work; 'timeline-chat' is a
+// one-line Chats row.
 export type SessionSidebarRenderContext = 'project' | 'timeline' | 'timeline-mixed' | 'mixed-compact' | 'timeline-chat';
 
 /** Rows that render through `SessionTimelineRowBody` with two lines. */
@@ -116,16 +116,25 @@ export type SessionSidebarRowModelArgs = {
   /** Every non-archived root project session with its project, in lifecycle order. */
   timelineItems?: readonly SessionSidebarActivityItem[];
   /**
-   * Pinned sessions and sessions in work, already ordered and
-   * search-filtered. Each zone renders as its own block at the top, and its
-   * sessions stay under their project too. Search lists each of them once,
-   * in its zone.
+   * Sessions that need the user (a pending permission or form, or a finished
+   * turn not viewed yet), most urgent first and search-filtered. They render
+   * in their own zone at the very top as duplicates: each session keeps its
+   * place in its project group and every other projection.
+   */
+  attentionItems?: readonly SessionSidebarActivityItem[];
+  /**
+   * Sessions the user pinned, in collection order and search-filtered. A
+   * duplicate zone like Attention: nothing leaves its project group for it.
    */
   pinnedItems?: readonly SessionSidebarActivityItem[];
+  /**
+   * Sessions in work, already ordered and search-filtered. They render in
+   * their own block at the top and stay under their project too. Search
+   * lists each of them once, in the work block.
+   */
   workItems?: readonly SessionSidebarActivityItem[];
-  /** Every session listed in the Pinned or In work zone. */
-  zoneSessionIds?: ReadonlySet<string>;
-  /** Pinned and In work rows in the Tree view: two lines when set, one otherwise. */
+  workSessionIds?: ReadonlySet<string>;
+  /** In work rows in the Tree view: two lines when set, one otherwise. */
   detailedZoneRows?: boolean;
   foldersMap: SessionFoldersMap;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
@@ -207,7 +216,7 @@ export const countSessionSearchMatches = (nodes: readonly SessionNode[], normali
 };
 
 const EMPTY_FOLDERS: readonly SessionFolder[] = [];
-const EMPTY_ZONE_SESSION_IDS: ReadonlySet<string> = new Set();
+const EMPTY_WORK_SESSION_IDS: ReadonlySet<string> = new Set();
 const SESSION_ESTIMATE = 32;
 const TIMELINE_SESSION_ESTIMATE = 52;
 // Chats open on a short page in both views, with pinned chats on top of it.
@@ -307,10 +316,10 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
   const keyOccurrences = new Map<string, number>();
   const search = args.mode === 'search';
   const pinned = args.pinnedSessionIds instanceof Set ? args.pinnedSessionIds : new Set(args.pinnedSessionIds);
-  const inZone = args.zoneSessionIds ?? EMPTY_ZONE_SESSION_IDS;
-  // A pinned session or one in work also stays in its project; only search
-  // lists it once, in its zone, so its count and rows agree.
-  const isMovedToZone = (sessionId: string): boolean => search && inZone.has(sessionId);
+  const inWork = args.workSessionIds ?? EMPTY_WORK_SESSION_IDS;
+  // A session in work also stays in its project; only search lists it once,
+  // in the work block, so its count and rows agree.
+  const isMovedToWork = (sessionId: string): boolean => search && inWork.has(sessionId);
   let searchMatchCount = 0;
 
   const authoritativeRoots = [
@@ -441,13 +450,13 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     }
   };
 
-  // A group's search matches once the trees listed in a zone are taken out:
-  // those render in Pinned or In work, which counts them. Zero means nothing to show.
+  // A group's search matches once the trees in work are taken out: those
+  // render in their own zone, which counts them. Zero means nothing to show.
   const groupSearchMatches = (group: SessionGroup): number => {
     const searchData = args.groupSearchDataByGroup.get(group);
     if (searchData?.hasMatch !== true) return 0;
-    const movedToZone = inZone.size > 0 ? searchData.filteredNodes.filter((node) => isMovedToZone(node.session.id)) : [];
-    const sessionMatches = Math.max(0, searchData.matchedSessionCount - countSessionSearchMatches(movedToZone, args.normalizedQuery));
+    const movedToWork = inWork.size > 0 ? searchData.filteredNodes.filter((node) => isMovedToWork(node.session.id)) : [];
+    const sessionMatches = Math.max(0, searchData.matchedSessionCount - countSessionSearchMatches(movedToWork, args.normalizedQuery));
     return sessionMatches + searchData.folderNameMatchCount + (searchData.groupMatches ? 1 : 0);
   };
 
@@ -465,7 +474,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       searchMatchCount += matches;
     }
     const sourceNodes = (search ? searchData?.filteredNodes ?? [] : group.sessions)
-      .filter((node) => !isMovedToZone(node.session.id))
+      .filter((node) => !isMovedToWork(node.session.id))
       .sort((left, right) => compareNodes(left, right, pinned, args.sessionOrderIndex));
     const indexed = indexNodes(sourceNodes);
     const selectionPoolOffset = selectionDescendantIds.length;
@@ -705,6 +714,22 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     }
   };
 
+  // Duplicate zones first: Needs attention, then Pinned. Both list sessions
+  // that stay where they are elsewhere, so neither touches `inWork`, and their
+  // rows add nothing to the match count: the project group already counts them.
+  // Like In work they mix sessions of every project, so they take its row.
+  const attentionItems = args.attentionItems ?? [];
+  if (attentionItems.length > 0) {
+    const collapsed = appendActivityHeader('attention');
+    if (!collapsed) appendActivityItems(attentionItems, 'activity:attention', 'timeline-mixed', () => 0);
+  }
+
+  const pinnedItems = args.pinnedItems ?? [];
+  if (pinnedItems.length > 0) {
+    const collapsed = appendActivityHeader('pinned');
+    if (!collapsed) appendActivityItems(pinnedItems, 'activity:pinned', 'timeline-mixed', () => 0);
+  }
+
   if (args.chatGroup) {
     if (!search || groupSearchMatches(args.chatGroup) > 0) {
       const collapsed = appendActivityHeader('chats');
@@ -718,10 +743,10 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     }
   }
 
-  // Pinned and In work list sessions of every project together: two-line
-  // rows with the project's icon in List, one-line rows in Tree unless the
-  // user asked for detailed rows.
-  const zoneRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
+  // In work lists sessions of every project together: two-line rows with
+  // the project's icon in List, one-line rows in Tree unless the user asked
+  // for detailed rows.
+  const workRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
 
   /**
    * A list that reveals `initial` entries, then `increment` more per Show
@@ -743,23 +768,21 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     else if (entries.length > initialLimit) push({ kind: 'show-control', key: `${containerKey}:fewer`, estimateSize: STATUS_ESTIMATE, control: 'fewer', containerKey, currentCount: visibleEntries.length, increment, flat: true });
   };
 
-  // Pinned and then In work sit under Chats and above the projects. A tree
-  // is listed for its matching subsession too; the ancestors around it are
-  // context, so only real matches count.
-  const appendZone = (activityKey: 'pinned' | 'work', items: readonly SessionSidebarActivityItem[]): void => {
-    if (items.length === 0) return;
-    const collapsed = appendActivityHeader(activityKey);
-    if (!collapsed) appendActivityItems(items, `activity:${activityKey}`, zoneRenderContext, (item) => countSessionTreeQueryMatches(item.node, args.normalizedQuery));
-  };
-  appendZone('pinned', args.pinnedItems ?? []);
-  appendZone('work', args.workItems ?? []);
+  // In work sits under Chats and above the projects.
+  const workItems = args.workItems ?? [];
+  if (workItems.length > 0) {
+    const collapsed = appendActivityHeader('work');
+    // A tree is listed for its matching subsession too; the ancestors around
+    // it are context, so only real matches count.
+    if (!collapsed) appendActivityItems(workItems, 'activity:work', workRenderContext, (item) => countSessionTreeQueryMatches(item.node, args.normalizedQuery));
+  }
 
   if (timelineMode) {
     // One header per project, in the user's manual order, over its root
     // sessions from every worktree in lifecycle order.
     const itemsByProject = new Map<string, SessionSidebarActivityItem[]>();
     for (const item of args.timelineItems ?? []) {
-      if (!item.projectId || isMovedToZone(item.node.session.id)) continue;
+      if (!item.projectId || isMovedToWork(item.node.session.id)) continue;
       const list = itemsByProject.get(item.projectId);
       if (list) list.push(item);
       else itemsByProject.set(item.projectId, [item]);
@@ -794,7 +817,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
   }
   for (const section of projectSections) {
     const descriptors = buildGroupRenderDescriptors(section, { mainWorkspaceOnly: args.showOnlyMainWorkspace });
-    // A project whose only matches moved to a zone shows no empty header.
+    // A project whose only matches moved to In work shows no empty header.
     if (search && !descriptors.some((descriptor) => groupSearchMatches(descriptor.group) > 0)) continue;
     const projectCollapsed = !search && !args.singleProjectMode && !args.showOnlyMainWorkspace && args.collapsedProjects.has(section.project.id);
     if (!args.showOnlyMainWorkspace) {

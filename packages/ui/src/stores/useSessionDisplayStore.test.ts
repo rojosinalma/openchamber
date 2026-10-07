@@ -99,6 +99,33 @@ describe('useSessionDisplayStore view mode', () => {
 });
 
 
+describe('useSessionDisplayStore attention and pinned zones', () => {
+  test('both zones default to off', () => {
+    expect(useSessionDisplayStore.getState().showAttentionSection).toBe(false);
+    expect(useSessionDisplayStore.getState().showPinnedSection).toBe(false);
+  });
+
+  test('v9→v10 fills the two new flags with false, drops Recent and keeps the rest', () => {
+    const migrated = migrateSessionDisplayState({ showRecentSection: true, projectSortOrder: 'a-z' }, 9);
+
+    expect(migrated.showAttentionSection).toBe(false);
+    expect(migrated.showPinnedSection).toBe(false);
+    expect((migrated as { showRecentSection?: boolean }).showRecentSection).toBeUndefined();
+    expect(migrated.projectSortOrder).toBe('a-z');
+  });
+
+  test('v9→v10 keeps flags already stored as booleans', () => {
+    const migrated = migrateSessionDisplayState({ showAttentionSection: true, showPinnedSection: true }, 9);
+
+    expect(migrated.showAttentionSection).toBe(true);
+    expect(migrated.showPinnedSection).toBe(true);
+  });
+
+  test('persists at version 10', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(10);
+  });
+});
+
 describe('useSessionDisplayStore animated activity', () => {
   test('hydrates existing v8 data with motion off and retains saved choices', async () => {
     const initialState = useSessionDisplayStore.getState();

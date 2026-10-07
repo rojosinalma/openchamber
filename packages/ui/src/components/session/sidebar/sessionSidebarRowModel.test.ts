@@ -83,7 +83,7 @@ describe('buildSessionSidebarRowModel', () => {
     const other = node('other');
     const input = args([project([group([working, other])])]);
     input.workItems = [timelineItem('working')];
-    input.zoneSessionIds = new Set(['working']);
+    input.workSessionIds = new Set(['working']);
 
     const model = buildSessionSidebarRowModel(input);
     const sessionRows = model.rows.flatMap((row) => (row.kind === 'session' ? [`${row.renderContext}:${row.node.session.id}`] : []));
@@ -97,7 +97,7 @@ describe('buildSessionSidebarRowModel', () => {
   test('detailed zone rows give the Tree view the two-line row', () => {
     const input = args([project([group([node('working')])])]);
     input.workItems = [timelineItem('working')];
-    input.zoneSessionIds = new Set(['working']);
+    input.workSessionIds = new Set(['working']);
     input.detailedZoneRows = true;
 
     const rows = buildSessionSidebarRowModel(input).rows;
@@ -106,50 +106,11 @@ describe('buildSessionSidebarRowModel', () => {
     expect(zoneRow?.kind === 'session' && zoneRow.renderContext).toBe('timeline-mixed');
   });
 
-  test('Pinned opens above In work and its sessions stay in their project', () => {
-    const input = args([project([group([node('pinned'), node('working')])])]);
-    input.pinnedItems = [timelineItem('pinned')];
-    input.workItems = [timelineItem('working')];
-    input.zoneSessionIds = new Set(['pinned', 'working']);
-
-    const rows = buildSessionSidebarRowModel(input).rows;
-    const order = rows.flatMap((row) => (
-      row.kind === 'activity-header' ? [row.activityKey]
-        : row.kind === 'session' ? [`${row.renderContext}:${row.node.session.id}`]
-          : []
-    ));
-
-    expect(order).toEqual(['pinned', 'mixed-compact:pinned', 'work', 'mixed-compact:working', 'project:pinned', 'project:working']);
-  });
-
-  test('search lists a pinned session once, in Pinned', () => {
-    const pinnedNode = node('ses_pinned');
-    const main = group([pinnedNode, node('ses_other')]);
-    const input = args([project([main])]);
-    input.mode = 'search';
-    input.normalizedQuery = 'ses_pinned';
-    input.groupSearchDataByGroup.set(main, {
-      filteredNodes: [pinnedNode],
-      matchedSessionCount: countSessionSearchMatches([pinnedNode], 'ses_pinned'),
-      folderNameMatchCount: 0,
-      groupMatches: false,
-      hasMatch: true,
-    });
-    input.pinnedItems = [{ ...timelineItem('ses_pinned'), node: pinnedNode }];
-    input.zoneSessionIds = new Set(['ses_pinned']);
-
-    const model = buildSessionSidebarRowModel(input);
-
-    expect(model.searchMatchCount).toBe(1);
-    expect(model.rows.flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? ['project'] : []))).toEqual(['pinned']);
-    expect(model.rows.filter((row) => row.kind === 'session')).toHaveLength(1);
-  });
-
   test('a session in work stays in its folder', () => {
     const input = args([project([group([node('in-folder'), node('top-level')])])]);
     input.foldersMap = { '/repo': [{ id: 'outer', name: 'Outer', createdAt: 1, sessionIds: ['in-folder'] }] };
     input.workItems = [timelineItem('in-folder')];
-    input.zoneSessionIds = new Set(['in-folder']);
+    input.workSessionIds = new Set(['in-folder']);
 
     const rows = buildSessionSidebarRowModel(input).rows.filter((row) => row.kind === 'folder-header' || row.kind === 'session');
 
@@ -172,7 +133,7 @@ describe('buildSessionSidebarRowModel', () => {
       hasMatch: true,
     });
     input.workItems = [{ ...timelineItem('ses_parent'), node: parent }];
-    input.zoneSessionIds = new Set(['ses_parent']);
+    input.workSessionIds = new Set(['ses_parent']);
 
     const model = buildSessionSidebarRowModel(input);
     const rows = model.rows.flatMap((row) => (row.kind === 'session' ? [row.node.session.id] : []));
@@ -187,7 +148,7 @@ describe('buildSessionSidebarRowModel', () => {
     input.viewMode = 'timeline';
     input.timelineItems = [timelineItem('working'), timelineItem('other')];
     input.workItems = [timelineItem('working')];
-    input.zoneSessionIds = new Set(['working']);
+    input.workSessionIds = new Set(['working']);
 
     const rows = buildSessionSidebarRowModel(input).rows;
     const headers = rows.flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []));
@@ -237,7 +198,7 @@ describe('buildSessionSidebarRowModel', () => {
         { directory: '/worktree', sessionIDs: ['worker'] },
       ],
     })];
-    input.zoneSessionIds = new Set(['working']);
+    input.workSessionIds = new Set(['working']);
 
     const model = buildSessionSidebarRowModel(input);
     const rows = model.rows.filter((row) => row.kind === 'session');
@@ -261,7 +222,7 @@ describe('buildSessionSidebarRowModel', () => {
       hasMatch: true,
     });
     input.workItems = [{ ...timelineItem('ses_parent'), node: parent }];
-    input.zoneSessionIds = new Set(['ses_parent']);
+    input.workSessionIds = new Set(['ses_parent']);
 
     const model = buildSessionSidebarRowModel(input);
     const rows = model.rows.flatMap((row) => (row.kind === 'session' ? [row.node.session.id] : []));
@@ -279,7 +240,7 @@ describe('buildSessionSidebarRowModel', () => {
     input.mode = 'search';
     input.normalizedQuery = 'header';
     input.workItems = [{ ...timelineItem('ses_parent'), node: parent }];
-    input.zoneSessionIds = new Set(['ses_parent']);
+    input.workSessionIds = new Set(['ses_parent']);
 
     expect(buildSessionSidebarRowModel(input).searchMatchCount).toBe(2);
   });
@@ -289,7 +250,7 @@ describe('buildSessionSidebarRowModel', () => {
     const input = args([project([group([working, node('other')])])]);
     input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
     input.workItems = [timelineItem('working')];
-    input.zoneSessionIds = new Set(['working']);
+    input.workSessionIds = new Set(['working']);
 
     const headers = buildSessionSidebarRowModel(input).rows.flatMap((row) => (
       row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []
@@ -309,7 +270,7 @@ describe('buildSessionSidebarRowModel', () => {
     const repeated = node('same-session');
     const input = args([project([group([repeated])])]);
     input.workItems = [{ node: repeated, projectId: 'project-a', groupDirectory: '/repo', secondaryMeta: null }];
-    input.zoneSessionIds = new Set(['same-session']);
+    input.workSessionIds = new Set(['same-session']);
 
     const model = buildSessionSidebarRowModel(input);
     const entries = model.selectionEntries.filter((entry) => entry.id === 'same-session');
@@ -649,7 +610,7 @@ describe('buildSessionSidebarRowModel', () => {
         timelineItem('lane-1', { blockingBadgeSessionScopes: [{ directory: '/repo', sessionIDs: ['lane-1', 'lane-1-child'] }] }),
         timelineItem('lane-2', { blockingBadgeSessionScopes: [{ directory: '/repo', sessionIDs: ['lane-2'] }] }),
       ];
-      input.zoneSessionIds = new Set(['lane-1', 'lane-2']);
+      input.workSessionIds = new Set(['lane-1', 'lane-2']);
       input.expandedParents = new Set([runExpansionKey('mixed-compact', runKey)]);
       const rows = buildSessionSidebarRowModel(input).rows;
       const run = rows.find((row) => row.kind === 'run');
@@ -688,5 +649,90 @@ describe('buildSessionSidebarRowModel', () => {
     input.authoritativeSections = [authoritative];
 
     expect(buildSessionSidebarRowModel(input).sessionById.get('hidden')?.id).toBe('hidden');
+  });
+});
+
+describe('buildSessionSidebarRowModel attention and pinned zones', () => {
+  const headersOf = (input: SessionSidebarRowModelArgs) => buildSessionSidebarRowModel(input).rows
+    .flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : []));
+  // Session rows in document order, each tagged with the zone or project it
+  // sits under: the header above it, or 'project' once the project tree starts.
+  // Order inside the project group follows lifecycle sorting, which these
+  // fixtures do not control, so project placements are compared as a set.
+  const placementsOf = (input: SessionSidebarRowModelArgs): string[] => {
+    const placements: string[] = [];
+    let current = 'project';
+    for (const row of buildSessionSidebarRowModel(input).rows) {
+      if (row.kind === 'activity-header') current = row.activityKey;
+      else if (row.kind === 'project-header') current = 'project';
+      else if (row.kind === 'session') placements.push(`${current}:${row.node.session.id}`);
+    }
+    return placements;
+  };
+
+  test('attention sits ahead of Chats with its own header and keeps its sessions in their project group', () => {
+    const urgent = node('urgent');
+    const input = args([project([group([urgent, node('other')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.attentionItems = [timelineItem('urgent')];
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'attention', key: 'activity:attention:header' });
+    expect(headersOf(input)).toEqual(['attention', 'chats']);
+    const placements = placementsOf(input);
+    expect(placements.slice(0, 2)).toEqual(['attention:urgent', 'chats:chat']);
+    expect(placements.slice(2).sort()).toEqual(['project:other', 'project:urgent']);
+  });
+
+  test('pinned sits after attention and before Chats, and also duplicates into the project group', () => {
+    const urgent = node('urgent');
+    const pinned = node('pinned');
+    const input = args([project([group([urgent, pinned, node('other')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.attentionItems = [timelineItem('urgent')];
+    input.pinnedItems = [timelineItem('pinned')];
+
+    expect(headersOf(input)).toEqual(['attention', 'pinned', 'chats']);
+    const placements = placementsOf(input);
+    expect(placements.slice(0, 3)).toEqual(['attention:urgent', 'pinned:pinned', 'chats:chat']);
+    expect(placements.slice(3).sort()).toEqual(['project:other', 'project:pinned', 'project:urgent']);
+  });
+
+  test('empty attention and pinned lists render no header', () => {
+    const input = args([project([group([node('other')])])]);
+    input.attentionItems = [];
+    input.pinnedItems = [];
+
+    expect(headersOf(input)).toEqual([]);
+
+    const omitted = args([project([group([node('other')])])]);
+    expect(headersOf(omitted)).toEqual([]);
+  });
+
+  test('a collapsed zone keeps its header and hides its items', () => {
+    const input = args([project([group([node('urgent'), node('pinned')])])]);
+    input.attentionItems = [timelineItem('urgent')];
+    input.pinnedItems = [timelineItem('pinned')];
+    input.collapsedActivities = new Set(['attention', 'pinned']);
+
+    const model = buildSessionSidebarRowModel(input);
+    const headers = model.rows.filter((row) => row.kind === 'activity-header');
+
+    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['attention', true], ['pinned', true]]);
+    expect(placementsOf(input).sort()).toEqual(['project:pinned', 'project:urgent']);
+  });
+
+  test('a pinned session in work appears under Pinned and Work and stays in its project group', () => {
+    const both = node('both');
+    const input = args([project([group([both, node('other')])])]);
+    input.pinnedItems = [timelineItem('both')];
+    input.workItems = [timelineItem('both')];
+    input.workSessionIds = new Set(['both']);
+
+    expect(headersOf(input)).toEqual(['pinned', 'work']);
+    const placements = placementsOf(input);
+    expect(placements.slice(0, 2)).toEqual(['pinned:both', 'work:both']);
+    expect(placements.slice(2).sort()).toEqual(['project:both', 'project:other']);
   });
 });

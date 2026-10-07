@@ -8,6 +8,7 @@ import { useMergedWorktreeCleanup } from '@/hooks/useMergedWorktreeCleanup';
 import { useWindowControlsOverlayLayout } from '@/hooks/useWindowControlsOverlayLayout';
 import { setOptimisticRefs } from '@/sync/session-actions';
 import { markSessionViewed } from '@/sync/notification-store';
+import { markSessionViewedRemote } from '@/sync/session-viewed';
 import { setExternallyViewedSession } from '@/sync/sync-context';
 import { useSync } from '@/sync/use-sync';
 import { isServerOwnedMessageQueue } from '@/stores/messageQueueStore';
@@ -56,6 +57,7 @@ const MiniChatPresenceBridge: React.FC = () => {
       setExternallyViewedSession(data.directory, data.sessionId, viewed);
       if (viewed) {
         markSessionViewed(data.sessionId);
+        markSessionViewedRemote(data.sessionId, data.directory);
       }
     };
 

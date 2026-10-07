@@ -25,6 +25,7 @@ import {
 import { useFilesViewTabsStore } from '@/stores/useFilesViewTabsStore';
 import { clampContextEditorTreeWidth, normalizeContextPanelDirectoryKey, useUIStore, type PendingDiffScope } from '@/stores/useUIStore';
 import { markSessionViewed } from '@/sync/notification-store';
+import { markSessionViewedRemote } from '@/sync/session-viewed';
 import { setExternallyViewedSession } from '@/sync/sync-context';
 import { ContextPanelHeaderSlotProvider } from './contextPanelHeaderSlot';
 import { getSessionIDFromDedupeKey } from './contextPanelSessionTitles';
@@ -416,6 +417,7 @@ export const ContextSurfacePanes: React.FC = () => {
       }
 
       markSessionViewed(activeChatSessionID);
+      markSessionViewedRemote(activeChatSessionID, activeChatDirectory);
       setExternallyViewedSession(activeChatDirectory, activeChatSessionID, true);
     };
 

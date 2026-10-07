@@ -83,6 +83,7 @@ import {
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { useAllLiveSessions } from '@/sync/sync-context';
 import { useGlobalSyncStore } from '@/sync/global-sync-store';
+import { useAttentionSessionIds } from '@/hooks/useAttentionSessions';
 import { useSessionUnseenCount } from '@/sync/notification-store';
 import { useHasSessionActivityDuration } from '@/sync/session-activity-timing';
 import { SessionActivityDuration } from '@/components/session/SessionActivityDuration';
@@ -222,6 +223,8 @@ const CHAT_PAGE_SIZE = 3;
 const MOBILE_TREE_BASE_PADDING_PX = 32;
 const treeRowLeft = (depth: number): number => MOBILE_TREE_BASE_PADDING_PX + depth * 12;
 const treeTextLeft = (depth: number): number => treeRowLeft(depth) + 20;
+/** Expansion key of the optional "Needs attention" section, alongside project ids. */
+const ATTENTION_SECTION_ID = 'openchamber:attention';
 /** Expansion keys of the "Pinned" and "In work" sections, alongside project ids. */
 const PINNED_SECTION_ID = 'openchamber:pinned';
 const WORK_SECTION_ID = 'openchamber:work';
@@ -820,6 +823,8 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   const setSidebarViewMode = useSessionDisplayStore((state) => state.setSidebarViewMode);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
   const setShowWorkSection = useSessionDisplayStore((state) => state.setShowWorkSection);
+  const showAttentionSection = useSessionDisplayStore((state) => state.showAttentionSection);
+  const setShowAttentionSection = useSessionDisplayStore((state) => state.setShowAttentionSection);
   const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
   const setShowPinnedSection = useSessionDisplayStore((state) => state.setShowPinnedSection);
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
@@ -1140,6 +1145,29 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
       ? orderSessionsByLifecycleScopes(sessions.filter((session) => workSessionIds.has(session.id) && !pinnedZoneSessionIds.has(session.id)), pinnedSessionIds, sessionOrderRanks)
       : [],
   }), [pinnedSessionIds, pinnedZoneSessionIds, sessionOrderRanks, sessions, workSessionIds]);
+  // Optional cross-project section above Chats, as on the desktop sidebar.
+  // It duplicates: a session listed here keeps its place in its project.
+  // Attention shares the desktop's rule and order (useAttentionSessionIds:
+  // pending permission, then pending question, then a finished turn not viewed
+  // yet, newest first); each root brings its subsessions so a row can expand.
+  const attentionRootIds = useAttentionSessionIds();
+  const attentionBucket = React.useMemo<WorktreeBucket>(() => {
+    const bucket: WorktreeBucket = { key: ATTENTION_SECTION_ID, label: '', path: '', worktree: null, space: null, sessions: [] };
+    if (!showAttentionSection || attentionRootIds.length === 0) return bucket;
+    const sessionById = new Map(sessions.map((session) => [session.id, session]));
+    bucket.sessions = attentionRootIds.flatMap((rootId) => {
+      const root = sessionById.get(rootId);
+      if (!root) return [];
+      return [
+        root,
+        ...getDescendantIds(childrenBySessionId, rootId).flatMap((id) => {
+          const child = sessionById.get(id);
+          return child ? [child] : [];
+        }),
+      ];
+    });
+    return bucket;
+  }, [attentionRootIds, childrenBySessionId, sessions, showAttentionSection]);
   const chatsBucketKey = `${CHAT_DRAFT_PROJECT_ID}::${CHAT_DRAFT_PROJECT_ID}`;
   const chatRootCount = React.useMemo(
     () => sectionChatSessions.filter((session) => !getParentId(session)).length,
@@ -1547,6 +1575,12 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
     void updateDesktopSettings({ sidebarShowWorkSection: next });
   };
 
+  const handleToggleAttentionSection = () => {
+    const next = !showAttentionSection;
+    setShowAttentionSection(next);
+    void updateDesktopSettings({ sidebarShowAttentionSection: next });
+  };
+
   const handleTogglePinnedSection = () => {
     const next = !showPinnedSection;
     setShowPinnedSection(next);
@@ -1664,7 +1698,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   // reorder) is on screen.
   const listActive = !normalizedQuery && !editingOrder;
   const compactZoneRows = sidebarViewMode !== 'timeline' && !detailedZoneRows;
-  const needsTimelineContext = timelineActive || (listActive && (workBucket.sessions.length > 0 || pinnedBucket.sessions.length > 0));
+  const needsTimelineContext = timelineActive || (listActive && (workBucket.sessions.length > 0 || attentionBucket.sessions.length > 0 || pinnedBucket.sessions.length > 0));
 
   // The git store only knows directories something asked about. The grouped
   // project tree never needs project root branches, so the timeline-style
@@ -1739,6 +1773,12 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
     () => (listActive ? toTimelineEntries(workBucket.sessions.filter((session) => !getParentId(session))) : []),
     [listActive, toTimelineEntries, workBucket],
   );
+  // Needs attention takes the same rows with the project icon; it keeps the
+  // urgency order its ids arrive in.
+  const attentionTimelineEntries = React.useMemo(
+    () => (listActive ? toTimelineEntries(attentionBucket.sessions.filter((session) => !getParentId(session))) : []),
+    [attentionBucket, listActive, toTimelineEntries],
+  );
   const pinnedTimelineEntries = React.useMemo(
     () => (listActive ? toTimelineEntries(pinnedBucket.sessions.filter((session) => !getParentId(session))) : []),
     [listActive, toTimelineEntries, pinnedBucket],
@@ -1761,7 +1801,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
     );
   };
 
-  /** Pinned or In work: a collapsible section over its timeline rows; nothing when empty. */
+  /** Needs attention, Pinned or In work: a collapsible section over its timeline rows; nothing when empty. */
   const renderZoneSection = (
     sectionId: string,
     icon: IconName,
@@ -1871,6 +1911,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
           </>
         )}
         <DropdownMenuSeparator />
+        {renderMenuChoice('attention', 'sessions.sidebar.header.displayMode.showAttention', showAttentionSection, handleToggleAttentionSection)}
         {renderMenuChoice('pinned', 'sessions.sidebar.header.displayMode.showPinned', showPinnedSection, handleTogglePinnedSection)}
         {sessionWorkEnabled ? renderMenuChoice('work', 'sessions.sidebar.header.displayMode.showWork', showWorkSection, handleToggleWorkSection) : null}
         {/* List rows always carry two lines; Tree keeps Pinned and In work on one unless asked. */}
@@ -2082,6 +2123,8 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
             </div>
           ) : (
             <div className="flex flex-col">
+              {renderZoneSection(ATTENTION_SECTION_ID, 'notification-3', t('sessions.sidebar.attention.title'), attentionBucket, attentionTimelineEntries)}
+              {renderZoneSection(PINNED_SECTION_ID, 'pushpin', t('sessions.sidebar.activity.pinnedTitle'), pinnedBucket, pinnedTimelineEntries)}
               {(() => {
                 const chatsExpanded = projectExpandedMap[CHAT_DRAFT_PROJECT_ID] ?? true;
                 const chatsLabel = t('mobile.sessions.section.chats');
@@ -2137,7 +2180,6 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
                   </section>
                 );
               })()}
-              {renderZoneSection(PINNED_SECTION_ID, 'pushpin', t('sessions.sidebar.activity.pinnedTitle'), pinnedBucket, pinnedTimelineEntries)}
               {renderZoneSection(WORK_SECTION_ID, 'eye', t('sessions.sidebar.work.title'), workBucket, workTimelineEntries)}
               {orderedNodes.map((node) => {
                 const projectExpanded = isProjectExpanded(node);

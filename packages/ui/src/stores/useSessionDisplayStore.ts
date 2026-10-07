@@ -27,9 +27,11 @@ type SessionDisplayStore = {
   showChatsSection: boolean;
   /** The In work block; hidden, its sessions stay in their projects. */
   showWorkSection: boolean;
-  /** The Pinned block above In work; off by default. Hidden, pinned sessions stay in their projects. */
+  // Activity zones above the project groups. Both duplicate rows that are
+  // also in their project group, so both start off.
+  showAttentionSection: boolean;
   showPinnedSection: boolean;
-  /** Pinned and In work rows in the Tree view: one line by default, two with branch, PR and model when set. */
+  /** In work rows in the Tree view: one line by default, two with branch, PR and model when set. */
   detailedZoneRows: boolean;
   // VS Code only: the compact webview keeps archived buckets inline because it
   // has no room for the full Archive page. Web/desktop ignore this flag and
@@ -39,9 +41,12 @@ type SessionDisplayStore = {
   worktreeSortOrder: WorktreeSortOrder;
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
+  setShowAttentionSection: (show: boolean) => void;
   setShowPinnedSection: (show: boolean) => void;
   setDetailedZoneRows: (detailed: boolean) => void;
   setShowArchivedSessions: (show: boolean) => void;
+  toggleAttentionSection: () => void;
+  togglePinnedSection: () => void;
   toggleArchivedSessions: () => void;
   setProjectSortOrder: (order: ProjectSortOrder) => void;
   setWorktreeSortOrder: (order: WorktreeSortOrder) => void;
@@ -87,6 +92,11 @@ export const migrateSessionDisplayState = (
     // v10 removes Recent: In work holds the sessions being worked on, and the
     // timeline view answers "what was I doing" across projects.
     delete state.showRecentSection;
+    // v10 also adds the Needs attention and Pinned zones. Both are off until
+    // the user turns them on (or a server preference re-enables them on sync):
+    // they duplicate rows that already sit in the project groups.
+    if (typeof state.showAttentionSection !== 'boolean') state.showAttentionSection = false;
+    if (typeof state.showPinnedSection !== 'boolean') state.showPinnedSection = false;
   }
   return state;
 };
@@ -106,6 +116,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       setSidebarViewMode: (mode) => set({ sidebarViewMode: mode }),
       showChatsSection: true,
       showWorkSection: true,
+      showAttentionSection: false,
       showPinnedSection: false,
       detailedZoneRows: false,
       // Default to HIDDEN so the pre-hydration state matches the quiet/safe
@@ -116,9 +127,12 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       worktreeSortOrder: 'manual',
       setShowChatsSection: (show) => set({ showChatsSection: show }),
       setShowWorkSection: (show) => set({ showWorkSection: show }),
+      setShowAttentionSection: (show) => set({ showAttentionSection: show }),
       setShowPinnedSection: (show) => set({ showPinnedSection: show }),
       setDetailedZoneRows: (detailed) => set({ detailedZoneRows: detailed }),
       setShowArchivedSessions: (show) => set({ showArchivedSessions: show }),
+      toggleAttentionSection: () => set((state) => ({ showAttentionSection: !state.showAttentionSection })),
+      togglePinnedSection: () => set((state) => ({ showPinnedSection: !state.showPinnedSection })),
       toggleArchivedSessions: () => set((state) => ({ showArchivedSessions: !state.showArchivedSessions })),
       setProjectSortOrder: (order) => set({ projectSortOrder: order }),
       setWorktreeSortOrder: (order) => set({ worktreeSortOrder: order }),
@@ -134,7 +148,8 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // v6→v7 drops stickyZoneHeaders (derived from the view mode now).
       // v7→v8 turned Recent off by default.
       // v8→v9 adds worktreeSortOrder (manual by default).
-      // v9→v10 drops showRecentSection (Recent is gone).
+      // v9→v10 drops showRecentSection (Recent is gone) and adds
+      // showAttentionSection and showPinnedSection (off by default).
       migrate: migrateSessionDisplayState,
     },
   ),

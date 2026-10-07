@@ -363,7 +363,10 @@ export const createSettingsHelpers = (dependencies) => {
     if (typeof candidate.sidebarShowWorkSection === 'boolean') {
       result.sidebarShowWorkSection = candidate.sidebarShowWorkSection;
     }
-    if (candidate.sidebarShowPinnedSection === true || candidate.sidebarShowPinnedSection === false) {
+    if (typeof candidate.sidebarShowAttentionSection === 'boolean') {
+      result.sidebarShowAttentionSection = candidate.sidebarShowAttentionSection;
+    }
+    if (typeof candidate.sidebarShowPinnedSection === 'boolean') {
       result.sidebarShowPinnedSection = candidate.sidebarShowPinnedSection;
     }
     if (candidate.sidebarDetailedZoneRows === true || candidate.sidebarDetailedZoneRows === false) {

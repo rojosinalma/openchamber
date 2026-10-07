@@ -293,6 +293,10 @@
       "scope": "profile",
       "perSurface": true
     },
+    "sidebarShowAttentionSection": {
+      "scope": "profile",
+      "perSurface": true
+    },
     "sidebarShowPinnedSection": {
       "scope": "profile",
       "perSurface": true
