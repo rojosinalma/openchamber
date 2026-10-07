@@ -661,6 +661,7 @@ export const dict = {
   'sessions.sidebar.session.menu.pin': 'הצמד הפעלה',
   'sessions.sidebar.work.title': 'בעבודה',
   'sessions.sidebar.attention.title': 'דורש תשומת לב',
+  'sessions.sidebar.projects.title': 'פרויקטים',
   'sessions.sidebar.session.work.track': 'עקוב כבעבודה',
   'sessions.sidebar.session.work.markDone': 'סמן כהושלם',
   'sessions.sidebar.session.work.doneSuggested': 'נראה שהושלם',

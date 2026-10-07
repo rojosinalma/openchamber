@@ -71,7 +71,9 @@ describe('SessionSidebarRows section spacing', () => {
 
   test('a row that ends a section is estimated as its siblings plus its gap', () => {
     const rows = buildSessionSidebarRowModel(input(true)).rows;
-    const lastBeforeProjects = rows.findIndex((row) => row.kind === 'project-header') - 1;
+    // The Projects zone header starts the project block, so the zone block
+    // ends on the row before it.
+    const lastBeforeProjects = rows.findIndex((row) => row.key === 'activity:projects:header') - 1;
     const last = rows[lastBeforeProjects];
     expect(last.kind).toBe('session');
     expect(estimateSessionSidebarRowSize(last, rows[lastBeforeProjects + 1])).toBe(last.estimateSize + 8);

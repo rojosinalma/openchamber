@@ -688,6 +688,7 @@ export const dict: Record<I18nKey, string> = {
   "sessions.sidebar.session.menu.pin": "Прикріпити сесію",
   "sessions.sidebar.work.title": "В роботі",
   "sessions.sidebar.attention.title": "Потребує уваги",
+  "sessions.sidebar.projects.title": "Проєкти",
   "sessions.sidebar.session.work.track": "Відстежувати як у роботі",
   "sessions.sidebar.session.work.markDone": "Позначити готовим",
   "sessions.sidebar.session.work.doneSuggested": "Схоже, готово",

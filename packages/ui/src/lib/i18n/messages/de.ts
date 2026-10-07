@@ -608,6 +608,7 @@ export const dict = {
   'sessions.sidebar.session.menu.pin': 'Sitzung anheften',
   'sessions.sidebar.work.title': 'In Arbeit',
   'sessions.sidebar.attention.title': 'Braucht Aufmerksamkeit',
+  'sessions.sidebar.projects.title': 'Projekte',
   'sessions.sidebar.session.work.track': 'Als in Arbeit verfolgen',
   'sessions.sidebar.session.work.markDone': 'Als erledigt markieren',
   'sessions.sidebar.session.work.doneSuggested': 'Sieht erledigt aus',

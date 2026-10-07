@@ -687,6 +687,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.session.menu.pin': '세션 고정',
   'sessions.sidebar.work.title': '작업 중',
   'sessions.sidebar.attention.title': '확인 필요',
+  'sessions.sidebar.projects.title': '프로젝트',
   'sessions.sidebar.session.work.track': '작업 중으로 추적',
   'sessions.sidebar.session.work.markDone': '완료로 표시',
   'sessions.sidebar.session.work.doneSuggested': '완료된 것 같습니다',

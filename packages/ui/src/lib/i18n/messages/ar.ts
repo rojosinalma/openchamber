@@ -661,6 +661,7 @@ export const dict = {
   'sessions.sidebar.session.menu.pin': 'تثبيت الجلسة',
   'sessions.sidebar.work.title': 'قيد العمل',
   'sessions.sidebar.attention.title': 'يحتاج إلى اهتمام',
+  'sessions.sidebar.projects.title': 'المشاريع',
   'sessions.sidebar.session.work.track': 'تتبّع كعمل جارٍ',
   'sessions.sidebar.session.work.markDone': 'تعليم كمنجزة',
   'sessions.sidebar.session.work.doneSuggested': 'تبدو منجزة',

@@ -510,6 +510,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.session.menu.pin': 'Przypnij sesję',
   'sessions.sidebar.work.title': 'W toku',
   'sessions.sidebar.attention.title': 'Wymaga uwagi',
+  'sessions.sidebar.projects.title': 'Projekty',
   'sessions.sidebar.session.work.track': 'Śledź jako w toku',
   'sessions.sidebar.session.work.markDone': 'Oznacz jako gotowe',
   'sessions.sidebar.session.work.doneSuggested': 'Wygląda na gotowe',

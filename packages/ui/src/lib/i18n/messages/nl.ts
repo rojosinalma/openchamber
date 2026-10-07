@@ -678,6 +678,7 @@ export const dict = {
   'sessions.sidebar.session.menu.pin': 'Sessie vastzetten',
   'sessions.sidebar.work.title': 'In bewerking',
   'sessions.sidebar.attention.title': 'Vraagt aandacht',
+  'sessions.sidebar.projects.title': 'Projecten',
   'sessions.sidebar.session.work.track': 'Markeren als in bewerking',
   'sessions.sidebar.session.work.markDone': 'Markeer als afgerond',
   'sessions.sidebar.session.work.doneSuggested': 'Lijkt afgerond',

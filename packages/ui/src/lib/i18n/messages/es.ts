@@ -688,6 +688,7 @@ export const dict: Record<I18nKey, string> = {
   "sessions.sidebar.session.menu.pin": "Anclar sesión",
   "sessions.sidebar.work.title": "En curso",
   "sessions.sidebar.attention.title": "Requiere atención",
+  "sessions.sidebar.projects.title": "Proyectos",
   "sessions.sidebar.session.work.track": "Seguir como en curso",
   "sessions.sidebar.session.work.markDone": "Marcar como hecho",
   "sessions.sidebar.session.work.doneSuggested": "Parece terminado",

@@ -22,7 +22,9 @@ export type SessionSidebarActivityItem = {
   searchMatchCount?: number;
 };
 
-export type SessionSidebarActivityKey = 'attention' | 'pinned' | 'work' | 'chats';
+// 'projects' is the zone header over the project sections, in both views;
+// collapsing it hides every project at once. It has no items of its own.
+export type SessionSidebarActivityKey = 'attention' | 'pinned' | 'work' | 'chats' | 'projects';
 
 /** Activity sections; the display menu's Collapse all / Expand all drive them with the projects. */
 export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['attention', 'chats', 'pinned', 'work'];
@@ -783,6 +785,12 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
   appendZone('pinned', args.pinnedItems ?? []);
   appendZone('work', args.workItems ?? []);
 
+  // One zone header over the project list, in both views, so the projects
+  // collapse together like Chats or In work do. The single-project and
+  // main-workspace-only views are nothing but that list, so there the header
+  // would only add a row.
+  const projectsZone = !args.singleProjectMode && !args.showOnlyMainWorkspace;
+
   if (timelineMode) {
     // One header per project, in the user's manual order, over its root
     // sessions from every worktree in lifecycle order.
@@ -793,10 +801,13 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       if (list) list.push(item);
       else itemsByProject.set(item.projectId, [item]);
     }
-    for (const section of args.sections) {
+    const listedSections = search
+      ? args.sections.filter((section) => (itemsByProject.get(section.project.id) ?? []).length > 0)
+      : args.sections;
+    const projectsCollapsed = projectsZone && listedSections.length > 0 && appendActivityHeader('projects');
+    for (const section of projectsCollapsed ? [] : listedSections) {
       const projectId = section.project.id;
       const items = itemsByProject.get(projectId) ?? [];
-      if (search && items.length === 0) continue;
       const collapsed = !search && args.collapsedProjects.has(projectId);
       const rowIndex = rows.length;
       push({ kind: 'project-header', key: `project:${projectId}:header`, estimateSize: HEADER_ESTIMATE, section, collapsed, forceExpanded: search });
@@ -839,18 +850,24 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     const active = projectSections.find((section) => section.project.id === args.activeProjectId) ?? projectSections[0];
     projectSections = active ? [active] : [];
   }
-  for (const section of projectSections) {
+  const renderedSections = projectSections.flatMap((section) => {
     const descriptors = buildGroupRenderDescriptors(section, { mainWorkspaceOnly: args.showOnlyMainWorkspace });
     // A project whose only matches moved to a zone shows no empty header.
-    if (search && !descriptors.some((descriptor) => groupSearchMatches(descriptor.group) > 0)) continue;
-    const projectCollapsed = !search && !args.singleProjectMode && !args.showOnlyMainWorkspace && args.collapsedProjects.has(section.project.id);
-    if (!args.showOnlyMainWorkspace) {
-      const rowIndex = rows.length;
-      push({ kind: 'project-header', key: `project:${section.project.id}:header`, estimateSize: HEADER_ESTIMATE, section, collapsed: projectCollapsed, forceExpanded: search });
-      stickyHeaders.push(Object.freeze({ rowIndex, kind: 'project', id: section.project.id }));
+    if (search && !descriptors.some((descriptor) => groupSearchMatches(descriptor.group) > 0)) return [];
+    return [{ section, descriptors }];
+  });
+  const projectsCollapsed = projectsZone && renderedSections.length > 0 && appendActivityHeader('projects');
+  if (!projectsCollapsed) {
+    for (const { section, descriptors } of renderedSections) {
+      const projectCollapsed = !search && !args.singleProjectMode && !args.showOnlyMainWorkspace && args.collapsedProjects.has(section.project.id);
+      if (!args.showOnlyMainWorkspace) {
+        const rowIndex = rows.length;
+        push({ kind: 'project-header', key: `project:${section.project.id}:header`, estimateSize: HEADER_ESTIMATE, section, collapsed: projectCollapsed, forceExpanded: search });
+        stickyHeaders.push(Object.freeze({ rowIndex, kind: 'project', id: section.project.id }));
+      }
+      if (projectCollapsed) continue;
+      for (const descriptor of descriptors) appendGroup(descriptor.group, descriptor.groupKey, descriptor.projectId, descriptor.hideGroupLabel);
     }
-    if (projectCollapsed) continue;
-    for (const descriptor of descriptors) appendGroup(descriptor.group, descriptor.groupKey, descriptor.projectId, descriptor.hideGroupLabel);
   }
 
   if (rows.length === 0) {
