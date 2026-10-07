@@ -22,17 +22,17 @@ export type SessionSidebarActivityItem = {
   searchMatchCount?: number;
 };
 
-export type SessionSidebarActivityKey = 'pinned' | 'work' | 'chats';
+export type SessionSidebarActivityKey = 'attention' | 'pinned' | 'work' | 'chats';
 
 /** Activity sections; the display menu's Collapse all / Expand all drive them with the projects. */
-export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['chats', 'pinned', 'work'];
+export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['attention', 'chats', 'pinned', 'work'];
 
 // 'project' is a one-line file tree row of the grouped view. Timeline rows
 // have no left gutter and carry their status on the right: 'timeline' is a
 // two-line row under its project header; 'timeline-mixed' is the same row in
-// Pinned and In work, where sessions of every project mix, so its second line
-// opens with the project's icon; 'mixed-compact' is that row on one line, the
-// Tree view's default for Pinned and In work; 'timeline-chat' is a one-line
+// Needs attention, Pinned and In work, where sessions of every project mix,
+// so its second line opens with the project's icon; 'mixed-compact' is that
+// row on one line, the Tree view's default for those zones; 'timeline-chat' is a one-line
 // Chats row in List, 'tree-chat' the same row in Tree.
 export type SessionSidebarRenderContext = 'project' | 'timeline' | 'timeline-mixed' | 'mixed-compact' | 'timeline-chat' | 'tree-chat';
 
@@ -127,6 +127,14 @@ export type SessionSidebarRowModelArgs = {
   /** Every non-archived root project session with its project, in lifecycle order. */
   timelineItems?: readonly SessionSidebarActivityItem[];
   /**
+   * Sessions that need the user (a pending permission or form, or a finished
+   * turn not viewed yet), most urgent first and search-filtered. They render
+   * in their own zone at the very top as duplicates: each session keeps its
+   * place in its project group and every other projection, and search counts
+   * it there, not here.
+   */
+  attentionItems?: readonly SessionSidebarActivityItem[];
+  /**
    * Pinned sessions and sessions in work, already ordered and
    * search-filtered. Each zone renders as its own block at the top, and its
    * sessions stay under their project too. Search lists each of them once,
@@ -136,7 +144,7 @@ export type SessionSidebarRowModelArgs = {
   workItems?: readonly SessionSidebarActivityItem[];
   /** Every session listed in the Pinned or In work zone. */
   zoneSessionIds?: ReadonlySet<string>;
-  /** Pinned and In work rows in the Tree view: two lines when set, one otherwise. */
+  /** Needs attention, Pinned and In work rows in the Tree view: two lines when set, one otherwise. */
   detailedZoneRows?: boolean;
   foldersMap: SessionFoldersMap;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
@@ -716,6 +724,20 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     }
   };
 
+  // Pinned, Needs attention and In work list sessions of every project
+  // together: two-line rows with the project's icon in List, one-line rows in
+  // Tree unless the user asked for detailed rows.
+  const zoneRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
+
+  // Needs attention first, above everything. A duplicate zone: its sessions
+  // stay where they are elsewhere, so it never touches `inZone`, and its rows
+  // add nothing to the match count: the project group already counts them.
+  const attentionItems = args.attentionItems ?? [];
+  if (attentionItems.length > 0) {
+    const collapsed = appendActivityHeader('attention');
+    if (!collapsed) appendActivityItems(attentionItems, 'activity:attention', zoneRenderContext, () => 0);
+  }
+
   if (args.chatGroup) {
     if (!search || groupSearchMatches(args.chatGroup) > 0) {
       const collapsed = appendActivityHeader('chats');
@@ -729,11 +751,6 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       }
     }
   }
-
-  // Pinned and In work list sessions of every project together: two-line
-  // rows with the project's icon in List, one-line rows in Tree unless the
-  // user asked for detailed rows.
-  const zoneRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
 
   /**
    * A list that reveals `initial` entries, then `increment` more per Show

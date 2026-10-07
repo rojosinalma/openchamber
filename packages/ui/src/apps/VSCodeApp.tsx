@@ -23,6 +23,7 @@ import { useDirectoryStore } from '@/stores/useDirectoryStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { onHostSurfaceSeen } from '@/lib/surfaceAttention';
 import { markSessionViewed } from '@/sync/notification-store';
+import { markSessionViewedRemote } from '@/sync/session-viewed';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { SyncProvider } from '@/sync/sync-context';
 import { SyncAppEffects } from './AppEffects';
@@ -56,8 +57,11 @@ export function VSCodeApp({ apis }: VSCodeAppProps) {
   // webview again, the selected session counts as seen. VS Code learns that from
   // the extension host, not from a DOM focus event.
   React.useEffect(() => onHostSurfaceSeen(() => {
-    const sessionId = useSessionUIStore.getState().currentSessionId;
-    if (sessionId) markSessionViewed(sessionId);
+    const { currentSessionId: sessionId, currentSessionDirectory } = useSessionUIStore.getState();
+    if (sessionId) {
+      markSessionViewed(sessionId);
+      markSessionViewedRemote(sessionId, currentSessionDirectory);
+    }
   }), []);
 
   React.useEffect(() => {

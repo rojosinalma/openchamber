@@ -158,6 +158,8 @@ export function SidebarHeader(props: Props): React.ReactNode {
   const setShowChatsSection = useSessionDisplayStore((state) => state.setShowChatsSection);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
   const setShowWorkSection = useSessionDisplayStore((state) => state.setShowWorkSection);
+  const showAttentionSection = useSessionDisplayStore((state) => state.showAttentionSection);
+  const toggleAttentionSection = useSessionDisplayStore((state) => state.toggleAttentionSection);
   const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
   const setShowPinnedSection = useSessionDisplayStore((state) => state.setShowPinnedSection);
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
@@ -276,6 +278,11 @@ export function SidebarHeader(props: Props): React.ReactNode {
       {toggleItem('sessions.sidebar.header.displayMode.showChats', showChatsSection, () => {
         setShowChatsSection(!showChatsSection);
         void updateDesktopSettings({ sidebarShowChatsSection: !showChatsSection });
+      })}
+      {/* Needs attention duplicates rows that also sit in their project group, so it starts off. */}
+      {toggleItem('sessions.sidebar.header.displayMode.showAttention', showAttentionSection, () => {
+        toggleAttentionSection();
+        void updateDesktopSettings({ sidebarShowAttentionSection: !showAttentionSection });
       })}
       {toggleItem('sessions.sidebar.header.displayMode.showPinned', showPinnedSection, () => {
         setShowPinnedSection(!showPinnedSection);

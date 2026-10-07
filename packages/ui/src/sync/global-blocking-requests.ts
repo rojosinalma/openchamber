@@ -20,7 +20,7 @@ import type { FormRequest, PermissionRequest } from '@/lib/opencode/model';
 export type BlockingPermissionRequest = Pick<PermissionRequest, 'id' | 'sessionID' | 'action' | 'resources' | 'save'>;
 export type BlockingFormRequest = Pick<FormRequest, 'id' | 'sessionID' | 'title'>;
 
-type PendingBlockingRequests = {
+export type PendingBlockingRequests = {
   directory: string;
   permissions: readonly BlockingPermissionRequest[];
   forms: readonly BlockingFormRequest[];

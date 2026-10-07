@@ -99,6 +99,37 @@ describe('useSessionDisplayStore view mode', () => {
 });
 
 
+describe('useSessionDisplayStore attention zone', () => {
+  test('the zone defaults to off', () => {
+    expect(useSessionDisplayStore.getState().showAttentionSection).toBe(false);
+  });
+
+  test('v9→v10 fills the new flag with false, drops Recent and keeps the rest', () => {
+    const migrated = migrateSessionDisplayState({ showRecentSection: true, projectSortOrder: 'a-z' }, 9);
+
+    expect(migrated.showAttentionSection).toBe(false);
+    expect((migrated as { showRecentSection?: boolean }).showRecentSection).toBeUndefined();
+    expect(migrated.projectSortOrder).toBe('a-z');
+  });
+
+  test('v9→v10 keeps a flag already stored as a boolean', () => {
+    const migrated = migrateSessionDisplayState({ showAttentionSection: true }, 9);
+
+    expect(migrated.showAttentionSection).toBe(true);
+  });
+
+  test('toggleAttentionSection flips the flag', () => {
+    const before = useSessionDisplayStore.getState().showAttentionSection;
+    useSessionDisplayStore.getState().toggleAttentionSection();
+    expect(useSessionDisplayStore.getState().showAttentionSection).toBe(!before);
+    useSessionDisplayStore.getState().setShowAttentionSection(before);
+  });
+
+  test('persists at version 10', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(10);
+  });
+});
+
 describe('useSessionDisplayStore animated activity', () => {
   test('hydrates existing v8 data with motion off and retains saved choices', async () => {
     const initialState = useSessionDisplayStore.getState();

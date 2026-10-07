@@ -1022,6 +1022,15 @@ class OpencodeService {
   }
 
   /**
+   * Records that the user has looked at the session up to the turn that
+   * ended at `idle` (the record's `time.idle`). OpenCode stamps
+   * `time.viewed` and echoes `session.viewed` to every client.
+   */
+  async viewSession(id: string, idle: number, directory?: string | null): Promise<void> {
+    await call("session.view", () => this.clientFor(directory).session.view({ sessionID: id, idle }))
+  }
+
+  /**
    * One page of a session's messages, newest first by default. `cursor` comes
    * from a previous page; the server rejects combining it with `order`.
    *

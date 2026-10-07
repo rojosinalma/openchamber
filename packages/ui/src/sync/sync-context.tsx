@@ -87,6 +87,7 @@ import { isDirectoryOfKnownSpace, isSpaceDirectoryStopped, isSpaceStopped, known
 import { cleanupPersistedSessionState } from "./session-deletion-cleanup"
 import { toast } from "@/components/ui"
 import { appendNotification } from "./notification-store"
+import { markSessionViewedRemote } from "./session-viewed"
 import { recordSessionError, responseBodyOf, summarizeOpenCodeError } from "./session-error-log"
 import {
   applyGlobalSessionStatusEvent,
@@ -1824,15 +1825,22 @@ const recordTurnOutcomeNotification = (
     recordSessionError({ sessionId: sessionID, directory, ...errorSummary })
   }
   if (isSubtaskSession(sessionID, directory, childStores, batch)) return
+  const viewed = isViewedInCurrentSession(directory, sessionID)
   appendNotification({
     directory,
     session: sessionID,
     time: Date.now(),
-    viewed: isViewedInCurrentSession(directory, sessionID),
+    viewed,
     ...(errorSummary
       ? { type: "error" as const, error: { ...errorSummary, responseBody } }
       : { type: "turn-complete" as const }),
   })
+  // The user watched this turn end, so the server-side acknowledgement goes
+  // out too; otherwise the record's new `time.idle` would outrank its
+  // `time.viewed` and the persistent unseen marker would light up for a
+  // session the user is looking at. Deferred past the current flush: the
+  // `time.idle` patch travels in the same batch and is published after it.
+  if (viewed) queueMicrotask(() => markSessionViewedRemote(sessionID, directory))
 }
 
 export function handleEvent(

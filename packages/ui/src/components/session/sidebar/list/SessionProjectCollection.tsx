@@ -63,6 +63,7 @@ import { useSidebarSpaces, type SpaceMark } from '@/lib/spaces/spaces-store';
 import { useUIStore } from '@/stores/useUIStore';
 import { isSessionInWork } from '@/lib/sessionWorkMetadata';
 import { isSessionPinned } from '@/stores/useSessionPinnedStore';
+import { useAttentionSessions } from '@/hooks/useAttentionSessions';
 import { buildMultiRunIndex } from '@/lib/multirun/runs';
 import { selectBlockingBadgeSessionScopes } from '../sessions/sessionNodeItemUtils';
 
@@ -79,6 +80,7 @@ const EMPTY_TIMELINE_ITEMS: ReturnType<typeof deriveTimelineActivityItems> = [];
 /** Top-level sessions listed in the Pinned and In work zones. */
 type ZoneSessions = { pinned: readonly Session[]; work: readonly Session[] };
 const EMPTY_ZONE_SESSIONS: ZoneSessions = { pinned: [], work: [] };
+const EMPTY_ATTENTION_SESSIONS: readonly Session[] = [];
 
 const isRootSession = (session: Session): boolean => {
   // SAFETY: OpenCode attaches parentID to hierarchical session records,
@@ -509,9 +511,25 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
   }, [collection.childrenMap, ownership.bySessionId, spaceLabelById, topology.availableWorktreesByProject, topology.gitBranches, topology.projectRootBranches, topology.projects, view.hasSessionSearchQuery, view.homeDirectory, view.normalizedSessionSearchQuery]);
   const pinnedItems = React.useMemo(() => buildZoneItems(zoneSessions.pinned), [buildZoneItems, zoneSessions.pinned]);
   const workItems = React.useMemo(() => buildZoneItems(zoneSessions.work), [buildZoneItems, zoneSessions.work]);
+  // Needs attention: root project sessions that need the user (pending
+  // permission or form, or a finished turn not viewed yet), most urgent first.
+  // A duplicate zone: the session keeps its place in its project group and in
+  // Pinned or In work, so it stays out of `zoneSessionIds`.
+  const showAttentionSection = useSessionDisplayStore((state) => state.showAttentionSection);
+  const attentionEntries = useAttentionSessions();
+  const attentionSessions = React.useMemo(() => {
+    if (!showAttentionSection || attentionEntries.length === 0) return EMPTY_ATTENTION_SESSIONS;
+    const byId = new Map(collection.orderedSessions.map((session) => [session.id, session]));
+    const sessions = attentionEntries.flatMap((entry) => {
+      const session = byId.get(entry.sessionId);
+      return session && !session.parentID && !session.time?.archived && !isChatDirectoryPath(session.directory) ? [session] : [];
+    });
+    return sessions.length > 0 ? sessions : EMPTY_ATTENTION_SESSIONS;
+  }, [attentionEntries, collection.orderedSessions, showAttentionSection]);
+  const attentionItems = React.useMemo(() => buildZoneItems(attentionSessions), [attentionSessions, buildZoneItems]);
   // Worktree branches whose PR badge is on screen in the current mode:
-  // Timeline rows there; expanded project groups in the Projects view; In
-  // work rows in both. Collapse state from the Projects
+  // Timeline rows there; expanded project groups in the Projects view;
+  // Attention, Pinned and In work rows in both. Collapse state from the Projects
   // view must not decide what a Timeline badge shows.
   const shownPrs = React.useMemo(() => {
     const targets = new Map<string, { directory: string; branch: string }>();
@@ -547,6 +565,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
       }
       node.children.forEach(addNode);
     };
+    attentionItems.forEach((item) => addNode(item.node));
     pinnedItems.forEach((item) => addNode(item.node));
     workItems.forEach((item) => addNode(item.node));
     if (timelineMode) {
@@ -568,7 +587,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
       });
     });
     return { targets, linkedRefs: [...linkedRefs.values()], linkedIssueRefs: [...linkedIssueRefs.values()], linearIdentifiers: [...linearIdentifiers], gitlabRefs: [...gitlabRefs.values()] };
-  }, [pinnedItems, projectSections, projectView.collapsedProjects, timelineItems, timelineMode, topology.gitBranches, topology.isVSCode, workItems]);
+  }, [attentionItems, pinnedItems, projectSections, projectView.collapsedProjects, timelineItems, timelineMode, topology.gitBranches, topology.isVSCode, workItems]);
   const shownPrTargets = shownPrs.targets;
   // The discovery effect below subscribes to bindings and reads them; keep its
   // input stable while the shown branches are the same, so ordinary sidebar
@@ -879,6 +898,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     // Hidden only from the list: folders and search keep the group.
     chatGroup: showChatsSection ? chatGroup : null,
     timelineItems,
+    attentionItems,
     pinnedItems,
     workItems,
     zoneSessionIds,
@@ -903,7 +923,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     hideDirectoryControls: view.hideDirectoryControls,
     sessionBatchSize: singleProjectMode && !view.useGroupedSections ? 20 : undefined,
     runIndex,
-  }), [runIndex, chatGroup, showChatsSection, projectView.collapsedActivities, timelineItems, timelineMode, pinnedItems, workItems, zoneSessionIds, detailedZoneRows, collapsedFolderIds, collection.pinnedSessionIds, expandedParents, folderAuthorityByOwner, foldersMap, groupSearchDataByGroup, groupStatusByKey, orderedSectionsForRender, projectSections, projectView.collapsedGroups, projectView.collapsedProjects, selectedSingleProjectId, sessionOrderIndex, singleProjectMode, view.activeProjectId, view.hasSessionSearchQuery, view.hideDirectoryControls, view.normalizedSessionSearchQuery, view.showOnlyMainWorkspace, view.useGroupedSections, visibleCountByContainer]);
+  }), [runIndex, chatGroup, showChatsSection, projectView.collapsedActivities, timelineItems, timelineMode, attentionItems, pinnedItems, workItems, zoneSessionIds, detailedZoneRows, collapsedFolderIds, collection.pinnedSessionIds, expandedParents, folderAuthorityByOwner, foldersMap, groupSearchDataByGroup, groupStatusByKey, orderedSectionsForRender, projectSections, projectView.collapsedGroups, projectView.collapsedProjects, selectedSingleProjectId, sessionOrderIndex, singleProjectMode, view.activeProjectId, view.hasSessionSearchQuery, view.hideDirectoryControls, view.normalizedSessionSearchQuery, view.showOnlyMainWorkspace, view.useGroupedSections, visibleCountByContainer]);
   React.useEffect(() => {
     onSearchMatchCountChange(sidebarRowModel.searchMatchCount);
   }, [onSearchMatchCountChange, sidebarRowModel.searchMatchCount]);

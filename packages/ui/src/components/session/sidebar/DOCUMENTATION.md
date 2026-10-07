@@ -86,7 +86,8 @@ In work, and Timeline use this same ownership resolver; rows keep the session's
 own directory while taking display ownership (project id, labels) from the
 index.
 
-Web and desktop show managed Chats, then In work, then the projects. There is
+Web and desktop show the optional Needs attention zone (see below), then
+managed Chats, then the optional Pinned zone, then In work, then the projects. There is
 no Recent zone any more (removed 2026-10): In work holds the sessions being
 worked on, and the timeline view answers "what was I doing". Chats use
 their shared managed root for folders and never expose worktree actions. Project
@@ -109,7 +110,7 @@ manual project order with reordering, one header per project over its root
 sessions from every worktree and space, 7 at a time with Show more / Show
 fewer (collapsing a project resets it), two-line rows with a fixed-height
 second line, and the project's icon on that line in In work. The
-phone's Tree view follows the desktop tree: Pinned and In work use one-line
+phone's Tree view follows the desktop tree: Needs attention, Pinned and In work use one-line
 rows unless Detailed rows is on, Chats one-line rows without a gutter, and project sessions are
 tree rows (12px per level, subsession chevron on the left with a
 thumb-sized target, live state on the right) under worktree headers drawn as
@@ -119,8 +120,8 @@ separates projects, as zones and projects are sections of equal weight. Its tree
 (`MOBILE_TREE_BASE_PADDING_PX`), so root session titles start where the
 project label does next to the project icon's 32px slot (no tile: a bare
 20px glyph, or a 24px image with rounded corners; zone icons likewise); the phone has no session
-folders. Its display menu offers the Pinned and In work toggles and, in Tree,
-Detailed rows; pinned sessions and sessions in work stay under their project
+folders. Its display menu offers the Needs attention, Pinned and In work toggles and, in Tree,
+Detailed rows; sessions listed in those zones stay under their project
 in both views. VS Code excludes
 worktrees and managed
 Chats, while retaining its workspace-scoped grouped list and inline archived
@@ -223,7 +224,8 @@ branch. In Tree they use `'mixed-compact'` by default: one line like a Chats
 row, the PR or issue as a coloured mark without its number (its tooltip lists
 the links), the branch, project and model in the whole-row tooltip. The display
 menu's Detailed rows toggle (`detailedZoneRows`, `sidebarDetailedZoneRows`, per
-surface, off by default, offered in Tree only) gives Tree the two-line rows.
+surface, off by default, offered in Tree only) gives Tree the two-line rows;
+the Needs attention zone follows the same rule.
 Both never expand, with subsessions feeding the badges; a run row there opens
 its overview. Search
 keeps a root whose subsession matches (`sessionTreeMatchesSidebarQuery`): those
@@ -285,6 +287,70 @@ Tree, Detailed rows, and its Pinned and In work sections render
 shows no section toggles, so it has no Pinned zone and its In work rows stay on
 one line.
 
+## Needs attention
+
+An optional `attention` zone ("Needs attention") sits above everything else:
+before Chats, Pinned, In work and the projects (as a tree or as the List
+view's project lists). It is a DUPLICATE zone: a session listed there keeps
+its row in its project group, folder, the List view and in Pinned or In work,
+so `zoneSessionIds` never carries it and its rows add nothing to the search
+match count (the project group already counts the session). An empty zone
+renders no header. Rows use the same `renderContext` as Pinned and In work
+(two lines with the project's icon in List or with Detailed rows, one line in
+Tree; never expanded, subsessions feeding the badges); collapse and spacing
+come for free from the `activity:` key prefix, and the display menu's Collapse
+all / Expand all drive it with the other zones (`SIDEBAR_ACTIVITY_KEYS`). The
+row model takes `attentionItems` (`SessionSidebarRowModelArgs`); the header
+icon and title live in `sessionSidebarHeaderPresentation.tsx`
+(`notification-3` / `sessions.sidebar.attention.title`). The zone is gated by
+its own display-store flag (`showAttentionSection` in
+`stores/useSessionDisplayStore.ts`, `sidebarShowAttentionSection` per surface,
+off by default; the display menu's Show needs attention section).
+
+Needs attention lists root project sessions that need the user right now,
+most urgent first: a pending permission, then a pending form, then a finished
+turn the user has not looked at yet. `hooks/useAttentionSessions.ts` derives
+the ordered list from the cross-directory request index
+(`sync/global-blocking-requests.ts`; a request under a subagent surfaces its
+root, resolved through the global sessions store) and from the global sessions
+list, where `lib/sessionAttention.ts` `isSessionUnseen(session, now)` reads
+OpenCode's own stamps: a root, unarchived session whose `time.idle` is newer
+than `time.viewed` (never viewed = 0) and inside the 48 h
+`SESSION_ATTENTION_WINDOW_MS`. A session whose
+turn is still open (running, a subagent below it running, or a background
+command, see `useSessionTurnActivity`) is not unseen; it reappears once the
+turn ends. Within a kind the newest need comes first (`time.idle` for unseen,
+the record's recency for requests, which carry no request time). The hook
+returns the same array while membership and order are unchanged.
+`list/SessionProjectCollection.tsx` turns the ids into items the way Pinned
+and In work do (`buildZoneItems`: same location resolver, flat rows with badge
+scopes, search keeps a root whose subsession matches). The mobile sessions
+sheet lists the zone above Chats with the Pinned and In work sections' header
+and rows (`renderZoneSection`; one line in Tree unless Detailed rows is on),
+and its display menu offers Show needs attention section. The selected
+session stays listed: selecting
+a row records the view in the same tick, so `sync/attention-sticky.ts` keeps
+the session that was unseen at selection time, with the `time.idle` it owed a
+look at (captured in `setCurrentSession` before `markSessionViewedRemote`,
+from the record about to be patched, never from a previous render), and the
+hook lists it as the active row while it is still the current, unarchived
+root with that same `idle`. Selecting a different session or a draft, turning
+the zone off, a runtime switch, or a newer turn in the session releases it;
+coming back does not re-add it unless it qualifies again. Pending permissions
+and forms never need this: they stay until answered.
+
+The sidebar's green unread check (`SessionNodeItem.tsx`) derives from the same
+signal: `isSessionUnseen(session) || unseenCount > 0`. The in-memory
+notification (`sync/notification-store.ts`) is the fast path for the seconds
+before the record's `time.idle` lands and the only one that survives when the
+app was unfocused at turn end; the record's stamps are the one that survives
+reloads and other clients. Every place that marks a session viewed locally
+also calls `sync/session-viewed.ts` `markSessionViewedRemote`, which writes
+`time.viewed` through `session.view` (see `sync/DOCUMENTATION.md`), so the
+two signals cannot disagree for long. `notifyOnSubtasks` keeps working:
+`isSessionUnseen` is false for subsessions, so a subtask row lights only
+through the in-memory count, as before.
+
 ## Timeline view
 
 `sidebarViewMode` (profile-scoped, per surface) switches the desktop and web
@@ -311,14 +377,14 @@ all / Expand all.
 - Zone collapse state lives in `useSessionProjectViewState` next to project
   collapse and is saved in local storage (`oc.sessions.activityCollapse`), so
   it survives a restart like project and group collapse. The display menu's Collapse all /
-  Expand all set every project and the zones (`SIDEBAR_ACTIVITY_KEYS`: Chats,
-  Pinned, In work) together, in both views. Session folders keep their own
+  Expand all set every project and the zones (`SIDEBAR_ACTIVITY_KEYS`: Needs
+  attention, Pinned, Chats, In work) together, in both views. Session folders keep their own
   collapse state.
 - Zone and project headers are sticky in both views; there is no user toggle.
   Both views draw the same zone headers, with the leading icon that turns
   into the collapse chevron on hover and the Chats new-chat button; project
   headers are shared too, with the same hover actions and menu.
-- Below Chats, Pinned and In work it renders one project
+- Below Needs attention, Pinned, Chats and In work it renders one project
   header per project followed by that project's non-archived root sessions
   from every worktree and space, in the shared lifecycle order with pinned
   sessions first. Projects keep the manual order whatever the stored project
@@ -334,7 +400,7 @@ all / Expand all.
   the Tree's failure line under it. The phone's timeline shows the space's bucket header the same
   way, through the header the phone tree uses.
 - Timeline rows carry `renderContext: 'timeline'` (under a project) or
-  `'timeline-mixed'` (Pinned and In work), depth 0 and empty children. They
+  `'timeline-mixed'` (Needs attention, Pinned and In work), depth 0 and empty children. They
   never expand, show no chevron, no folders and no worktree groups. Folders are
   not projected, so the row menu hides `Move to folder`. Their archive/delete
   actions still cover the full subtree, because `collectSessionSubtreeIds`

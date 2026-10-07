@@ -63,6 +63,7 @@ import { refTintStyle } from '@/lib/source-control/prVisualState';
 import { getLinkedGitHubPullRequests, getLinkedSidebarChanges, getLinkedSidebarIssues, type LinkedGitHubPullRequest, type LinkedSidebarChange, type LinkedSidebarIssue } from '@/lib/linkedIssues';
 import { buildSessionIssueItems, combineSessionPrSummaries, findLinkedPrsWithoutState } from './sessionPrSummaries';
 import { useSessionUnseenCount } from '@/sync/notification-store';
+import { isSessionUnseen } from '@/lib/sessionAttention';
 import { useHasSessionActivityDuration } from '@/sync/session-activity-timing';
 import { SessionActivityDuration } from '@/components/session/SessionActivityDuration';
 import { useSessionMultiSelectStore } from '@/stores/useSessionMultiSelectStore';
@@ -670,7 +671,10 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
   } = useSessionBlockingRequests(blockingBadgeSessionScopes);
   const isSubtaskSession = Boolean(resolvedSession.parentID);
   const unseenCount = useSessionUnseenCount(session.id);
-  const needsAttention = unseenCount > 0 && (!isSubtaskSession || notifyOnSubtasks);
+  // Two unread signals, one marker: the in-memory notification is instant and
+  // covers the seconds before the record's `time.idle` lands; the record's own
+  // idle/viewed stamps persist across reloads and clients. Either lights it.
+  const needsAttention = (isSessionUnseen(resolvedSession, Date.now()) || unseenCount > 0) && (!isSubtaskSession || notifyOnSubtasks);
   // The last conversation, as the list orders by: a rename or a metadata
   // write must not make an old session read as just used.
   const sessionTimestamp = getSessionActivityTime(resolvedSession) || Date.now();

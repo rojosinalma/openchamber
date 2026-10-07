@@ -58,6 +58,8 @@ import {
   type SessionDirectorySources,
 } from "./session-directory-resolution"
 import { markSessionViewed } from "./notification-store"
+import { markSessionViewedRemote } from "./session-viewed"
+import { captureAttentionSticky } from "./attention-sticky"
 import { setActiveSession } from "./sync-context"
 import {
   createSession as createSessionAction,
@@ -1274,9 +1276,14 @@ export const useSessionUIStore = create<SessionUIState>()((set, get) => ({
       });
     }
 
+    // The Needs attention row the user just clicked must survive the view
+    // being recorded below; capture it from the record before the patch.
+    captureAttentionSticky(id, previousSessionId)
+
     // Mark session viewed in notification store + update active session ref
     if (id) {
       markSessionViewed(id)
+      markSessionViewedRemote(id, resolvedDir)
       setActiveSession(resolvedDir ?? "", id)
     } else {
       setActiveSession("", "")

@@ -121,6 +121,10 @@ const getSessionSignature = (session: Session): string => {
     session.parentID ?? '',
     session.time?.created ?? 0,
     session.time?.updated ?? 0,
+    // The turn-finished and last-viewed stamps carry the persistent unseen
+    // signal; a record that differs only there is still a change.
+    session.time?.idle ?? 0,
+    session.time?.viewed ?? 0,
     session.time?.archived ?? 0,
     JSON.stringify(session.metadata ?? null),
     resolveGlobalSessionDirectory(session) ?? '',

@@ -27,6 +27,12 @@ type SessionDisplayStore = {
   showChatsSection: boolean;
   /** The In work block; hidden, its sessions stay in their projects. */
   showWorkSection: boolean;
+  /**
+   * The Needs attention block above everything: root sessions with a pending
+   * request or a finished turn not viewed yet. Off by default: it duplicates
+   * rows that already sit in the project groups.
+   */
+  showAttentionSection: boolean;
   /** The Pinned block above In work; off by default. Hidden, pinned sessions stay in their projects. */
   showPinnedSection: boolean;
   /** Pinned and In work rows in the Tree view: one line by default, two with branch, PR and model when set. */
@@ -39,6 +45,8 @@ type SessionDisplayStore = {
   worktreeSortOrder: WorktreeSortOrder;
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
+  setShowAttentionSection: (show: boolean) => void;
+  toggleAttentionSection: () => void;
   setShowPinnedSection: (show: boolean) => void;
   setDetailedZoneRows: (detailed: boolean) => void;
   setShowArchivedSessions: (show: boolean) => void;
@@ -87,6 +95,10 @@ export const migrateSessionDisplayState = (
     // v10 removes Recent: In work holds the sessions being worked on, and the
     // timeline view answers "what was I doing" across projects.
     delete state.showRecentSection;
+    // v10 also adds the Needs attention zone, off until the user turns it on
+    // (or a server preference re-enables it on sync): it duplicates rows that
+    // already sit in the project groups.
+    if (typeof state.showAttentionSection !== 'boolean') state.showAttentionSection = false;
   }
   return state;
 };
@@ -106,6 +118,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       setSidebarViewMode: (mode) => set({ sidebarViewMode: mode }),
       showChatsSection: true,
       showWorkSection: true,
+      showAttentionSection: false,
       showPinnedSection: false,
       detailedZoneRows: false,
       // Default to HIDDEN so the pre-hydration state matches the quiet/safe
@@ -116,6 +129,8 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       worktreeSortOrder: 'manual',
       setShowChatsSection: (show) => set({ showChatsSection: show }),
       setShowWorkSection: (show) => set({ showWorkSection: show }),
+      setShowAttentionSection: (show) => set({ showAttentionSection: show }),
+      toggleAttentionSection: () => set((state) => ({ showAttentionSection: !state.showAttentionSection })),
       setShowPinnedSection: (show) => set({ showPinnedSection: show }),
       setDetailedZoneRows: (detailed) => set({ detailedZoneRows: detailed }),
       setShowArchivedSessions: (show) => set({ showArchivedSessions: show }),
@@ -134,7 +149,8 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // v6→v7 drops stickyZoneHeaders (derived from the view mode now).
       // v7→v8 turned Recent off by default.
       // v8→v9 adds worktreeSortOrder (manual by default).
-      // v9→v10 drops showRecentSection (Recent is gone).
+      // v9→v10 drops showRecentSection (Recent is gone) and adds
+      // showAttentionSection (off by default).
       migrate: migrateSessionDisplayState,
     },
   ),

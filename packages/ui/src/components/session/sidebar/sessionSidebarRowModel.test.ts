@@ -740,3 +740,105 @@ describe('buildSessionSidebarRowModel', () => {
     expect(buildSessionSidebarRowModel(input).sessionById.get('hidden')?.id).toBe('hidden');
   });
 });
+
+describe('buildSessionSidebarRowModel attention zone', () => {
+  const headersOf = (input: SessionSidebarRowModelArgs) => buildSessionSidebarRowModel(input).rows
+    .flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : []));
+  // Session rows in document order, each tagged with the zone or project it
+  // sits under: the header above it, or 'project' once the project tree starts.
+  // Order inside the project group follows lifecycle sorting, which these
+  // fixtures do not control, so project placements are compared as a set.
+  const placementsOf = (input: SessionSidebarRowModelArgs): string[] => {
+    const placements: string[] = [];
+    let current = 'project';
+    for (const row of buildSessionSidebarRowModel(input).rows) {
+      if (row.kind === 'activity-header') current = row.activityKey;
+      else if (row.kind === 'project-header') current = 'project';
+      else if (row.kind === 'session') placements.push(`${current}:${row.node.session.id}`);
+    }
+    return placements;
+  };
+
+  test('attention sits ahead of Chats with its own header and keeps its sessions in their project group', () => {
+    const urgent = node('urgent');
+    const input = args([project([group([urgent, node('other')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.attentionItems = [timelineItem('urgent')];
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.rows[0]).toMatchObject({ kind: 'activity-header', activityKey: 'attention', key: 'activity:attention:header' });
+    expect(headersOf(input)).toEqual(['attention', 'chats']);
+    const placements = placementsOf(input);
+    expect(placements.slice(0, 2)).toEqual(['attention:urgent', 'chats:chat']);
+    expect(placements.slice(2).sort()).toEqual(['project:other', 'project:urgent']);
+  });
+
+  test('attention precedes Pinned and In work; a session can sit in attention and a zone and still in its project group', () => {
+    const urgent = node('urgent');
+    const pinned = node('pinned');
+    const input = args([project([group([urgent, pinned, node('other')])])]);
+    input.attentionItems = [timelineItem('urgent'), timelineItem('pinned')];
+    input.pinnedItems = [timelineItem('pinned')];
+    input.workItems = [timelineItem('urgent')];
+    input.zoneSessionIds = new Set(['pinned', 'urgent']);
+
+    expect(headersOf(input)).toEqual(['attention', 'pinned', 'work']);
+    const placements = placementsOf(input);
+    expect(placements.slice(0, 4)).toEqual(['attention:urgent', 'attention:pinned', 'pinned:pinned', 'work:urgent']);
+    expect(placements.slice(4).sort()).toEqual(['project:other', 'project:pinned', 'project:urgent']);
+  });
+
+  test('attention takes the zone row: one line in Tree, two in List or with detailed rows', () => {
+    const input = args([project([group([node('urgent')])])]);
+    input.attentionItems = [timelineItem('urgent')];
+    const contextOf = (current: SessionSidebarRowModelArgs) => {
+      const row = buildSessionSidebarRowModel(current).rows[1];
+      return row?.kind === 'session' ? row.renderContext : null;
+    };
+
+    expect(contextOf(input)).toBe('mixed-compact');
+    expect(contextOf({ ...input, detailedZoneRows: true })).toBe('timeline-mixed');
+    expect(contextOf({ ...input, viewMode: 'timeline', timelineItems: [timelineItem('urgent')] })).toBe('timeline-mixed');
+  });
+
+  test('an empty attention list renders no header', () => {
+    const input = args([project([group([node('other')])])]);
+    input.attentionItems = [];
+
+    expect(headersOf(input)).toEqual([]);
+  });
+
+  test('a collapsed attention zone keeps its header and hides its items', () => {
+    const input = args([project([group([node('urgent')])])]);
+    input.attentionItems = [timelineItem('urgent')];
+    input.collapsedActivities = new Set(['attention']);
+
+    const model = buildSessionSidebarRowModel(input);
+    const headers = model.rows.filter((row) => row.kind === 'activity-header');
+
+    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['attention', true]]);
+    expect(placementsOf(input)).toEqual(['project:urgent']);
+  });
+
+  test('search lists an attention session in its zone and its project, counting it once', () => {
+    const urgent = node('ses_urgent');
+    const main = group([urgent, node('ses_other')]);
+    const input = args([project([main])]);
+    input.mode = 'search';
+    input.normalizedQuery = 'ses_urgent';
+    input.groupSearchDataByGroup.set(main, {
+      filteredNodes: [urgent],
+      matchedSessionCount: countSessionSearchMatches([urgent], 'ses_urgent'),
+      folderNameMatchCount: 0,
+      groupMatches: false,
+      hasMatch: true,
+    });
+    input.attentionItems = [{ ...timelineItem('ses_urgent'), node: urgent }];
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.searchMatchCount).toBe(1);
+    expect(placementsOf(input)).toEqual(['attention:ses_urgent', 'project:ses_urgent']);
+  });
+});
