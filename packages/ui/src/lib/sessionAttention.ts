@@ -1,26 +1,30 @@
 import type { Session } from '@/lib/opencode/model';
+import { DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS, sidebarWindowHoursToMs } from '@/lib/sidebarTimeWindows';
 
 /**
- * How long a finished turn stays something the user still owes a look. Older
- * than this, a session is history.
+ * How long a finished turn stays something the user still owes a look when
+ * nothing else is said: the shipped default of the `sidebarAttentionWindowHours`
+ * setting (`lib/sidebarTimeWindows.ts`). Live callers pass the user's value;
+ * older than that, a session is history.
  */
-export const SESSION_ATTENTION_WINDOW_MS = 48 * 60 * 60 * 1000;
+export const SESSION_ATTENTION_WINDOW_MS = sidebarWindowHoursToMs(DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS);
 
 /**
  * A root session whose last turn ended after the user last looked at it, as
  * OpenCode records it (`time.idle` vs `time.viewed`). This is the persistent
  * unread signal: it survives reloads and other clients because both stamps
  * live on the server record. A session that never finished a turn, is
- * archived, is a subsession, or went idle outside the attention window is not
- * unseen. `viewed` missing means never viewed.
+ * archived, is a subsession, or went idle more than `windowMs` ago (the user's
+ * `sidebarAttentionWindowHours`) is not unseen. `viewed` missing means never
+ * viewed.
  */
-export const isSessionUnseen = (session: Session, nowMs: number): boolean => {
+export const isSessionUnseen = (session: Session, nowMs: number, windowMs = SESSION_ATTENTION_WINDOW_MS): boolean => {
   if (session.parentID) return false;
   const { idle, viewed, archived } = session.time;
   if (archived) return false;
   if (idle === undefined) return false;
   if (idle <= (viewed ?? 0)) return false;
-  return nowMs - idle <= SESSION_ATTENTION_WINDOW_MS;
+  return nowMs - idle <= windowMs;
 };
 
 /** Why a session needs the user, most urgent first. */

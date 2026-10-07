@@ -120,6 +120,20 @@ describe('settings helpers', () => {
     expect(helpers.sanitizeSettingsUpdate({ sidebarZoneOrder: 'chats' }).sidebarZoneOrder).toBeUndefined();
     expect(helpers.sanitizeSettingsUpdate({ sidebarZoneOrder: [] }).sidebarZoneOrder).toEqual([]);
   });
+  it('clamps the attention window to whole hours between 1 and 720 and round-trips it', () => {
+    const helpers = createTestHelpers();
+    const changes = helpers.sanitizeSettingsUpdate({ sidebarAttentionWindowHours: 71.6 });
+    expect(changes.sidebarAttentionWindowHours).toBe(72);
+    expect(helpers.sanitizeSettingsUpdate({ sidebarAttentionWindowHours: 100000 }).sidebarAttentionWindowHours).toBe(720);
+    expect(helpers.sanitizeSettingsUpdate({ sidebarAttentionWindowHours: 0 }).sidebarAttentionWindowHours).toBe(1);
+    expect(helpers.sanitizeSettingsUpdate({ sidebarAttentionWindowHours: '24' }).sidebarAttentionWindowHours).toBeUndefined();
+    expect(helpers.sanitizeSettingsUpdate({ sidebarAttentionWindowHours: Number.NaN }).sidebarAttentionWindowHours).toBeUndefined();
+    const saved = helpers.mergePersistedSettings({}, changes);
+    const reloaded = helpers.formatSettingsResponse(JSON.parse(JSON.stringify(saved)));
+    expect(reloaded.sidebarAttentionWindowHours).toBe(72);
+    const next = helpers.mergePersistedSettings(reloaded, helpers.sanitizeSettingsUpdate({ sidebarShowPinnedSection: true }));
+    expect(helpers.formatSettingsResponse(next).sidebarAttentionWindowHours).toBe(72);
+  });
   it('round-trips telemetry opt-in with the hidden list and preserves it across unrelated writes', () => {
     const helpers = createTestHelpers();
     const legacy = helpers.sanitizeSettingsUpdate({ workStatusHiddenSections: [] });
@@ -854,7 +868,7 @@ describe('settings registry gate', () => {
     tunnelProvider: 'cloudflare', tunnelMode: 'quick', tunnelBootstrapTtlMs: 600000, tunnelSessionTtlMs: 86400000, managedLocalTunnelConfigPath: '/tmp/x',
     managedRemoteTunnelHostname: 'x.example', managedRemoteTunnelToken: 'token', managedRemoteTunnelPresets: [{ id: 'a', name: 'A', hostname: 'a.example' }],
     managedRemoteTunnelSelectedPresetId: 'a', managedRemoteTunnelPresetTokens: { a: 'token' },
-    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'],
+    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'], sidebarAttentionWindowHours: 96,
     workStatusPanelEnabled: true, workStatusHiddenSections: ['mcp'], workStatusHiddenSectionsExplicit: true, workStatusSectionOrder: ['mcp', 'session'],
     showReasoningTraces: true, streamingAutoFollowEnabled: true, collapsibleThinkingBlocks: true, expandReasoningWhileStreaming: true, showTextJustificationActivity: true,
     chatRenderMode: 'live', activityRenderMode: 'summary', mermaidRenderingMode: 'svg', userMessageRenderingMode: 'markdown', collapsibleUserMessages: true,

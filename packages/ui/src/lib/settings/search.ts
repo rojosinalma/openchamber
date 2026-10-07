@@ -560,6 +560,20 @@ const SETTINGS_SEARCH_ITEMS: readonly SettingsSearchItem[] = [
     keywords: ['in work', 'in progress', 'track', 'done', 'sidebar'],
   },
   {
+    id: 'sessions.sidebar-windows',
+    page: 'sessions',
+    titleKey: 'settings.openchamber.sidebarWindows.title',
+    descriptionKey: 'settings.openchamber.sidebarWindows.info',
+    keywords: ['sidebar', 'needs attention', 'unseen', 'hours', 'window'],
+  },
+  {
+    id: 'sessions.sidebar-attention-window',
+    page: 'sessions',
+    titleKey: 'settings.openchamber.sidebarWindows.field.attentionWindowHours',
+    descriptionKey: 'settings.openchamber.sidebarWindows.field.attentionWindowHoursInfo',
+    keywords: ['needs attention', 'attention', 'unseen', 'unread', 'hours', 'sidebar', 'window'],
+  },
+  {
     id: 'sessions.small-model',
     page: 'sessions',
     titleKey: 'settings.openchamber.defaults.smallModel.title',

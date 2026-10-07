@@ -32,7 +32,12 @@ import { isTerminalShell } from '@/lib/terminalShell';
 import { sanitizeWorkStatusHiddenSections, sanitizeWorkStatusSectionOrder } from '@/components/chat/work-status/sections';
 import { useInputHistoryStore } from '@/stores/useInputHistoryStore';
 import { useMessageQueueStore } from '@/stores/messageQueueStore';
-import { normalizeSidebarZoneOrder, useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
+import {
+  DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS,
+  normalizeSidebarWindowHours,
+  normalizeSidebarZoneOrder,
+  useSessionDisplayStore,
+} from '@/stores/useSessionDisplayStore';
 import { useUIStore, type FileEditorKeymap, type LargeTextPasteBehavior } from '@/stores/useUIStore';
 import { isSessionGoalMaxAutoTurns } from '@/lib/sessionGoalTurnLimit';
 import { z } from 'zod';
@@ -374,6 +379,10 @@ export const SETTINGS_REGISTRY = {
   // to reorder, it follows what the desktop chose. Any stored list is
   // completed on read, so a stale or partial value never hides a zone.
   sidebarZoneOrder: field({ scope: 'profile', parse: mapParser(parseStringList, normalizeSidebarZoneOrder), ui: sessionDisplayField('sidebarZoneOrder') }),
+  // The Needs attention window, in whole hours (1..720; see
+  // `lib/sidebarTimeWindows.ts`). Per surface like the zone toggles: a phone
+  // and a desktop can keep different horizons.
+  sidebarAttentionWindowHours: field({ scope: 'profile', perSurface: true, parse: mapParser(parseFiniteNumber, (value) => normalizeSidebarWindowHours(value, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS)), ui: sessionDisplayField('sidebarAttentionWindowHours') }),
 
   // ── Work status ──
   workStatusSectionOrder: field({

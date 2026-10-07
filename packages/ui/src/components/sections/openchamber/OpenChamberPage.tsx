@@ -4,6 +4,7 @@ import { AboutSettings } from './AboutSettings';
 import { SessionRetentionSettings } from './SessionRetentionSettings';
 import { MergedWorktreeCleanupSettings } from './MergedWorktreeCleanupSettings';
 import { SessionWorkSettings } from './SessionWorkSettings';
+import { SidebarWindowsSettings } from './SidebarWindowsSettings';
 import { PasskeySettings } from './PasskeySettings';
 import { AppLinkSecuritySettings } from './AppLinkSecuritySettings';
 import { DefaultsSettings } from './DefaultsSettings';
@@ -56,6 +57,7 @@ export const OpenChamberPage: React.FC<OpenChamberPageProps> = ({ section }) => 
                 <OpenChamberVisualSettings />
                 <DefaultsSettings key={runtimeEndpointEpoch} />
                 <SessionWorkSettings />
+                <SidebarWindowsSettings />
                 {showDesktopNetworkSettings && <DesktopNetworkSettings />}
                 {!isVSCode && <OpenCodeCliSettings />}
                 {!isVSCode && <EnvironmentVariablesSettings key={runtimeEndpointEpoch} />}
@@ -235,12 +237,13 @@ const ChatSectionContent: React.FC = () => {
     );
 };
 
-// Sessions section: Default model & agent, Session retention
+// Sessions section: Default model & agent, Sessions in work, Needs attention window, Session retention
 const SessionsSectionContent: React.FC<{ runtimeEndpointEpoch: number }> = ({ runtimeEndpointEpoch }) => {
     return (
         <>
             <DefaultsSettings key={runtimeEndpointEpoch} />
             <SessionWorkSettings />
+            <SidebarWindowsSettings />
             <SessionRetentionSettings />
             {!isVSCodeRuntime() && <MergedWorktreeCleanupSettings />}
         </>

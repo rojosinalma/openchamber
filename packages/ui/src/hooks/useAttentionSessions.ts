@@ -6,7 +6,9 @@ import {
   type SessionAttentionEntry,
   type SessionAttentionKind,
 } from '@/lib/sessionAttention';
+import { sidebarWindowHoursToMs } from '@/lib/sidebarTimeWindows';
 import { resolveGlobalSessionDirectory, useGlobalSessionsStore } from '@/stores/useGlobalSessionsStore';
+import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import { useGlobalBlockingRequestsStore, type PendingBlockingRequests } from '@/sync/global-blocking-requests';
 import { hasActiveSubagent, useGlobalSessionStatusStore } from '@/sync/global-session-status';
 import { useBackgroundShellsStore } from '@/sync/background-shells';
@@ -52,6 +54,7 @@ export const deriveAttentionEntries = ({
   shellSessionIds,
   now,
   sticky = null,
+  attentionWindowMs,
 }: {
   bySession: ReadonlyMap<string, PendingBlockingRequests>;
   activeSessions: readonly Session[];
@@ -61,6 +64,8 @@ export const deriveAttentionEntries = ({
   now: number;
   /** The selected session captured as unseen at selection time (`sync/attention-sticky.ts`); listed while that turn is still its last. */
   sticky?: AttentionSticky | null;
+  /** How far back a finished turn still counts (`sidebarAttentionWindowHours`); the shipped default when omitted. */
+  attentionWindowMs?: number;
 }): readonly SessionAttentionEntry[] => {
   const byRoot = new Map<string, SessionAttentionEntry>();
   // A request anywhere in a family blocks the whole family, so the row shown
@@ -93,7 +98,7 @@ export const deriveAttentionEntries = ({
     const idle = session.time.idle;
     if (idle === undefined) continue;
     const stuck = sticky !== null && sticky.sessionId === session.id && sticky.idle === idle && !session.parentID && !session.time.archived;
-    if (!stuck && !isSessionUnseen(session, now)) continue;
+    if (!stuck && !isSessionUnseen(session, now, attentionWindowMs)) continue;
     if (turnIsOpen(session.id)) continue;
     byRoot.set(session.id, {
       sessionId: session.id,
@@ -122,12 +127,22 @@ export const useAttentionSessions = (): readonly SessionAttentionEntry[] => {
   const stickyCandidate = useAttentionStickyStore((state) => state.sticky);
   const currentSessionId = useSessionUIStore((state) => state.currentSessionId);
   const sticky = stickyCandidate && stickyCandidate.sessionId === currentSessionId ? stickyCandidate : null;
+  const attentionWindowHours = useSessionDisplayStore((state) => state.sidebarAttentionWindowHours);
   const stable = React.useRef<readonly SessionAttentionEntry[]>(EMPTY_ENTRIES);
   return React.useMemo(() => {
-    const entries = deriveAttentionEntries({ bySession, activeSessions, entityById, activeSessionIds, shellSessionIds, now: Date.now(), sticky });
+    const entries = deriveAttentionEntries({
+      bySession,
+      activeSessions,
+      entityById,
+      activeSessionIds,
+      shellSessionIds,
+      now: Date.now(),
+      sticky,
+      attentionWindowMs: sidebarWindowHoursToMs(attentionWindowHours),
+    });
     if (!sameEntries(stable.current, entries)) stable.current = entries;
     return stable.current;
-  }, [activeSessionIds, activeSessions, bySession, entityById, shellSessionIds, sticky]);
+  }, [activeSessionIds, activeSessions, attentionWindowHours, bySession, entityById, shellSessionIds, sticky]);
 };
 
 /** The session ids of `useAttentionSessions`, in the same order and with the same identity guarantee. */
