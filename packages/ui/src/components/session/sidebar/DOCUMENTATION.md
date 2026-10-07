@@ -65,7 +65,7 @@ unread. The local Appearance preference `animatedActivityIndicators`
 is off by default. Enabling it swaps every running kind for a stepped spinner,
 even when the OS requests reduced motion; the unread icon stays. Permission/question badges and per-session
 elapsed counters retain their existing precedence and behavior. The display
-store is at version 10 (v10 dropped the Recent toggle): missing preferences inherit the default during hydration,
+store is at version 11 (v10 dropped the Recent toggle, v11 added the zone order): missing preferences inherit the default during hydration,
 while an explicitly saved choice survives reload.
 
 Full-app active records remain in the collection when their directory is no
@@ -256,11 +256,25 @@ its subsessions' requests. Row memoization
 compares `metadata` by reference and `time.idle`, so metadata-only changes
 (work, goal, recap) re-render the row.
 
+## Zone order (`sidebarZoneOrder`)
+
+The zones (Pinned, Needs attention, In work, Chats, Projects) render in the order of
+`useSessionDisplayStore.sidebarZoneOrder` (default `DEFAULT_SIDEBAR_ZONE_ORDER`: pinned, attention,
+work, chats, projects; the same order in the Tree and the List view, where the `projects` slot holds
+the project tree or the per-project timeline lists). The row model iterates that order; hidden or
+empty zones are skipped. `normalizeSidebarZoneOrder` drops unknown or duplicate keys and appends
+missing ones, so a partial or stale value never loses a zone. The user reorders by dragging a zone
+header (its own dnd-kit sortable context, disabled during search or a rename), with "Move up / Move
+down" in the header menu or context menu, or "Reset section order" in the Display mode menu. The
+preference is the `sidebarZoneOrder` settings-registry field (profile scope, display store v11) and
+the mobile sheet renders its cross-project sections in the same order. Zones and projects are
+sections of equal weight, so the gap between them is the same whatever the order.
+
 ## Needs attention and Pinned
 
-Two optional zones sit above everything else, in this order: `attention`
-("Needs attention"), then `pinned` ("Pinned"), then Chats, In work, the
-projects (as a tree or as the List view's project lists). Both are DUPLICATE
+Two optional zones, `attention` ("Needs attention") and `pinned` ("Pinned"),
+sit with In work and Chats above the projects (as a tree or as the List view's
+project lists) in the user's zone order (see "Zone order"). Both are DUPLICATE
 zones: a session listed there keeps its row in its project group, folder and
 the List view, so `inWork` is never touched for them and their rows add
 nothing to the search match count (the project group already counts the

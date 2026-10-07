@@ -245,7 +245,7 @@ describe('buildSessionSidebarRowModel', () => {
     expect(buildSessionSidebarRowModel(input).searchMatchCount).toBe(2);
   });
 
-  test('in work sits under Chats and above the projects', () => {
+  test('in work sits above Chats and the projects', () => {
     const working = node('working');
     const input = args([project([group([working, node('other')])])]);
     input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
@@ -256,7 +256,7 @@ describe('buildSessionSidebarRowModel', () => {
       row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []
     ));
 
-    expect(headers).toEqual(['chats', 'work', 'projects', 'project-a']);
+    expect(headers).toEqual(['work', 'chats', 'projects', 'project-a']);
   });
 
   test('no block while nothing is in work', () => {
@@ -687,7 +687,7 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     expect(placements.slice(2).sort()).toEqual(['project:other', 'project:urgent']);
   });
 
-  test('pinned sits after attention and before Chats, and also duplicates into the project group', () => {
+  test('pinned sits above attention and Chats, and also duplicates into the project group', () => {
     const urgent = node('urgent');
     const pinned = node('pinned');
     const input = args([project([group([urgent, pinned, node('other')])])]);
@@ -695,9 +695,9 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     input.attentionItems = [timelineItem('urgent')];
     input.pinnedItems = [timelineItem('pinned')];
 
-    expect(headersOf(input)).toEqual(['attention', 'pinned', 'chats', 'projects']);
+    expect(headersOf(input)).toEqual(['pinned', 'attention', 'chats', 'projects']);
     const placements = placementsOf(input);
-    expect(placements.slice(0, 3)).toEqual(['attention:urgent', 'pinned:pinned', 'chats:chat']);
+    expect(placements.slice(0, 3)).toEqual(['pinned:pinned', 'attention:urgent', 'chats:chat']);
     expect(placements.slice(3).sort()).toEqual(['project:other', 'project:pinned', 'project:urgent']);
   });
 
@@ -721,7 +721,7 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     const model = buildSessionSidebarRowModel(input);
     const headers = model.rows.filter((row) => row.kind === 'activity-header');
 
-    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['attention', true], ['pinned', true], ['projects', false]]);
+    expect(headers.map((row) => [row.activityKey, row.collapsed])).toEqual([['pinned', true], ['attention', true], ['projects', false]]);
     expect(placementsOf(input).sort()).toEqual(['project:pinned', 'project:urgent']);
   });
 
@@ -763,10 +763,10 @@ describe('buildSessionSidebarRowModel projects zone', () => {
 
     const model = buildSessionSidebarRowModel(input);
 
-    expect(kindsOf(input)).toEqual(['activity:chats', 'session:chat', 'activity:work', 'session:working', 'activity:projects']);
+    expect(kindsOf(input)).toEqual(['activity:work', 'session:working', 'activity:chats', 'session:chat', 'activity:projects']);
     expect(model.rows.at(-1)).toMatchObject({ kind: 'activity-header', activityKey: 'projects', collapsed: true });
     // Only project sessions are gone from selection; the zones keep theirs.
-    expect(model.selectionEntries.map((entry) => entry.id)).toEqual(['chat', 'working']);
+    expect(model.selectionEntries.map((entry) => entry.id)).toEqual(['working', 'chat']);
   });
 
   test('a collapsed Projects zone alone is not an empty sidebar', () => {
@@ -835,5 +835,76 @@ describe('buildSessionSidebarRowModel projects zone', () => {
     input.groupSearchDataByGroup.set(main, { filteredNodes: [], matchedSessionCount: 0, folderNameMatchCount: 0, groupMatches: false, hasMatch: false });
 
     expect(kindsOf(input)).toEqual(['empty']);
+  });
+});
+
+describe('buildSessionSidebarRowModel zone order', () => {
+  const headersOf = (input: SessionSidebarRowModelArgs) => buildSessionSidebarRowModel(input).rows
+    .flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : []));
+  // Every zone populated, so the order alone decides the header sequence.
+  const everyZone = (): SessionSidebarRowModelArgs => {
+    const input = args([project([group([node('pinned'), node('urgent'), node('working'), node('other')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.pinnedItems = [timelineItem('pinned')];
+    input.attentionItems = [timelineItem('urgent')];
+    input.workItems = [timelineItem('working')];
+    input.workSessionIds = new Set(['working']);
+    return input;
+  };
+
+  test('zones follow the given order, with the project tree under the Projects header wherever it lands', () => {
+    const input = everyZone();
+    input.zoneOrder = ['projects', 'chats', 'work', 'attention', 'pinned'];
+
+    const rows = buildSessionSidebarRowModel(input).rows;
+
+    expect(headersOf(input)).toEqual(['projects', 'chats', 'work', 'attention', 'pinned']);
+    expect(rows.findIndex((row) => row.kind === 'project-header')).toBe(1);
+    expect(rows.map((row) => row.key).filter((key) => key.endsWith(':header')))
+      .toEqual(['activity:projects:header', 'project:project-a:header', 'activity:chats:header', 'activity:work:header', 'activity:attention:header', 'activity:pinned:header']);
+  });
+
+  test('no order given means the order the sidebar always had', () => {
+    expect(headersOf(everyZone())).toEqual(['pinned', 'attention', 'work', 'chats', 'projects']);
+  });
+
+  test('a zone missing from the order is left out, so callers pass a normalised order', () => {
+    const input = everyZone();
+    input.zoneOrder = ['chats', 'projects'];
+
+    expect(headersOf(input)).toEqual(['chats', 'projects']);
+  });
+
+  test('zones that are off or empty are skipped in a custom order too', () => {
+    const input = everyZone();
+    input.zoneOrder = ['chats', 'projects', 'work', 'pinned', 'attention'];
+    input.pinnedItems = [];
+    input.attentionItems = undefined;
+
+    expect(headersOf(input)).toEqual(['chats', 'projects', 'work']);
+  });
+
+  test('the timeline view follows the same order, with the per-project timeline under Projects', () => {
+    const input = args([project([group([])])]);
+    input.viewMode = 'timeline';
+    input.zoneOrder = ['projects', 'chats', 'pinned', 'attention', 'work'];
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.timelineItems = [timelineItem('pinned'), timelineItem('other')];
+    input.pinnedItems = [timelineItem('pinned')];
+
+    const rows = buildSessionSidebarRowModel(input).rows;
+    const headers = rows.flatMap((row) => (row.kind === 'activity-header' ? [row.activityKey] : row.kind === 'project-header' ? [row.section.project.id] : []));
+
+    expect(headers).toEqual(['projects', 'project-a', 'chats', 'pinned']);
+  });
+
+  test('sticky headers keep document order under a custom zone order', () => {
+    const input = everyZone();
+    input.zoneOrder = ['projects', 'chats', 'pinned', 'attention', 'work'];
+
+    const model = buildSessionSidebarRowModel(input);
+
+    expect(model.stickyHeaders.map((header) => header.id)).toEqual(['projects', 'project-a', 'chats', 'pinned', 'attention', 'work']);
+    expect(model.stickyHeaders.map((header) => header.rowIndex)).toEqual([...model.stickyHeaders.map((header) => header.rowIndex)].sort((left, right) => left - right));
   });
 });

@@ -95,6 +95,7 @@ export const createSettingsHelpers = (dependencies) => {
   const UI_LOCALE_VALUES = new Set(['en', 'de', 'fr', 'nl', 'zh-CN', 'zh-TW', 'uk', 'es', 'pt-BR', 'ko', 'pl', 'ja', 'tr', 'ar', 'he']);
   const SIDEBAR_PROJECT_SORT_ORDER_VALUES = new Set(['manual', 'a-z', 'z-a', 'date-added', 'recent']);
   const SIDEBAR_WORKTREE_SORT_ORDER_VALUES = new Set(['recent', 'manual', 'a-z']);
+  const SIDEBAR_ZONE_KEYS = new Set(['pinned', 'attention', 'work', 'chats', 'projects']);
   const HIDDEN_MODELS_MAX = 1024;
   const RECENT_EFFORTS_MAX_KEYS = 128;
   const RECENT_EFFORTS_MAX_VARIANTS_PER_KEY = 5;
@@ -371,6 +372,13 @@ export const createSettingsHelpers = (dependencies) => {
     }
     if (candidate.sidebarDetailedZoneRows === true || candidate.sidebarDetailedZoneRows === false) {
       result.sidebarDetailedZoneRows = candidate.sidebarDetailedZoneRows;
+    }
+    if (Array.isArray(candidate.sidebarZoneOrder)) {
+      // Known zone keys only, each once; the client completes a partial list
+      // with the default order on read, so nothing is appended here.
+      result.sidebarZoneOrder = [
+        ...new Set(candidate.sidebarZoneOrder.filter((entry) => SIDEBAR_ZONE_KEYS.has(entry))),
+      ];
     }
 
     if (Array.isArray(candidate.securityScopedBookmarks)) {

@@ -305,6 +305,9 @@
       "scope": "profile",
       "perSurface": true
     },
+    "sidebarZoneOrder": {
+      "scope": "profile"
+    },
     "workStatusSectionOrder": {
       "scope": "profile"
     },

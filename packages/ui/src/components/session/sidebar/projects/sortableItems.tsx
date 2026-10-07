@@ -544,3 +544,35 @@ const SortableGroupItemBase: React.FC<{
 };
 
 export const SortableGroupItem = React.memo(SortableGroupItemBase);
+
+export type SortableZoneHandleProps = {
+  attributes: ReturnType<typeof useSortable>['attributes'];
+  listeners: ReturnType<typeof useSortable>['listeners'];
+  isDragging: boolean;
+};
+
+/**
+ * A zone header (Pinned, Chats, Projects, ...) sortable among the other zone
+ * headers. The header itself is the drag handle, like a project header:
+ * translate only, so the header keeps its width while it moves.
+ */
+const SortableZoneItemBase: React.FC<{
+  id: string;
+  disabled?: boolean;
+  children: (handle: SortableZoneHandleProps) => React.ReactNode;
+}> = ({ id, disabled = false, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled });
+  const handle = React.useMemo<SortableZoneHandleProps>(() => ({ attributes, listeners, isDragging }), [attributes, listeners, isDragging]);
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={cn('relative', isDragging && 'opacity-30')}
+    >
+      {children(handle)}
+    </div>
+  );
+};
+
+export const SortableZoneItem = React.memo(SortableZoneItemBase);
