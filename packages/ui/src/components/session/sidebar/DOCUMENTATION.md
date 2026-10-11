@@ -312,7 +312,10 @@ the hook, `SessionNodeItem.tsx` and `sync/attention-sticky.ts` pass the store
 value. A session whose
 turn is still open (running, a subagent below it running, or a background
 command, see `useSessionTurnActivity`) is not unseen; it reappears once the
-turn ends. Within a kind the newest need comes first (`time.idle` for unseen,
+turn ends. Looking at a session in a secondary surface counts as viewing it:
+a docked chat tab or an expanded `/btw` sheet (`hooks/useSessionViewedWhileShown.ts`)
+records the view while the window is attended, so a `/btw` turn that ends in
+the open sheet never lands here; one that ends behind the collapsed strip does. Within a kind the newest need comes first (`time.idle` for unseen,
 the record's recency for requests, which carry no request time). The hook
 returns the same array while membership and order are unchanged.
 `list/SessionProjectCollection.tsx` turns the ids into items the way In work

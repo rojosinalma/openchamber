@@ -12,6 +12,7 @@ import { resolveProjectContextId } from '@/lib/projectContextApi';
 import { cn } from '@/lib/utils';
 import { registerBrowserOpener, registerSleepingBrowserTab, setShownBrowserTab } from '@/lib/browser/controlClient';
 import { subscribeOpenchamberEvents } from '@/lib/openchamberEvents';
+import { useSessionViewedWhileShown } from '@/hooks/useSessionViewedWhileShown';
 import { useGuestsStore } from '@/lib/guests/store';
 import { guestHasSharedSurface, guestSurfaceDocking, type GuestSurfaceDocking } from '@/lib/guests/surfaces';
 import { GUEST_SURFACE_DOCK_SIZE_MIN } from '@openchamber/sdk';
@@ -24,9 +25,6 @@ import {
 } from '@/lib/workspace/zones';
 import { useFilesViewTabsStore } from '@/stores/useFilesViewTabsStore';
 import { clampContextEditorTreeWidth, normalizeContextPanelDirectoryKey, useUIStore, type PendingDiffScope } from '@/stores/useUIStore';
-import { markSessionViewed } from '@/sync/notification-store';
-import { markSessionViewedRemote } from '@/sync/session-viewed';
-import { setExternallyViewedSession } from '@/sync/sync-context';
 import { ContextPanelHeaderSlotProvider } from './contextPanelHeaderSlot';
 import { getSessionIDFromDedupeKey } from './contextPanelSessionTitles';
 import { MovablePane } from './MovablePane';
@@ -405,36 +403,7 @@ export const ContextSurfacePanes: React.FC = () => {
     [activeChatSessionID, activeChatDirectory],
   );
 
-  React.useEffect(() => {
-    if (!activeChatDirectory || !activeChatSessionID || typeof window === 'undefined') {
-      return;
-    }
-
-    const markActiveChatViewed = () => {
-      if (document.visibilityState === 'hidden' || !document.hasFocus()) {
-        setExternallyViewedSession(activeChatDirectory, activeChatSessionID, false);
-        return;
-      }
-
-      markSessionViewed(activeChatSessionID);
-      markSessionViewedRemote(activeChatSessionID, activeChatDirectory);
-      setExternallyViewedSession(activeChatDirectory, activeChatSessionID, true);
-    };
-
-    markActiveChatViewed();
-    const interval = window.setInterval(markActiveChatViewed, 10_000);
-    window.addEventListener('focus', markActiveChatViewed);
-    window.addEventListener('blur', markActiveChatViewed);
-    document.addEventListener('visibilitychange', markActiveChatViewed);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener('focus', markActiveChatViewed);
-      window.removeEventListener('blur', markActiveChatViewed);
-      document.removeEventListener('visibilitychange', markActiveChatViewed);
-      setExternallyViewedSession(activeChatDirectory, activeChatSessionID, false);
-    };
-  }, [activeChatDirectory, activeChatSessionID]);
+  useSessionViewedWhileShown(activeChatDirectory, activeChatSessionID, true);
 
   const diffActiveTab = diffZone.activeTab;
   const handleDiffScopeChange = React.useCallback((nextScope: PendingDiffScope) => {

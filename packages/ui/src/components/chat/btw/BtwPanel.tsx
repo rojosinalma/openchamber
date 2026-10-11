@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/icon/Icon';
+import { useSessionViewedWhileShown } from '@/hooks/useSessionViewedWhileShown';
 import { useBtwStore } from '@/stores/useBtwStore';
 import { useSync } from '@/sync/use-sync';
 import {
@@ -283,6 +284,11 @@ const BtwSheet: React.FC<{
     collapsed: boolean;
 }> = ({ sessionRef, boundaryMessageID, collapsed }) => {
     const { t } = useI18n();
+    // Only the expanded sheet counts as viewing the btw session: the user must
+    // actually see the surface (the same rule `isViewedInCurrentSession`
+    // applies to the selected session), so a turn that ends behind the
+    // collapsed strip stays unseen until the sheet is expanded.
+    useSessionViewedWhileShown(sessionRef.directory, sessionRef.btwSessionId, !collapsed);
     const handleDestroy = useBtwDestroy(sessionRef);
     const setCollapsed = React.useCallback((next: boolean) => {
         useBtwStore.getState().setPanelState(sessionRef.parentSessionId, { collapsed: next });
