@@ -652,7 +652,10 @@ expansion belongs to the unsent panel. Discarding that panel invalidates the
 send, and a runtime change prevents fork creation and stale UI recovery.
 
 The unsent panel shows "Ask your question" until fork creation starts.
-Existing panels hide titles. Promotion retains the existing internal title, without
+Existing panels hide titles. The expanded sheet marks the fork viewed while
+the window is attended (`hooks/useSessionViewedWhileShown.ts`, shared with the
+side panel's docked chat tab); a turn that ends behind the collapsed strip stays
+unseen until the sheet is expanded. Promotion retains the existing internal title, without
 transcript fetching or Small Model generation.
 
 ## Pinned composer
