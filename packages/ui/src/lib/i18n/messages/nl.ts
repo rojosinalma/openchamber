@@ -573,6 +573,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Gedetailleerde rijen',
   'sessions.sidebar.activity.pinnedTitle': 'Vastgezet',
   'sessions.sidebar.header.displayMode.showAttention': 'Sectie „Aandacht nodig” tonen',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Rijen op één regel',
   'sessions.sidebar.header.displayMode.showArchived': 'Gearchiveerde sessies tonen',
   'sessions.sidebar.header.displayMode.collapseAll': 'Alles inklappen',
   'sessions.sidebar.header.displayMode.expandAll': 'Alles uitklappen',

@@ -573,6 +573,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Detailed rows',
   'sessions.sidebar.activity.pinnedTitle': 'Pinned',
   'sessions.sidebar.header.displayMode.showAttention': 'Show needs attention section',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Single-line rows',
   'sessions.sidebar.header.displayMode.showArchived': 'Show archived sessions',
   'sessions.sidebar.header.displayMode.collapseAll': 'Collapse all',
   'sessions.sidebar.header.displayMode.expandAll': 'Expand all',

@@ -2,7 +2,7 @@ import type { Session } from '@/lib/opencode/model';
 import type { SessionFolder, SessionFoldersMap } from '@/stores/useSessionFoldersStore';
 import { compareSessionsByLifecycleOrder, EMPTY_SESSION_ORDER_RANKS } from '@/sync/session-ordering';
 import { isSessionPinned } from '@/stores/useSessionPinnedStore';
-import { DEFAULT_SIDEBAR_ZONE_ORDER, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
+import { DEFAULT_SIDEBAR_SINGLE_LINE_ROWS, DEFAULT_SIDEBAR_ZONE_ORDER, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
 import type { GroupSearchData, SessionGroup, SessionNode } from './types';
 import type { ProjectSection } from './projects/sessionProjectRender';
 import { buildGroupRenderDescriptors } from './projects/sessionProjectRender';
@@ -57,6 +57,16 @@ export const isTwoLineTimelineContext = (context: SessionSidebarRenderContext): 
 /** Flat zone and timeline rows never expand: a run row opens its overview instead. */
 const isNeverExpandedContext = (context: SessionSidebarRenderContext): boolean => (
   isTwoLineTimelineContext(context) || context === 'mixed-compact'
+);
+
+/**
+ * Whether a row of this context takes the two-line height: the single-line
+ * rows switch (`useSessionDisplayStore.sidebarSingleLineRows`) folds the
+ * two-line contexts onto one line; 'project', 'mixed-compact' and the Chats
+ * rows are one line either way.
+ */
+export const isTwoLineSessionRow = (context: SessionSidebarRenderContext, singleLineRows: boolean): boolean => (
+  !singleLineRows && isTwoLineTimelineContext(context)
 );
 
 export type SessionSidebarViewMode = 'projects' | 'timeline';
@@ -157,6 +167,12 @@ export type SessionSidebarRowModelArgs = {
    * `DEFAULT_SIDEBAR_ZONE_ORDER`.
    */
   zoneOrder?: readonly SidebarZoneKey[];
+  /**
+   * One-line timeline-style rows (`useSessionDisplayStore.sidebarSingleLineRows`):
+   * 'timeline' and 'timeline-mixed' rows take the one-line estimate. Defaults
+   * to `DEFAULT_SIDEBAR_SINGLE_LINE_ROWS`.
+   */
+  singleLineRows?: boolean;
   foldersMap: SessionFoldersMap;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
   normalizedQuery: string;
@@ -385,6 +401,10 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     baseDepth?: number;
   };
   const runIndex = args.runIndex ?? EMPTY_MULTI_RUN_INDEX;
+  const singleLineRows = args.singleLineRows ?? DEFAULT_SIDEBAR_SINGLE_LINE_ROWS;
+  const sessionRowEstimate = (renderContext: SessionSidebarRenderContext): number => (
+    isTwoLineSessionRow(renderContext, singleLineRows) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE
+  );
   const appendRun = (entry: RunEntry, options: AppendOptions): void => {
     const expansionKey = runExpansionKey(options.renderContext, entry.run.key);
     // Timeline rows never expand; the overview lists the lanes.
@@ -400,7 +420,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     push({
       kind: 'run',
       key: keyFor(`${options.containerKey}:run:${entry.run.key}`),
-      estimateSize: isTwoLineTimelineContext(options.renderContext) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE,
+      estimateSize: sessionRowEstimate(options.renderContext),
       run: entry.run,
       depth: options.baseDepth ?? 0,
       laneNodes: Object.freeze([...entry.lanes]),
@@ -433,7 +453,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       push({
         kind: 'session',
         key: rowKey,
-        estimateSize: isTwoLineTimelineContext(options.renderContext) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE,
+        estimateSize: sessionRowEstimate(options.renderContext),
         node: current.node,
         blockingBadgeSessionScopes: current.depth === baseDepth
           ? options.getBlockingBadgeSessionScopes?.(current.node.session.id) ?? options.blockingBadgeSessionScopes

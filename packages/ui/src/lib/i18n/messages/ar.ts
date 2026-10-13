@@ -549,6 +549,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'صفوف مفصّلة',
   'sessions.sidebar.activity.pinnedTitle': 'المثبّتة',
   'sessions.sidebar.header.displayMode.showAttention': 'إظهار قسم يحتاج إلى اهتمام',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'صفوف بسطر واحد',
   'sessions.sidebar.header.displayMode.showArchived': 'إظهار الجلسات المؤرشفة',
   'sessions.sidebar.header.displayMode.collapseAll': 'طي الكل',
   'sessions.sidebar.header.displayMode.expandAll': 'توسيع الكل',

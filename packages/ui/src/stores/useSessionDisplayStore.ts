@@ -28,6 +28,12 @@ export const DEFAULT_SIDEBAR_ZONE_ORDER: readonly SidebarZoneKey[] = Object.free
 const SIDEBAR_ZONE_KEYS: ReadonlySet<string> = new Set(DEFAULT_SIDEBAR_ZONE_ORDER);
 const isSidebarZoneKey = (value: string): value is SidebarZoneKey => SIDEBAR_ZONE_KEYS.has(value);
 
+// Timeline-style session rows (the List view, In work, Needs attention,
+// Pinned) collapse to one line: the branch line goes, the PR badge and the
+// model's logo move into the title line's meta cluster, and the row tooltip
+// keeps project and branch. On by default; off restores the two-line rows.
+export const DEFAULT_SIDEBAR_SINGLE_LINE_ROWS = true;
+
 /**
  * Turns a stored or synced list into a complete order: known keys in the
  * given order, unknown keys and duplicates dropped, missing keys appended in
@@ -115,6 +121,8 @@ type SessionDisplayStore = {
   sidebarZoneOrder: SidebarZoneKey[];
   /** Hours a finished, not yet viewed turn counts for Needs attention and the unread check (`lib/sidebarTimeWindows.ts`). */
   sidebarAttentionWindowHours: number;
+  /** One-line timeline-style session rows; see `DEFAULT_SIDEBAR_SINGLE_LINE_ROWS`. */
+  sidebarSingleLineRows: boolean;
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
   setShowAttentionSection: (show: boolean) => void;
@@ -130,6 +138,8 @@ type SessionDisplayStore = {
   moveSidebarZone: (key: SidebarZoneKey, direction: 'up' | 'down', rendered?: readonly SidebarZoneKey[]) => void;
   /** Both setters normalise: whole hours within the limits, the default for anything else. */
   setSidebarAttentionWindowHours: (hours: unknown) => void;
+  setSidebarSingleLineRows: (on: boolean) => void;
+  toggleSidebarSingleLineRows: () => void;
 };
 
 export const migrateSessionDisplayState = (
@@ -188,6 +198,11 @@ export const migrateSessionDisplayState = (
     // is kept if it is usable.
     state.sidebarAttentionWindowHours = normalizeSidebarWindowHours(state.sidebarAttentionWindowHours, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS);
   }
+  if (version < 13) {
+    // v13 adds the single-line rows switch, on for everyone (the branch line
+    // is one toggle away); a value from a newer build that was downgraded is kept.
+    if (typeof state.sidebarSingleLineRows !== 'boolean') state.sidebarSingleLineRows = DEFAULT_SIDEBAR_SINGLE_LINE_ROWS;
+  }
   return state;
 };
 
@@ -234,10 +249,13 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       setSidebarAttentionWindowHours: (hours) => set({
         sidebarAttentionWindowHours: normalizeSidebarWindowHours(hours, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS),
       }),
+      sidebarSingleLineRows: DEFAULT_SIDEBAR_SINGLE_LINE_ROWS,
+      setSidebarSingleLineRows: (on) => set({ sidebarSingleLineRows: on }),
+      toggleSidebarSingleLineRows: () => set((state) => ({ sidebarSingleLineRows: !state.sidebarSingleLineRows })),
     }),
     {
       name: 'session-display-mode',
-      version: 12,
+      version: 13,
       // v1→v2 adds projectSortOrder using the canonical manual ordering.
       // v2→v3 replaces the previously shipped recent default with manual.
       // v3→v4 removes displayMode (single sidebar row layout).
@@ -250,6 +268,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // showAttentionSection (off by default).
       // v10→v11 adds sidebarZoneOrder (the fixed order the sidebar had before).
       // v11→v12 adds sidebarAttentionWindowHours (48).
+      // v12→v13 adds sidebarSingleLineRows (on).
       migrate: migrateSessionDisplayState,
     },
   ),

@@ -574,6 +574,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': '详细行',
   'sessions.sidebar.activity.pinnedTitle': '已置顶',
   'sessions.sidebar.header.displayMode.showAttention': '显示需要关注部分',
+  'sessions.sidebar.header.displayMode.singleLineRows': '单行显示',
   'sessions.sidebar.header.displayMode.showArchived': '显示已归档会话',
   'sessions.sidebar.header.displayMode.collapseAll': '全部折叠',
   'sessions.sidebar.header.displayMode.expandAll': '全部展开',

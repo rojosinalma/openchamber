@@ -583,6 +583,7 @@ export const dict: Record<I18nKey, string> = {
   "sessions.sidebar.header.displayMode.detailedZoneRows": "Filas detalladas",
   "sessions.sidebar.activity.pinnedTitle": "Ancladas",
   "sessions.sidebar.header.displayMode.showAttention": "Mostrar sección de atención requerida",
+  "sessions.sidebar.header.displayMode.singleLineRows": "Filas de una línea",
   "sessions.sidebar.header.displayMode.showArchived": "Mostrar sesiones archivadas",
   "sessions.sidebar.header.displayMode.collapseAll": "Colapsar todo",
   "sessions.sidebar.header.displayMode.expandAll": "Expandir todo",

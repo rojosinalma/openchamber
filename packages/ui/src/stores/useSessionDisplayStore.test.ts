@@ -4,7 +4,7 @@ import { Window } from 'happy-dom';
 const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'window');
 const testWindow = new Window();
 Object.defineProperty(globalThis, 'window', { configurable: true, value: testWindow });
-const { DEFAULT_SIDEBAR_ZONE_ORDER, migrateSessionDisplayState, moveSidebarZone, moveSidebarZoneTo, normalizeSidebarZoneOrder, useSessionDisplayStore } = await import('./useSessionDisplayStore');
+const { DEFAULT_SIDEBAR_SINGLE_LINE_ROWS, DEFAULT_SIDEBAR_ZONE_ORDER, migrateSessionDisplayState, moveSidebarZone, moveSidebarZoneTo, normalizeSidebarZoneOrder, useSessionDisplayStore } = await import('./useSessionDisplayStore');
 const { DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS } = await import('@/lib/sidebarTimeWindows');
 afterAll(() => {
   testWindow.close();
@@ -126,8 +126,38 @@ describe('useSessionDisplayStore attention zone', () => {
     useSessionDisplayStore.getState().setShowAttentionSection(before);
   });
 
-  test('persists at version 12', () => {
-    expect(useSessionDisplayStore.persist.getOptions().version).toBe(12);
+  test('persists at version 13', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(13);
+  });
+});
+
+describe('useSessionDisplayStore single-line rows', () => {
+  test('defaults to on', () => {
+    expect(DEFAULT_SIDEBAR_SINGLE_LINE_ROWS).toBe(true);
+    expect(useSessionDisplayStore.getState().sidebarSingleLineRows).toBe(true);
+  });
+
+  test('v12→v13 turns the switch on for a snapshot without it and keeps the rest', () => {
+    const migrated = migrateSessionDisplayState({ showPinnedSection: true, sidebarAttentionWindowHours: 72 }, 12);
+
+    expect(migrated.sidebarSingleLineRows).toBe(true);
+    expect(migrated.showPinnedSection).toBe(true);
+    expect(migrated.sidebarAttentionWindowHours).toBe(72);
+  });
+
+  test('v12→v13 keeps a stored boolean and replaces anything else', () => {
+    expect(migrateSessionDisplayState({ sidebarSingleLineRows: false }, 12).sidebarSingleLineRows).toBe(false);
+    expect(migrateSessionDisplayState({ sidebarSingleLineRows: 'off' }, 12).sidebarSingleLineRows).toBe(true);
+    expect(migrateSessionDisplayState({ displayMode: 'grouped' }, 1).sidebarSingleLineRows).toBe(true);
+  });
+
+  test('the setter and the toggle flip the switch', () => {
+    const { setSidebarSingleLineRows, toggleSidebarSingleLineRows } = useSessionDisplayStore.getState();
+
+    setSidebarSingleLineRows(false);
+    expect(useSessionDisplayStore.getState().sidebarSingleLineRows).toBe(false);
+    toggleSidebarSingleLineRows();
+    expect(useSessionDisplayStore.getState().sidebarSingleLineRows).toBe(true);
   });
 });
 
@@ -261,7 +291,8 @@ describe('useSessionDisplayStore animated activity', () => {
       expect(useSessionDisplayStore.getState().sidebarViewMode).toBe('timeline');
       expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['pinned', 'attention', 'work', 'chats', 'projects']);
       expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
-      expect(useSessionDisplayStore.persist.getOptions().version).toBe(12);
+      expect(useSessionDisplayStore.getState().sidebarSingleLineRows).toBe(true);
+      expect(useSessionDisplayStore.persist.getOptions().version).toBe(13);
       useSessionDisplayStore.getState().setAnimatedActivityIndicators(true);
       const enabledSnapshot = stored;
       useSessionDisplayStore.setState({ animatedActivityIndicators: false });

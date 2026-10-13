@@ -134,6 +134,17 @@ describe('settings helpers', () => {
     const next = helpers.mergePersistedSettings(reloaded, helpers.sanitizeSettingsUpdate({ sidebarShowPinnedSection: true }));
     expect(helpers.formatSettingsResponse(next).sidebarAttentionWindowHours).toBe(72);
   });
+  it('keeps the single-line rows switch as a boolean and round-trips it', () => {
+    const helpers = createTestHelpers();
+    expect(helpers.sanitizeSettingsUpdate({ sidebarSingleLineRows: false }).sidebarSingleLineRows).toBe(false);
+    expect(helpers.sanitizeSettingsUpdate({ sidebarSingleLineRows: 'false' }).sidebarSingleLineRows).toBeUndefined();
+    expect(helpers.sanitizeSettingsUpdate({ sidebarSingleLineRows: 0 }).sidebarSingleLineRows).toBeUndefined();
+    const saved = helpers.mergePersistedSettings({}, helpers.sanitizeSettingsUpdate({ sidebarSingleLineRows: false }));
+    const reloaded = helpers.formatSettingsResponse(JSON.parse(JSON.stringify(saved)));
+    expect(reloaded.sidebarSingleLineRows).toBe(false);
+    const next = helpers.mergePersistedSettings(reloaded, helpers.sanitizeSettingsUpdate({ sidebarShowPinnedSection: true }));
+    expect(helpers.formatSettingsResponse(next).sidebarSingleLineRows).toBe(false);
+  });
   it('round-trips telemetry opt-in with the hidden list and preserves it across unrelated writes', () => {
     const helpers = createTestHelpers();
     const legacy = helpers.sanitizeSettingsUpdate({ workStatusHiddenSections: [] });
@@ -868,7 +879,7 @@ describe('settings registry gate', () => {
     tunnelProvider: 'cloudflare', tunnelMode: 'quick', tunnelBootstrapTtlMs: 600000, tunnelSessionTtlMs: 86400000, managedLocalTunnelConfigPath: '/tmp/x',
     managedRemoteTunnelHostname: 'x.example', managedRemoteTunnelToken: 'token', managedRemoteTunnelPresets: [{ id: 'a', name: 'A', hostname: 'a.example' }],
     managedRemoteTunnelSelectedPresetId: 'a', managedRemoteTunnelPresetTokens: { a: 'token' },
-    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'], sidebarAttentionWindowHours: 96,
+    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'], sidebarAttentionWindowHours: 96, sidebarSingleLineRows: false,
     workStatusPanelEnabled: true, workStatusHiddenSections: ['mcp'], workStatusHiddenSectionsExplicit: true, workStatusSectionOrder: ['mcp', 'session'],
     showReasoningTraces: true, streamingAutoFollowEnabled: true, collapsibleThinkingBlocks: true, expandReasoningWhileStreaming: true, showTextJustificationActivity: true,
     chatRenderMode: 'live', activityRenderMode: 'summary', mermaidRenderingMode: 'svg', userMessageRenderingMode: 'markdown', collapsibleUserMessages: true,

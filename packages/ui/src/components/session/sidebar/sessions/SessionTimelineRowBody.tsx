@@ -15,8 +15,10 @@ type TimelineRowProject = {
 };
 
 type Props = {
-  /** One-line rows (tree rows, Chats, the Tree view's Pinned and In work):
-      title and meta on one line, no branch line. */
+  /** One line: title and meta, no branch line. Chats rows always; the other
+      timeline rows while single-line rows are on. The meta cluster then also
+      carries the PR badge (or zombie mark) and the provider logo, which
+      otherwise close the second line; the row tooltip keeps project and branch. */
   compact?: boolean;
   /** Set in Pinned and In work, where projects mix: the second line opens
       with this project's icon. Rows under their project header pass null. */
@@ -124,8 +126,9 @@ export const SessionTimelineRowBody: React.FC<Props> = ({
   // after it would sit underneath them.
   const meta = <span className={cn('ms-auto flex flex-shrink-0 items-center gap-1 transition-opacity', metaPaddingClass, hideMetaOnHoverClass)}>
     {compact ? goal : null}
-    {compact ? zombieIndicator ?? prBadge : null}
+    {compact ? (zombieIndicator ?? prBadge) : null}
     {compact ? badges : null}
+    {compact && providerId ? <ProviderLogo providerId={providerId} className="h-3 w-3 flex-shrink-0 opacity-45" /> : null}
     {directoryIndicator}
     {pinnedMarker}
     {doneHint}

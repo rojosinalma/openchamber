@@ -602,6 +602,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': '詳細列',
   'sessions.sidebar.activity.pinnedTitle': '已釘選',
   'sessions.sidebar.header.displayMode.showAttention': '顯示需要關注部分',
+  'sessions.sidebar.header.displayMode.singleLineRows': '單行顯示',
   'sessions.sidebar.header.displayMode.showArchived': '顯示已封存會話',
   'sessions.sidebar.header.displayMode.collapseAll': '全部摺疊',
   'sessions.sidebar.header.displayMode.expandAll': '全部展開',

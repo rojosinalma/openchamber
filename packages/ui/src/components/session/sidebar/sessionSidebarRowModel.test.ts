@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import type { Session } from '@/lib/opencode/model';
 import type { SessionGroup, SessionNode } from './types';
 import type { ProjectSection } from './projects/sessionProjectRender';
-import { buildSessionSidebarRowModel, countSessionSearchMatches, resolveSessionSidebarStickyHeader, runExpansionKey, timelineProjectContainerKey, type SessionSidebarActivityItem, type SessionSidebarRowModelArgs } from './sessionSidebarRowModel';
+import { buildSessionSidebarRowModel, countSessionSearchMatches, isTwoLineSessionRow, resolveSessionSidebarStickyHeader, runExpansionKey, timelineProjectContainerKey, type SessionSidebarActivityItem, type SessionSidebarRowModelArgs } from './sessionSidebarRowModel';
 import { countSessionTreeQueryMatches } from './recent/activitySections';
 import { buildMultiRunIndex } from '@/lib/multirun/runs';
 import { withMultiRunMembership } from '@/lib/multirun/identity';
@@ -1012,5 +1012,82 @@ describe('buildSessionSidebarRowModel zone order', () => {
 
     expect(model.stickyHeaders.map((header) => header.id)).toEqual(['projects', 'project-a', 'chats', 'pinned', 'attention', 'work']);
     expect(model.stickyHeaders.map((header) => header.rowIndex)).toEqual([...model.stickyHeaders.map((header) => header.rowIndex)].sort((left, right) => left - right));
+  });
+});
+
+describe('buildSessionSidebarRowModel single-line rows', () => {
+  // Every kind of session row at once: a project-tree row, a Chats row, a
+  // timeline row under its project header and an In work row.
+  const everyRowKind = (): SessionSidebarRowModelArgs => {
+    const input = args([project([group([node('tree')])])]);
+    input.chatGroup = group([node('chat')], { id: 'chats', directory: '/chats', folderScopeKey: '/chats' });
+    input.workItems = [timelineItem('work')];
+    input.zoneSessionIds = new Set(['work']);
+    // Tree zone rows are one line on their own ('mixed-compact'); Detailed
+    // rows gives them the two-line context the switch acts on.
+    input.detailedZoneRows = true;
+    return input;
+  };
+  const estimatesOf = (input: SessionSidebarRowModelArgs): Record<string, number> => Object.fromEntries(
+    buildSessionSidebarRowModel(input).rows.flatMap((row) => (row.kind === 'session' ? [[`${row.renderContext}:${row.node.session.id}`, row.estimateSize]] : [])),
+  );
+
+  test('on (the default), timeline-style rows take the one-line estimate of tree and Chats rows', () => {
+    const estimates = estimatesOf(everyRowKind());
+
+    expect(estimates['timeline-mixed:work']).toBe(estimates['project:tree']);
+    expect(estimates['timeline-mixed:work']).toBe(estimates['tree-chat:chat']);
+    expect(estimatesOf({ ...everyRowKind(), singleLineRows: true })).toEqual(estimates);
+  });
+
+  test('off, timeline-style rows take the two-line estimate; tree and Chats rows keep theirs', () => {
+    const on = estimatesOf(everyRowKind());
+    const off = estimatesOf({ ...everyRowKind(), singleLineRows: false });
+
+    expect(off['timeline-mixed:work']).toBeGreaterThan(on['timeline-mixed:work']);
+    expect(off['project:tree']).toBe(on['project:tree']);
+    expect(off['tree-chat:chat']).toBe(on['tree-chat:chat']);
+  });
+
+  test('the List view rows under a project header follow the switch too', () => {
+    const input = everyRowKind();
+    input.viewMode = 'timeline';
+    input.timelineItems = [timelineItem('listed')];
+
+    const on = estimatesOf({ ...input, singleLineRows: true });
+    const off = estimatesOf({ ...input, singleLineRows: false });
+
+    expect(on['timeline:listed']).toBe(on['timeline-chat:chat']);
+    expect(off['timeline:listed']).toBeGreaterThan(on['timeline:listed']);
+  });
+
+  test('a run row in a timeline zone follows the switch like the session rows', () => {
+    const runMember = (id: string): Session => ({
+      ...session(id),
+      metadata: withMultiRunMembership({}, {
+        version: 1, sessionID: id, group: { kind: 'id', id: '2b1c0f6e-7d3a-4c1e-9a0b-5e6f7a8b9c0d' },
+        groupSlug: 'single-line', role: 'run', providerID: 'anthropic', modelID: 'claude', title: 'Single line',
+      }),
+    });
+    const lanes = [runMember('lane-1'), runMember('lane-2')];
+    const input = args([project([group([])])]);
+    input.workItems = lanes.map((lane) => timelineItem(lane.id, { node: { session: lane, children: [], worktree: null } }));
+    input.zoneSessionIds = new Set(lanes.map((lane) => lane.id));
+    input.detailedZoneRows = true;
+    input.runIndex = buildMultiRunIndex(lanes, () => '/repo');
+
+    const runEstimate = (singleLineRows: boolean) => buildSessionSidebarRowModel({ ...input, singleLineRows }).rows.find((row) => row.kind === 'run')?.estimateSize ?? Number.NaN;
+
+    expect(Number.isFinite(runEstimate(true))).toBe(true);
+    expect(runEstimate(false)).toBeGreaterThan(runEstimate(true));
+  });
+
+  test('isTwoLineSessionRow is pure in the flag and the context', () => {
+    expect(isTwoLineSessionRow('timeline', false)).toBe(true);
+    expect(isTwoLineSessionRow('timeline-mixed', false)).toBe(true);
+    expect(isTwoLineSessionRow('timeline', true)).toBe(false);
+    expect(isTwoLineSessionRow('timeline-mixed', true)).toBe(false);
+    expect(isTwoLineSessionRow('project', false)).toBe(false);
+    expect(isTwoLineSessionRow('timeline-chat', false)).toBe(false);
   });
 });

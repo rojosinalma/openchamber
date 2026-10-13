@@ -165,6 +165,8 @@ export function SidebarHeader(props: Props): React.ReactNode {
   const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
   const setDetailedZoneRows = useSessionDisplayStore((state) => state.setDetailedZoneRows);
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
+  const singleLineRows = useSessionDisplayStore((state) => state.sidebarSingleLineRows);
+  const toggleSingleLineRows = useSessionDisplayStore((state) => state.toggleSidebarSingleLineRows);
   const sidebarZoneOrder = useSessionDisplayStore((state) => state.sidebarZoneOrder);
   const setSidebarZoneOrder = useSessionDisplayStore((state) => state.setSidebarZoneOrder);
   const zoneOrderIsDefault = sidebarZoneOrder.every((zone, index) => zone === DEFAULT_SIDEBAR_ZONE_ORDER[index]);
@@ -295,8 +297,15 @@ export function SidebarHeader(props: Props): React.ReactNode {
         setShowWorkSection(!showWorkSection);
         void updateDesktopSettings({ sidebarShowWorkSection: !showWorkSection });
       }) : null}
-      {/* List rows always carry two lines; Tree keeps Pinned and In work on one unless asked. */}
-      {!timelineView ? toggleItem('sessions.sidebar.header.displayMode.detailedZoneRows', detailedZoneRows, () => {
+      {/* Timeline-style rows on one line (on by default); off brings the
+          branch line back. */}
+      {toggleItem('sessions.sidebar.header.displayMode.singleLineRows', singleLineRows, () => {
+        toggleSingleLineRows();
+        void updateDesktopSettings({ sidebarSingleLineRows: !singleLineRows });
+      })}
+      {/* With two-line rows, Tree keeps Pinned and In work on one unless asked;
+          single-line rows already fold them, so the toggle would change nothing. */}
+      {!timelineView && !singleLineRows ? toggleItem('sessions.sidebar.header.displayMode.detailedZoneRows', detailedZoneRows, () => {
         setDetailedZoneRows(!detailedZoneRows);
         void updateDesktopSettings({ sidebarDetailedZoneRows: !detailedZoneRows });
       }) : null}

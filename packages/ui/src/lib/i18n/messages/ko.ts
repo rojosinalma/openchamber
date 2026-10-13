@@ -574,6 +574,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': '자세한 행',
   'sessions.sidebar.activity.pinnedTitle': '고정됨',
   'sessions.sidebar.header.displayMode.showAttention': '확인 필요 섹션 표시',
+  'sessions.sidebar.header.displayMode.singleLineRows': '한 줄 행',
   'sessions.sidebar.header.displayMode.showArchived': '보관된 세션 표시',
   'sessions.sidebar.header.displayMode.collapseAll': '모두 접기',
   'sessions.sidebar.header.displayMode.expandAll': '모두 펼치기',

@@ -415,6 +415,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Szczegółowe wiersze',
   'sessions.sidebar.activity.pinnedTitle': 'Przypięte',
   'sessions.sidebar.header.displayMode.showAttention': 'Pokaż sekcję wymagających uwagi',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Wiersze jednoliniowe',
   'sessions.sidebar.header.displayMode.showArchived': 'Pokaż zarchiwizowane sesje',
   'sessions.sidebar.header.displayMode.collapseAll': 'Zwiń wszystkie',
   'sessions.sidebar.header.displayMode.expandAll': 'Rozwiń wszystkie',
