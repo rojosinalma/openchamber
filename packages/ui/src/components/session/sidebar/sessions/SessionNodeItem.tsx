@@ -75,7 +75,8 @@ import { getCurrentSessionAssist } from '@/lib/sessionAssistMetadata';
 import { isDoneSuggested, isSessionInWork } from '@/lib/sessionWorkMetadata';
 import { setSessionWorkState } from '@/sync/session-actions';
 import { sessionGoalStatusColor, sessionGoalStatusLabelKey } from '@/lib/sessionGoalPresentation';
-import { getChatsRootFromDirectory, isChatDirectoryPath } from '@/lib/chatDirectories';
+import { getChatsRootFromDirectory } from '@/lib/chatDirectories';
+import { canTrackSessionWork, chatZoneProject, chatZoneProjectLabel } from '@/lib/fork/zoneCandidates';
 import { getMultiRunIdentity, sameMultiRunIdentity } from '@/lib/multirun/identity';
 import { ArrowsMerge } from '@/components/icons/ArrowsMerge';
 import { RuntimeAPIContext } from '@/contexts/runtimeAPIContext';
@@ -363,11 +364,11 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
   const showQuickArchiveAction = !archivedBucket && !mobileVariant;
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
   const sessionRecapEnabled = useUIStore((state) => state.sessionRecapEnabled);
-  // Track / Done belongs to top-level project sessions: Chats are plain
-  // conversations, never work. Touch layouts keep their actions permanently
+  // Track / Done belongs to top-level sessions, chats included (fork:
+  // lib/fork/zoneCandidates). Touch layouts keep their actions permanently
   // visible, where an icon on every row would be noise: there it lives in the
   // session menu only.
-  const canTrackWork = sessionWorkEnabled && !archivedBucket && !node.session.parentID && !isChatDirectoryPath(node.session.directory);
+  const canTrackWork = canTrackSessionWork({ sessionWorkEnabled, archivedBucket, session: node.session });
   const showWorkAction = canTrackWork && !alwaysShowActions;
   // Pin / unpin on hover, like Track / Done: a live row with a directory to
   // pin under, where the actions are hover-revealed (touch keeps it in the menu).
@@ -436,9 +437,10 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
       if (renderContext !== 'timeline-mixed' || !projectId) return null;
       return state.projects.find((entry) => entry.id === projectId) ?? null;
     }, [renderContext, projectId]),
-  );
+  ) ?? chatZoneProject(renderContext, session.directory);
   const tooltipProjectLabel = secondaryMeta?.projectLabel
-    ?? (projectLabelFromStore ? formatProjectLabel(projectLabelFromStore) : null);
+    ?? (projectLabelFromStore ? formatProjectLabel(projectLabelFromStore) : null)
+    ?? chatZoneProjectLabel(renderContext, session.directory, t);
   // A null branchLabel on an explicit secondaryMeta is a deliberate filter
   // (HEAD/redundant with the project label), so it must not fall through to
   // the raw worktree branch. Project rows pass no secondaryMeta and keep the

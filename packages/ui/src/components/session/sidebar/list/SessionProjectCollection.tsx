@@ -63,6 +63,7 @@ import { useSidebarSpaces, type SpaceMark } from '@/lib/spaces/spaces-store';
 import { useUIStore } from '@/stores/useUIStore';
 import { isSessionInWork } from '@/lib/sessionWorkMetadata';
 import { isSessionPinned } from '@/stores/useSessionPinnedStore';
+import { isZoneCandidate } from '@/lib/fork/zoneCandidates';
 import { useAttentionSessions } from '@/hooks/useAttentionSessions';
 import { buildMultiRunIndex } from '@/lib/multirun/runs';
 import { selectBlockingBadgeSessionScopes } from '../sessions/sessionNodeItemUtils';
@@ -436,10 +437,10 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     return items.map((item) => ({ ...item, blockingBadgeSessionScopes: badgeScopesBySessionId.get(item.node.session.id) }));
   }, [collection.childrenMap, collection.orderedSessions, collection.rootSessions, ownership.bySessionId, spaceLabelById, timelineMode, topology.availableWorktreesByProject, topology.gitBranches, topology.projectRootBranches, topology.projects, view.hasSessionSearchQuery, view.homeDirectory, view.normalizedSessionSearchQuery]);
 
-  // Pinned sessions and sessions in work: top-level, unarchived project
-  // sessions (Chats are plain conversations and keep their pins in Chats), in
-  // the shared lifecycle order. A pinned session in work is listed in Pinned
-  // only. Both stay in their projects too; the row model gets the id set for
+  // Pinned sessions and sessions in work: top-level, unarchived sessions, in
+  // the shared lifecycle order. In work takes chats too (fork:
+  // lib/fork/zoneCandidates); Pinned lists project sessions only, chats keep
+  // their pins in Chats. A pinned session in work is listed in Pinned only. Both stay in their projects too; the row model gets the id set for
   // search, which lists each of them once, in its zone.
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
@@ -451,8 +452,8 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     const pinned: Session[] = [];
     const work: Session[] = [];
     for (const session of collection.orderedSessions) {
-      if (session.parentID || session.time?.archived || isChatDirectoryPath(session.directory)) continue;
-      if (showPinnedSection && isSessionPinned(collection.pinnedSessionIds, session.directory, session.id)) pinned.push(session);
+      if (!isZoneCandidate(session)) continue;
+      if (showPinnedSection && !isChatDirectoryPath(session.directory) && isSessionPinned(collection.pinnedSessionIds, session.directory, session.id)) pinned.push(session);
       else if (showWork && isSessionInWork(session)) work.push(session);
     }
     if (pinned.length === 0 && work.length === 0) return EMPTY_ZONE_SESSIONS;
@@ -524,7 +525,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     const byId = new Map(collection.orderedSessions.map((session) => [session.id, session]));
     const sessions = attentionEntries.flatMap((entry) => {
       const session = byId.get(entry.sessionId);
-      return session && !session.parentID && !session.time?.archived && !isChatDirectoryPath(session.directory) ? [session] : [];
+      return session && isZoneCandidate(session) ? [session] : [];
     });
     return sessions.length > 0 ? sessions : EMPTY_ATTENTION_SESSIONS;
   }, [attentionEntries, collection.orderedSessions, showAttentionSection]);

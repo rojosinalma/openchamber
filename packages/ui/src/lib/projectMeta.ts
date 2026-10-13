@@ -43,6 +43,7 @@ export const PROJECT_ICONS: Array<{ key: string; Icon: IconName; label: string }
   { key: 'camera',     Icon: 'camera',        label: 'Media' },
   { key: 'book',       Icon: 'book-open',      label: 'Docs' },
   { key: 'heart',      Icon: 'heart',         label: 'Favorite' },
+  { key: 'chat',       Icon: 'chat-4',        label: 'Chat' },
 ];
 
 export const PROJECT_ICON_MAP: Record<string, IconName> = Object.fromEntries(
