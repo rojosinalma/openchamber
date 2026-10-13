@@ -122,13 +122,18 @@ export const PluginsGrid: React.FC<{
     if (!checkOk) toast.error(t('settings.plugins.toast.checkFailed'));
   };
 
+  // A discovered file a config entry names (same real path) is the same
+  // plugin, loaded once: the entry's card stands for both, with the entry's
+  // options and the shared runtime state.
+  const visibleFiles = React.useMemo(() => files.filter((file) => !file.configEntryId), [files]);
+
   // One stable target per card, so each card's status hook memoizes.
   const runtimeTargets = React.useMemo(() => {
     const targets = new Map<string, PluginRuntimeTarget | null>();
-    for (const entry of entries) targets.set(entry.id, configEntryRuntimeTarget(entry.spec, entry.sourcePath));
-    for (const file of files) targets.set(file.id, pluginFileRuntimeTarget(file.absolutePath));
+    for (const entry of entries) targets.set(entry.id, configEntryRuntimeTarget(entry.spec, entry.sourcePath, entry.realPath));
+    for (const file of visibleFiles) targets.set(file.id, pluginFileRuntimeTarget(file.absolutePath, file.realPath));
     return targets;
-  }, [entries, files]);
+  }, [entries, visibleFiles]);
 
   // The package OpenCode can reinstall in place for this entry, when a newer
   // release matches its spec and no update is already running.
@@ -180,10 +185,10 @@ export const PluginsGrid: React.FC<{
 
   const items: GridItem[] = [
     ...entries.map((entry): GridItem => ({ kind: 'entry', entry })),
-    ...files.map((file): GridItem => ({ kind: 'file', file })),
+    ...visibleFiles.map((file): GridItem => ({ kind: 'file', file })),
   ];
   const filtered = rankByQuery(items, query, (item) => (
-    item.kind === 'entry' ? [item.entry.spec] : [item.file.fileName, item.file.absolutePath ?? '']
+    item.kind === 'entry' ? [item.entry.spec, item.entry.absolutePath ?? ''] : [item.file.fileName, item.file.absolutePath ?? '']
   ));
   const hasQuery = query.trim().length > 0;
   const refreshing = isLoadingRegistry || isCheckingUpdates;

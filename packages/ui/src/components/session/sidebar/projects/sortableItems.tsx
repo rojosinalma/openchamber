@@ -54,20 +54,16 @@ const ProjectHeaderIdentity: React.FC<ProjectHeaderIdentityProps> = ({
   const { currentTheme } = useThemeSystem();
   const projectIconName = projectIcon ? PROJECT_ICON_MAP[projectIcon] : null;
   const iconColor = resolveProjectColor(projectColor);
-  const hasCollapseControl = isCollapsed !== undefined;
-  // The project icon cross-fades into the collapse chevron on hover.
-  const iconVisibilityClassName = hasCollapseControl
-    ? (alwaysShowActions ? 'hidden' : 'transition-opacity group-hover/project:opacity-0 group-has-[:focus-visible]/project:opacity-0')
-    : undefined;
+  // The project icon stays put on hover; the collapse chevron replaces it
+  // only on touch surfaces, which have no hover to reveal it.
+  const showCollapseChevron = isCollapsed !== undefined && alwaysShowActions;
+  const iconVisibilityClassName = showCollapseChevron ? 'hidden' : undefined;
 
   return (
     <>
       <span className="relative inline-flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center">
-        {hasCollapseControl ? (
-          <span className={cn(
-            'h-3.5 w-3.5 items-center justify-center text-muted-foreground',
-            alwaysShowActions ? 'inline-flex' : 'absolute inset-0 inline-flex opacity-0 transition-opacity group-hover/project:opacity-100 group-has-[:focus-visible]/project:opacity-100',
-          )}>
+        {showCollapseChevron ? (
+          <span className="inline-flex h-3.5 w-3.5 items-center justify-center text-muted-foreground">
             <Icon name={isCollapsed ? 'arrow-right-s' : 'arrow-down-s'} className="h-3.5 w-3.5" />
           </span>
         ) : null}
@@ -75,8 +71,7 @@ const ProjectHeaderIdentity: React.FC<ProjectHeaderIdentityProps> = ({
           <span
             className={cn(
               'h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-[3px]',
-              hasCollapseControl && alwaysShowActions ? 'hidden' : 'inline-flex',
-              iconVisibilityClassName,
+              showCollapseChevron ? 'hidden' : 'inline-flex',
             )}
             style={projectIconBackground ? { backgroundColor: projectIconBackground } : undefined}
           >
@@ -100,9 +95,11 @@ const ProjectHeaderIdentity: React.FC<ProjectHeaderIdentityProps> = ({
           <Icon name="folder" className={cn('h-3.5 w-3.5 text-muted-foreground/80', iconVisibilityClassName)} style={iconColor ? { color: iconColor } : undefined} />
         )}
       </span>
-      {/* One size up from rows: projects and zones are the top level of the
-          tree, above semibold-free worktree and folder headers. */}
-      <span className={cn('truncate typography-ui-header font-semibold text-foreground', labelClassName)}>{projectLabel}</span>
+      {/* Label size, semibold: a half step above the row titles and set apart
+          from the zone caps-labels by weight and colour rather than size, so
+          zone (muted caps) < project (semibold) > rows (smallest) reads as
+          chapter / section / line. */}
+      <span className={cn('truncate typography-ui-label font-semibold text-foreground', labelClassName)}>{projectLabel}</span>
     </>
   );
 };

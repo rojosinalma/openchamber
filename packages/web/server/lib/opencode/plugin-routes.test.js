@@ -100,6 +100,48 @@ describe('opencode plugin routes', () => {
     expect(response.body).toEqual({ entries: [], files: [] });
   });
 
+  test('GET /api/config/plugins pairs a config entry with the discovered plugin it names', async () => {
+    const pluginDir = path.join(rootDir, 'plugins', 'local-plugin');
+    fs.mkdirSync(pluginDir, { recursive: true });
+    fs.writeFileSync(path.join(pluginDir, 'index.js'), '// plugin', 'utf8');
+    fs.mkdirSync(path.join(rootDir, 'plugins', 'standalone'), { recursive: true });
+    await createEntry('./plugins/local-plugin');
+    await createEntry('./plugins/not-on-disk');
+    await createEntry('some-npm-package');
+
+    const response = await request(app).get('/api/config/plugins').expect(200);
+
+    const paired = response.body.entries.find((entry) => entry.spec === './plugins/local-plugin');
+    const unpaired = response.body.entries.find((entry) => entry.spec === './plugins/not-on-disk');
+    const npm = response.body.entries.find((entry) => entry.spec === 'some-npm-package');
+    const pairedFile = response.body.files.find((file) => file.fileName === 'local-plugin');
+    const standalone = response.body.files.find((file) => file.fileName === 'standalone');
+    expect(paired).toMatchObject({ absolutePath: pluginDir, realPath: fs.realpathSync(pluginDir), fileId: pairedFile.id });
+    expect(pairedFile).toMatchObject({ realPath: fs.realpathSync(pluginDir), configEntryId: paired.id });
+    expect(unpaired).toMatchObject({ absolutePath: path.join(rootDir, 'plugins', 'not-on-disk') });
+    expect(unpaired.fileId).toBeUndefined();
+    expect(npm.absolutePath).toBeUndefined();
+    expect(npm.fileId).toBeUndefined();
+    expect(standalone.configEntryId).toBeUndefined();
+  });
+
+  testUnlessRoot('GET /api/config/plugins pairs through a symlinked plugins directory by real path', async () => {
+    const realDir = path.join(rootDir, 'real-plugins');
+    const realPluginDir = path.join(realDir, 'linked-plugin');
+    fs.rmSync(realDir, { recursive: true, force: true });
+    fs.mkdirSync(realPluginDir, { recursive: true });
+    fs.writeFileSync(path.join(realPluginDir, 'index.js'), '// plugin', 'utf8');
+    fs.symlinkSync(realDir, path.join(rootDir, 'plugins'), 'dir');
+    await createEntry(realPluginDir);
+
+    const response = await request(app).get('/api/config/plugins').expect(200);
+
+    const entry = response.body.entries[0];
+    const file = response.body.files.find((candidate) => candidate.fileName === 'linked-plugin');
+    expect(file).toMatchObject({ absolutePath: path.join(rootDir, 'plugins', 'linked-plugin'), realPath: fs.realpathSync(realPluginDir), configEntryId: entry.id });
+    expect(entry).toMatchObject({ absolutePath: realPluginDir, realPath: fs.realpathSync(realPluginDir), fileId: file.id });
+  });
+
   test('GET /registry with empty specs returns empty results', async () => {
     const getNpmInfo = mock(async () => ({ ok: true, latest: '1.0.0', versions: ['1.0.0'], distTags: { latest: '1.0.0' } }));
     createRegistryApp(getNpmInfo);
@@ -175,6 +217,36 @@ describe('opencode plugin routes', () => {
     const response = await request(app).get('/api/config/plugins/registry?specs=%2Fnonexistent%2F__path%2Fxyz.js').expect(200);
 
     expect(response.body.results[0]).toEqual({ kind: 'path-missing', spec: '/nonexistent/__path/xyz.js', absolutePath: '/nonexistent/__path/xyz.js' });
+  });
+
+  test('GET /registry resolves a relative user-scope spec against its config file, not the project', async () => {
+    createRegistryApp(mock(async () => ({ ok: true, latest: '1.0.0', versions: ['1.0.0'], distTags: { latest: '1.0.0' } })));
+    const pluginDir = path.join(rootDir, 'plugins', 'local-plugin');
+    fs.mkdirSync(pluginDir, { recursive: true });
+    fs.writeFileSync(path.join(pluginDir, 'index.js'), '// plugin', 'utf8');
+    await createEntry('./plugins/local-plugin');
+
+    const response = await request(app).get(`/api/config/plugins/registry?specs=${encodeURIComponent('./plugins/local-plugin')}`).expect(200);
+
+    expect(response.body.results[0]).toEqual({ kind: 'path-ok', spec: './plugins/local-plugin', absolutePath: pluginDir });
+  });
+
+  test('GET /registry keeps a relative project-scope spec on the project directory', async () => {
+    createRegistryApp(mock(async () => ({ ok: true, latest: '1.0.0', versions: ['1.0.0'], distTags: { latest: '1.0.0' } })));
+    fs.writeFileSync(path.join(projectDir, 'local.js'), '// plugin', 'utf8');
+    await request(app).post('/api/config/plugins/entry').send({ spec: './local.js', scope: 'project' }).expect(200);
+
+    const response = await request(app).get(`/api/config/plugins/registry?specs=${encodeURIComponent('./local.js')}`).expect(200);
+
+    expect(response.body.results[0]).toEqual({ kind: 'path-ok', spec: './local.js', absolutePath: path.join(projectDir, 'local.js') });
+  });
+
+  test('GET /registry resolves a relative spec no config lists against the project directory', async () => {
+    createRegistryApp(mock(async () => ({ ok: true, latest: '1.0.0', versions: ['1.0.0'], distTags: { latest: '1.0.0' } })));
+
+    const response = await request(app).get(`/api/config/plugins/registry?specs=${encodeURIComponent('./nowhere.js')}`).expect(200);
+
+    expect(response.body.results[0]).toEqual({ kind: 'path-missing', spec: './nowhere.js', absolutePath: path.join(projectDir, 'nowhere.js') });
   });
 
   test('GET /registry treats Windows absolute paths as local paths', async () => {

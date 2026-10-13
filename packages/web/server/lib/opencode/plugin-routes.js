@@ -1,5 +1,6 @@
 import fs from 'fs';
 import os from 'os';
+import path from 'path';
 
 import { getNpmInfo as defaultGetNpmInfo } from './npm-registry.js';
 import { isExactSemver as defaultIsExactSemver, isPathSpec as defaultIsPathSpec, parseNpmSpec as defaultParseNpmSpec, parsePathSpec as defaultParsePathSpec } from './plugin-spec.js';
@@ -32,6 +33,91 @@ export const registerPluginRoutes = (app, dependencies) => {
   } = dependencies;
 
   const parsedKindForSpec = (spec) => (isPathSpec(spec) ? 'path' : 'npm');
+
+  // A relative path spec resolves against the config file that declares it,
+  // as OpenCode does: `./plugins/x` in the global config means
+  // `<config dir>/plugins/x`, not `<project>/plugins/x`. The same spec can be
+  // declared in more than one layer, so every declaring base is tried and the
+  // first that exists wins; the project directory stays the fallback for a
+  // spec no config lists.
+  const isRelativePathSpec = (spec) => spec.startsWith('./') || spec.startsWith('../');
+  const resolvePathSpecCandidates = (spec, directory, entriesBySpec) => {
+    const homedir = os.homedir();
+    const fallbackCwd = directory || homedir;
+    if (!isRelativePathSpec(spec)) return [parsePathSpec(spec, { homedir, cwd: fallbackCwd }).absolutePath];
+    const bases = [];
+    for (const entry of entriesBySpec.get(spec) ?? []) {
+      const base = entry.scope === 'project'
+        ? fallbackCwd
+        : (typeof entry.sourcePath === 'string' && entry.sourcePath ? path.dirname(entry.sourcePath) : null);
+      if (base && !bases.includes(base)) bases.push(base);
+    }
+    if (bases.length === 0) bases.push(fallbackCwd);
+    return bases.map((cwd) => parsePathSpec(spec, { homedir, cwd }).absolutePath);
+  };
+  const resolvePathSpec = (spec, directory, entriesBySpec) => {
+    const candidates = resolvePathSpecCandidates(spec, directory, entriesBySpec);
+    return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0];
+  };
+  const indexEntriesBySpec = (directory) => {
+    const bySpec = new Map();
+    let entries = [];
+    try {
+      entries = listPluginEntries(directory || undefined) ?? [];
+    } catch {
+      return bySpec;
+    }
+    for (const entry of entries) {
+      if (typeof entry?.spec !== 'string') continue;
+      const list = bySpec.get(entry.spec) ?? [];
+      list.push(entry);
+      bySpec.set(entry.spec, list);
+    }
+    return bySpec;
+  };
+
+  // The path a single config entry names, resolved by the same rule as above
+  // but for one known declaring layer; relative project-scope specs and specs
+  // without a source file use the project directory.
+  const resolveEntryPath = (entry, directory) => {
+    const homedir = os.homedir();
+    const fallbackCwd = directory || homedir;
+    const declaringDir = entry.scope !== 'project' && typeof entry.sourcePath === 'string' && entry.sourcePath
+      ? path.dirname(entry.sourcePath)
+      : null;
+    const cwd = isRelativePathSpec(entry.spec) && declaringDir ? declaringDir : fallbackCwd;
+    return parsePathSpec(entry.spec, { homedir, cwd }).absolutePath;
+  };
+  const realPathOf = (absolutePath) => {
+    try {
+      return fs.realpathSync(absolutePath);
+    } catch {
+      return absolutePath;
+    }
+  };
+
+  // A plugin OpenCode discovers in a `plugins/` directory and a `plugins[]`
+  // config entry naming the same path (declared to carry options) are one
+  // plugin: the runtime loads it once. Both sides are compared by real path,
+  // so a symlinked plugins directory still pairs up, and each side points at
+  // the other (`fileId` / `configEntryId`) for the page to render one row.
+  const linkEntriesToFiles = (entries, files, directory) => {
+    const filesByRealPath = new Map();
+    for (const file of files) {
+      if (typeof file.absolutePath !== 'string') continue;
+      file.realPath = realPathOf(file.absolutePath);
+      if (!filesByRealPath.has(file.realPath)) filesByRealPath.set(file.realPath, file);
+    }
+    for (const entry of entries) {
+      if (entry.parsedKind !== 'path' || typeof entry.spec !== 'string') continue;
+      entry.absolutePath = resolveEntryPath(entry, directory);
+      entry.realPath = realPathOf(entry.absolutePath);
+      const file = filesByRealPath.get(entry.realPath);
+      if (!file || file.configEntryId) continue;
+      file.configEntryId = entry.id;
+      entry.fileId = file.id;
+    }
+  };
 
   const resolveDirectory = async (req, res) => {
     const { directory, error } = await resolveOptionalProjectDirectory(req);
@@ -90,10 +176,10 @@ export const registerPluginRoutes = (app, dependencies) => {
       const directory = await resolveDirectory(req, res);
       if (directory === null && res.headersSent) return;
 
-      res.json({
-        entries: listPluginEntries(directory),
-        files: listPluginDirFiles(directory),
-      });
+      const entries = listPluginEntries(directory) ?? [];
+      const files = listPluginDirFiles(directory) ?? [];
+      linkEntriesToFiles(entries, files, directory);
+      res.json({ entries, files });
     } catch (error) {
       console.error('[API:GET /api/config/plugins] Failed:', error);
       res.status(500).json({ error: 'Failed to list plugins' });
@@ -144,6 +230,9 @@ export const registerPluginRoutes = (app, dependencies) => {
       await Promise.all(Array.from(npmJobs.keys()).map(async (name) => {
         npmInfoByName.set(name, await getNpmInfo(name, { forceRefresh: refresh }));
       }));
+      const entriesBySpec = uniqueSpecs.some((spec) => parsedKindForSpec(spec) === 'path' && isRelativePathSpec(spec))
+        ? indexEntriesBySpec(directory)
+        : new Map();
 
       const results = [];
       for (const spec of uniqueSpecs) {
@@ -153,7 +242,7 @@ export const registerPluginRoutes = (app, dependencies) => {
         }
 
         if (parsedKindForSpec(spec) === 'path') {
-          const { absolutePath } = parsePathSpec(spec, { homedir: os.homedir(), cwd: directory || os.homedir() });
+          const absolutePath = resolvePathSpec(spec, directory, entriesBySpec);
           try {
             fs.statSync(absolutePath);
           } catch {
