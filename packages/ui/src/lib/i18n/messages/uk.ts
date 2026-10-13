@@ -579,6 +579,7 @@ export const dict: Record<I18nKey, string> = {
   "sessions.sidebar.header.displayMode.detailedZoneRows": "Детальні рядки",
   "sessions.sidebar.activity.pinnedTitle": "Закріплені",
   "sessions.sidebar.header.displayMode.showAttention": "Показувати розділ «Потребують уваги»",
+  "sessions.sidebar.header.displayMode.singleLineRows": "Однорядкові рядки",
   "sessions.sidebar.header.displayMode.showArchived": "Показувати архівовані сесії",
   "sessions.sidebar.header.displayMode.collapseAll": "Згорнути все",
   "sessions.sidebar.header.displayMode.expandAll": "Розгорнути все",

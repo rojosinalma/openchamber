@@ -383,6 +383,9 @@ export const SETTINGS_REGISTRY = {
   // `lib/sidebarTimeWindows.ts`). Per surface like the zone toggles: a phone
   // and a desktop can keep different horizons.
   sidebarAttentionWindowHours: field({ scope: 'profile', perSurface: true, parse: mapParser(parseFiniteNumber, (value) => normalizeSidebarWindowHours(value, DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS)), ui: sessionDisplayField('sidebarAttentionWindowHours') }),
+  // Timeline-style session rows on one line (no branch line). Per surface:
+  // a wide desktop may want the branch line back where a phone drawer does not.
+  sidebarSingleLineRows: field({ scope: 'profile', perSurface: true, parse: parseBoolean, ui: sessionDisplayField('sidebarSingleLineRows') }),
 
   // ── Work status ──
   workStatusSectionOrder: field({

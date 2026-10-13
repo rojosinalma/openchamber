@@ -570,6 +570,7 @@ export const dict: Record<I18nKey, string> = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': '詳細な行',
   'sessions.sidebar.activity.pinnedTitle': 'ピン留め',
   'sessions.sidebar.header.displayMode.showAttention': '要確認セクションを表示',
+  'sessions.sidebar.header.displayMode.singleLineRows': '1行表示の行',
   'sessions.sidebar.header.displayMode.showArchived': 'アーカイブ済みセッションを表示',
   'sessions.sidebar.header.displayMode.collapseAll': 'すべて折りたたむ',
   'sessions.sidebar.header.displayMode.expandAll': 'すべて展開',

@@ -394,6 +394,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Lignes détaillées',
   'sessions.sidebar.activity.pinnedTitle': 'Épinglées',
   'sessions.sidebar.header.displayMode.showAttention': 'Afficher la section « À traiter »',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Lignes sur une seule ligne',
   'sessions.sidebar.header.displayMode.collapseAll': 'Tout réduire',
   'sessions.sidebar.header.displayMode.expandAll': 'Tout développer',
   'sessions.sidebar.header.displayMode.resetZoneOrder': 'Réinitialiser l\'ordre des sections',

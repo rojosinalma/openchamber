@@ -54,3 +54,45 @@ for (const compact of [true, false]) {
     expect(element?.getAttribute('dir')).toBe('auto');
   });
 }
+
+// Single-line rows: what closed the second line (PR badge or zombie mark,
+// provider logo) moves into the title line's meta cluster, next to the time.
+const renderMarkedRow = (compact: boolean, zombie: boolean) => root.render(<SessionTimelineRowBody
+  compact={compact}
+  project={null}
+  projectLabel={null}
+  title={title}
+  titleClassName=""
+  branchLabel="feature/rows"
+  statusDot={null}
+  pinnedMarker={null}
+  timeSlot="1m"
+  directoryIndicator={null}
+  prBadge={<span data-testid="pr-badge">#42</span>}
+  zombieIndicator={zombie ? <span data-testid="zombie">!</span> : null}
+  badges={null}
+  providerId="anthropic"
+  hideMetaOnHoverClass=""
+/>);
+
+const metaOf = (marker: string): Element | null | undefined => document.querySelector(`[data-testid="${marker}"]`)?.parentElement;
+
+test('a compact row carries the PR badge and the provider logo in its meta cluster, and drops the branch', async () => {
+  await act(async () => renderMarkedRow(true, false));
+  const meta = metaOf('pr-badge');
+  expect(meta?.textContent).toContain('1m');
+  expect(meta?.querySelector('img, svg')).not.toBeNull();
+  expect(document.body.textContent).not.toContain('feature/rows');
+});
+
+test('a compact zombie row shows the zombie mark instead of the PR badge', async () => {
+  await act(async () => renderMarkedRow(true, true));
+  expect(document.querySelector('[data-testid="zombie"]')).not.toBeNull();
+  expect(document.querySelector('[data-testid="pr-badge"]')).toBeNull();
+});
+
+test('a two-line row keeps the PR badge on its second line, away from the time', async () => {
+  await act(async () => renderMarkedRow(false, false));
+  expect(metaOf('pr-badge')?.textContent).not.toContain('1m');
+  expect(document.body.textContent).toContain('feature/rows');
+});

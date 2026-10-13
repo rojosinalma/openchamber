@@ -226,6 +226,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
   const showChatsSection = useSessionDisplayStore((state) => state.showChatsSection);
   const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
   const sidebarZoneOrder = useSessionDisplayStore((state) => state.sidebarZoneOrder);
+  const sidebarSingleLineRows = useSessionDisplayStore((state) => state.sidebarSingleLineRows);
   const projectDisplayMode = useSessionDisplayStore((state) => state.projectDisplayMode);
   const singleProjectId = useSessionDisplayStore((state) => state.singleProjectId);
   const setSingleProjectId = useSessionDisplayStore((state) => state.setSingleProjectId);
@@ -439,7 +440,6 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
   // which lists each of them once, in the work block.
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
-  const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
   const workSessions = React.useMemo(() => {
     if (!sessionWorkEnabled || !showWorkSection) return EMPTY_WORK_SESSIONS;
     const sessions = collection.orderedSessions.filter((session) => !session.parentID && !session.time?.archived && !isChatDirectoryPath(session.directory) && isSessionInWork(session));
@@ -885,10 +885,10 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     timelineItems,
     workItems,
     workSessionIds,
-    detailedZoneRows,
     attentionItems,
     pinnedItems,
     zoneOrder: sidebarZoneOrder,
+    singleLineRows: sidebarSingleLineRows,
     foldersMap,
     groupSearchDataByGroup,
     normalizedQuery: view.normalizedSessionSearchQuery,
@@ -909,7 +909,7 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     hideDirectoryControls: view.hideDirectoryControls,
     sessionBatchSize: singleProjectMode && !view.useGroupedSections ? 20 : undefined,
     runIndex,
-  }), [runIndex, chatGroup, showChatsSection, projectView.collapsedActivities, timelineItems, timelineMode, workItems, workSessionIds, detailedZoneRows, attentionItems, pinnedItems, collapsedFolderIds, collection.pinnedSessionIds, expandedParents, folderAuthorityByOwner, foldersMap, groupSearchDataByGroup, groupStatusByKey, orderedSectionsForRender, projectSections, projectView.collapsedGroups, projectView.collapsedProjects, selectedSingleProjectId, sessionOrderIndex, sidebarZoneOrder, singleProjectMode, view.activeProjectId, view.hasSessionSearchQuery, view.hideDirectoryControls, view.normalizedSessionSearchQuery, view.showOnlyMainWorkspace, view.useGroupedSections, visibleCountByContainer]);
+  }), [runIndex, chatGroup, showChatsSection, projectView.collapsedActivities, timelineItems, timelineMode, workItems, workSessionIds, attentionItems, pinnedItems, collapsedFolderIds, collection.pinnedSessionIds, expandedParents, folderAuthorityByOwner, foldersMap, groupSearchDataByGroup, groupStatusByKey, orderedSectionsForRender, projectSections, projectView.collapsedGroups, projectView.collapsedProjects, selectedSingleProjectId, sessionOrderIndex, sidebarSingleLineRows, sidebarZoneOrder, singleProjectMode, view.activeProjectId, view.hasSessionSearchQuery, view.hideDirectoryControls, view.normalizedSessionSearchQuery, view.showOnlyMainWorkspace, view.useGroupedSections, visibleCountByContainer]);
   React.useEffect(() => {
     onSearchMatchCountChange(sidebarRowModel.searchMatchCount);
   }, [onSearchMatchCountChange, sidebarRowModel.searchMatchCount]);

@@ -211,16 +211,12 @@ default) shows it. With the zone hidden its sessions stay in their projects.
 `workItems` and `workSessionIds` to the row model. A session in work also stays
 in its project group and folders, in both views, so it appears in two places.
 Search lists it once, in the work block. Chats are never in work
-and offer no Track action. An empty zone is not rendered. In List, rows use
-`renderContext: 'timeline-mixed'`: two lines, the project's icon before the
-branch. In Tree they use `'mixed-compact'` by default: one line like a Chats
-row, the PR or issue as a coloured mark without its number (its tooltip lists
-the links), the branch, project and model in the whole-row tooltip. The display
-menu's Detailed rows toggle (`detailedZoneRows`, `sidebarDetailedZoneRows`, per
-surface, off by default, offered in Tree only) gives Tree the two-line rows;
-the fork's Needs attention and Pinned zones keep `'timeline-mixed'` in both views.
-Both never expand, with subsessions feeding the badges; a run row there opens
-its overview. Search
+and offer no Track action. An empty zone is not rendered. Rows use
+`renderContext: 'timeline-mixed'` in both views: two lines, the project's icon
+before the branch, or one line while the fork's Single-line rows switch is on
+(see the Timeline view notes on single-line rows; `sidebarDetailedZoneRows` is the phone sheet's own
+Detailed rows toggle and is not read on the desktop). Rows never expand, with
+subsessions feeding the badges; a run row there opens its overview. Search
 keeps a root whose subsession matches (`sessionTreeMatchesSidebarQuery`): those
 subsessions are nowhere else in the sidebar. The zone counts only sessions that match
 themselves (`countSessionTreeQueryMatches`), and a group subtracts the trees
@@ -416,6 +412,17 @@ all / Expand all.
   the project for assistive tech and on hover. The goal sits on the second line
   because hover actions cover the first line's meta and the running counter
   owns it during a turn.
+- Single-line rows (fork; `sidebarSingleLineRows`, on by default, per surface,
+  "Single-line rows" in the Display mode menu) fold the two-line contexts
+  (`timeline`, `timeline-mixed`, and the timeline run row) onto the Chats
+  rows' one-line geometry: `isTwoLineSessionRow(context, singleLineRows)` picks
+  the row estimate in the row model, `SessionNodeItem` passes `compact` and
+  takes the Chats rows' padding, action sizes and hover reserve. The compact
+  meta cluster then also carries the PR badge (or the zombie warning) and the
+  provider logo; the run row puts its lane count there. The branch line and the
+  mixed-zone project icon go; the row tooltip still names project and branch.
+  Off restores upstream's two-line rows unchanged. The phone's rows
+  (`MobileTimelineList.tsx`) do not read the switch.
 - Search filters the timeline's projects with the same rule as In work (exact
   `ses_` id, else title contains), lists every match without reveal limits,
   hides projects without matches, and counts one match per listed row.

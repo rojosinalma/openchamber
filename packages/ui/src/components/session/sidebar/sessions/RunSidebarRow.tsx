@@ -5,6 +5,7 @@ import { ProviderLogo } from '@/components/ui/ProviderLogo';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useProjectsStore } from '@/stores/useProjectsStore';
+import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import { useUIStore } from '@/stores/useUIStore';
 import type { MultiRunSummary } from '@/lib/multirun/runs';
 import type { SessionNode } from '../types';
@@ -63,10 +64,11 @@ function RunSidebarRowComponent({
 }: Props): React.ReactNode {
   const { t } = useI18n();
   const isActive = useUIStore((state) => state.runOverviewKey === run.key);
-  // The Tree view's Pinned and In work rows are flat too, on one line.
-  const isOneLineRow = renderContext === 'mixed-compact';
-  const isTimelineRow = isTwoLineTimelineContext(renderContext) || isOneLineRow;
-  // Only Pinned and In work mix projects; under a project header the row needs no icon.
+  const isTimelineRow = isTwoLineTimelineContext(renderContext);
+  // Single-line rows: the run row folds onto one line like the session rows
+  // around it; the lane count joins the provider logos in the meta cluster.
+  const singleLineRows = useSessionDisplayStore((state) => state.sidebarSingleLineRows);
+  // Only the mixed zones (Needs attention, Pinned, In work) mix projects; under a project header the row needs no icon.
   const timelineProject = useProjectsStore(React.useCallback((state) => (
     renderContext === 'timeline-mixed' && projectId ? state.projects.find((entry) => entry.id === projectId) ?? null : null
   ), [renderContext, projectId]));
@@ -76,6 +78,13 @@ function RunSidebarRowComponent({
     : t('sessions.sidebar.run.laneCountPlural', { count: laneCount });
   const activityNodes = React.useMemo(() => [...laneNodes], [laneNodes]);
   const activity = <CollapsedSessionActivityIndicator nodes={activityNodes} blockingSessionIds={blockingSessionIds} includeUnreadSubtasks={notifyOnSubtasks} />;
+  const laneCountMark = (
+    <>
+      <ArrowsMerge className="h-3 w-3 flex-shrink-0 text-muted-foreground/40" aria-hidden="true" />
+      <span className="min-w-0 truncate typography-micro text-muted-foreground/50">{laneCountLabel}</span>
+    </>
+  );
+  const providerLogos = <ProviderLogos providerIDs={run.providerIDs} ringClass="ring-sidebar opacity-60" />;
   const titleClassName = isActive ? 'text-interactive-selection-foreground' : 'text-foreground/80';
   const openOverview = () => useUIStore.getState().setRunOverviewKey(run.key);
 
@@ -92,30 +101,25 @@ function RunSidebarRowComponent({
         style={{ paddingInlineStart: TIMELINE_ROW_LEFT_PX }}
         className={cn(
           'group relative my-0.5 flex w-full cursor-pointer items-center rounded-md pe-2.5 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          isOneLineRow ? 'py-1' : 'py-1.5',
+          singleLineRows ? 'py-1' : 'py-1.5',
           isActive ? 'bg-interactive-selection/70 text-interactive-selection-foreground' : 'hover:bg-interactive-hover/60',
         )}
       >
         <SessionTimelineRowBody
-          compact={isOneLineRow}
+          compact={singleLineRows}
           project={timelineProject}
           projectLabel={projectLabel}
           title={run.title}
           titleClassName={titleClassName}
           branchLabel={null}
-          metaLineLead={(
-            <>
-              <ArrowsMerge className="h-3 w-3 flex-shrink-0 text-muted-foreground/40" aria-hidden="true" />
-              <span className="min-w-0 truncate typography-micro text-muted-foreground/50">{laneCountLabel}</span>
-            </>
-          )}
+          metaLineLead={laneCountMark}
           statusDot={activity}
           pinnedMarker={null}
           timeSlot={formatSessionCompactDateLabel(run.lastActivity)}
           directoryIndicator={null}
           prBadge={null}
           zombieIndicator={null}
-          badges={<ProviderLogos providerIDs={run.providerIDs} ringClass="ring-sidebar opacity-60" />}
+          badges={singleLineRows ? <>{laneCountMark}{providerLogos}</> : providerLogos}
           hideMetaOnHoverClass=""
         />
       </button>

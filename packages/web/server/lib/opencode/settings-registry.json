@@ -312,6 +312,10 @@
       "scope": "profile",
       "perSurface": true
     },
+    "sidebarSingleLineRows": {
+      "scope": "profile",
+      "perSurface": true
+    },
     "workStatusSectionOrder": {
       "scope": "profile"
     },

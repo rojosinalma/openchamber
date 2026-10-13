@@ -386,6 +386,9 @@ export const createSettingsHelpers = (dependencies) => {
     if (typeof candidate.sidebarAttentionWindowHours === 'number' && Number.isFinite(candidate.sidebarAttentionWindowHours)) {
       result.sidebarAttentionWindowHours = Math.max(SIDEBAR_WINDOW_HOURS_MIN, Math.min(SIDEBAR_WINDOW_HOURS_MAX, Math.round(candidate.sidebarAttentionWindowHours)));
     }
+    if (typeof candidate.sidebarSingleLineRows === 'boolean') {
+      result.sidebarSingleLineRows = candidate.sidebarSingleLineRows;
+    }
 
     if (Array.isArray(candidate.securityScopedBookmarks)) {
       result.securityScopedBookmarks = normalizeStringArray(candidate.securityScopedBookmarks);

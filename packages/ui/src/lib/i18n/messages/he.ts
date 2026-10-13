@@ -546,6 +546,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'שורות מפורטות',
   'sessions.sidebar.activity.pinnedTitle': 'מוצמדות',
   'sessions.sidebar.header.displayMode.showAttention': 'הצג את קטע דורש תשומת לב',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'שורות בשורה אחת',
   'sessions.sidebar.header.displayMode.showArchived': 'הצג הפעלות בארכיון',
   'sessions.sidebar.header.displayMode.collapseAll': 'כווץ הכול',
   'sessions.sidebar.header.displayMode.expandAll': 'הרחב הכול',

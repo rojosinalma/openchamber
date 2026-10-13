@@ -520,6 +520,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Ausführliche Zeilen',
   'sessions.sidebar.activity.pinnedTitle': 'Angeheftet',
   'sessions.sidebar.header.displayMode.showAttention': 'Abschnitt „Braucht Aufmerksamkeit“ anzeigen',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Einzeilige Zeilen',
   'sessions.sidebar.header.displayMode.showArchived': 'Archivierte Sitzungen anzeigen',
   'sessions.sidebar.header.displayMode.collapseAll': 'Alle einklappen',
   'sessions.sidebar.header.displayMode.expandAll': 'Alle ausklappen',

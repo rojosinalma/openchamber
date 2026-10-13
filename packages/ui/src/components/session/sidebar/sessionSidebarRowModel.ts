@@ -2,7 +2,7 @@ import type { Session } from '@/lib/opencode/model';
 import type { SessionFolder, SessionFoldersMap } from '@/stores/useSessionFoldersStore';
 import { compareSessionsByLifecycleOrder, EMPTY_SESSION_ORDER_RANKS } from '@/sync/session-ordering';
 import { isSessionPinned } from '@/stores/useSessionPinnedStore';
-import { DEFAULT_SIDEBAR_ZONE_ORDER, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
+import { DEFAULT_SIDEBAR_SINGLE_LINE_ROWS, DEFAULT_SIDEBAR_ZONE_ORDER, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
 import type { GroupSearchData, SessionGroup, SessionNode } from './types';
 import type { ProjectSection } from './projects/sessionProjectRender';
 import { buildGroupRenderDescriptors } from './projects/sessionProjectRender';
@@ -33,19 +33,23 @@ export const SIDEBAR_ACTIVITY_KEYS: readonly SessionSidebarActivityKey[] = ['att
 // have no left gutter and carry their status on the right: 'timeline' is a
 // two-line row under its project header; 'timeline-mixed' is the same row in
 // Needs attention, Pinned and In work, where sessions of every project mix,
-// so its second line opens with the project's icon; 'mixed-compact' is that
-// row on one line, the Tree view's default for In work; 'timeline-chat' is a
+// so its second line opens with the project's icon; 'timeline-chat' is a
 // one-line Chats row.
-export type SessionSidebarRenderContext = 'project' | 'timeline' | 'timeline-mixed' | 'mixed-compact' | 'timeline-chat';
+export type SessionSidebarRenderContext = 'project' | 'timeline' | 'timeline-mixed' | 'timeline-chat';
 
 /** Rows that render through `SessionTimelineRowBody` with two lines. */
 export const isTwoLineTimelineContext = (context: SessionSidebarRenderContext): boolean => (
   context === 'timeline' || context === 'timeline-mixed'
 );
 
-/** Flat zone and timeline rows never expand: a run row opens its overview instead. */
-const isNeverExpandedContext = (context: SessionSidebarRenderContext): boolean => (
-  isTwoLineTimelineContext(context) || context === 'mixed-compact'
+/**
+ * Whether a row of this context takes the two-line height: the single-line
+ * rows switch (`useSessionDisplayStore.sidebarSingleLineRows`) folds the
+ * two-line contexts onto one line; 'project' and 'timeline-chat' rows are
+ * one line either way.
+ */
+export const isTwoLineSessionRow = (context: SessionSidebarRenderContext, singleLineRows: boolean): boolean => (
+  !singleLineRows && isTwoLineTimelineContext(context)
 );
 
 export type SessionSidebarViewMode = 'projects' | 'timeline';
@@ -138,8 +142,6 @@ export type SessionSidebarRowModelArgs = {
    */
   workItems?: readonly SessionSidebarActivityItem[];
   workSessionIds?: ReadonlySet<string>;
-  /** In work rows in the Tree view: two lines when set, one otherwise. */
-  detailedZoneRows?: boolean;
   /**
    * Top-to-bottom order of the zones (`useSessionDisplayStore.sidebarZoneOrder`,
    * always complete). Zones that are off or empty are skipped; the 'projects'
@@ -147,6 +149,12 @@ export type SessionSidebarRowModelArgs = {
    * `DEFAULT_SIDEBAR_ZONE_ORDER`.
    */
   zoneOrder?: readonly SidebarZoneKey[];
+  /**
+   * One-line timeline-style rows (`useSessionDisplayStore.sidebarSingleLineRows`):
+   * 'timeline' and 'timeline-mixed' rows take the one-line estimate. Defaults
+   * to `DEFAULT_SIDEBAR_SINGLE_LINE_ROWS`.
+   */
+  singleLineRows?: boolean;
   foldersMap: SessionFoldersMap;
   groupSearchDataByGroup: WeakMap<SessionGroup, GroupSearchData>;
   normalizedQuery: string;
@@ -375,10 +383,14 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     baseDepth?: number;
   };
   const runIndex = args.runIndex ?? EMPTY_MULTI_RUN_INDEX;
+  const singleLineRows = args.singleLineRows ?? DEFAULT_SIDEBAR_SINGLE_LINE_ROWS;
+  const sessionRowEstimate = (renderContext: SessionSidebarRenderContext): number => (
+    isTwoLineSessionRow(renderContext, singleLineRows) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE
+  );
   const appendRun = (entry: RunEntry, options: AppendOptions): void => {
     const expansionKey = runExpansionKey(options.renderContext, entry.run.key);
     // Timeline rows never expand; the overview lists the lanes.
-    const expanded = !isNeverExpandedContext(options.renderContext) && (search || args.expandedParents.has(expansionKey));
+    const expanded = !isTwoLineTimelineContext(options.renderContext) && (search || args.expandedParents.has(expansionKey));
     const firstLaneId = entry.lanes[0]?.session.id;
     const meta = firstLaneId && options.getSecondaryMeta ? options.getSecondaryMeta(firstLaneId) : options.secondaryMeta;
     // Activity lanes come without their subagent rows, so the sessions whose
@@ -390,7 +402,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     push({
       kind: 'run',
       key: keyFor(`${options.containerKey}:run:${entry.run.key}`),
-      estimateSize: isTwoLineTimelineContext(options.renderContext) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE,
+      estimateSize: sessionRowEstimate(options.renderContext),
       run: entry.run,
       depth: options.baseDepth ?? 0,
       laneNodes: Object.freeze([...entry.lanes]),
@@ -423,7 +435,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
       push({
         kind: 'session',
         key: rowKey,
-        estimateSize: isTwoLineTimelineContext(options.renderContext) ? TIMELINE_SESSION_ESTIMATE : SESSION_ESTIMATE,
+        estimateSize: sessionRowEstimate(options.renderContext),
         node: current.node,
         blockingBadgeSessionScopes: current.depth === baseDepth
           ? options.getBlockingBadgeSessionScopes?.(current.node.session.id) ?? options.blockingBadgeSessionScopes
@@ -747,10 +759,9 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     });
   };
 
-  // In work lists sessions of every project together: two-line rows with
-  // the project's icon in List, one-line rows in Tree unless the user asked
-  // for detailed rows.
-  const workRenderContext: SessionSidebarRenderContext = timelineMode || args.detailedZoneRows ? 'timeline-mixed' : 'mixed-compact';
+  // In work lists sessions of every project together, as two-line rows with
+  // the project's icon in both views.
+  const activityRenderContext: SessionSidebarRenderContext = 'timeline-mixed';
 
   /**
    * A list that reveals `initial` entries, then `increment` more per Show
@@ -778,7 +789,7 @@ export const buildSessionSidebarRowModel = (args: SessionSidebarRowModelArgs): S
     const collapsed = appendActivityHeader('work');
     // A tree is listed for its matching subsession too; the ancestors around
     // it are context, so only real matches count.
-    if (!collapsed) appendActivityItems(workItems, 'activity:work', workRenderContext, (item) => countSessionTreeQueryMatches(item.node, args.normalizedQuery));
+    if (!collapsed) appendActivityItems(workItems, 'activity:work', activityRenderContext, (item) => countSessionTreeQueryMatches(item.node, args.normalizedQuery));
   };
 
   // One zone header over the project list, in both views, so the projects

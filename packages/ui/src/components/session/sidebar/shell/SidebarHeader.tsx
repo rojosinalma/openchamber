@@ -158,13 +158,13 @@ export function SidebarHeader(props: Props): React.ReactNode {
   const setShowChatsSection = useSessionDisplayStore((state) => state.setShowChatsSection);
   const showWorkSection = useSessionDisplayStore((state) => state.showWorkSection);
   const setShowWorkSection = useSessionDisplayStore((state) => state.setShowWorkSection);
-  const detailedZoneRows = useSessionDisplayStore((state) => state.detailedZoneRows);
-  const setDetailedZoneRows = useSessionDisplayStore((state) => state.setDetailedZoneRows);
   const sessionWorkEnabled = useUIStore((state) => state.sessionWorkEnabled);
   const showAttentionSection = useSessionDisplayStore((state) => state.showAttentionSection);
   const toggleAttentionSection = useSessionDisplayStore((state) => state.toggleAttentionSection);
   const showPinnedSection = useSessionDisplayStore((state) => state.showPinnedSection);
   const togglePinnedSection = useSessionDisplayStore((state) => state.togglePinnedSection);
+  const singleLineRows = useSessionDisplayStore((state) => state.sidebarSingleLineRows);
+  const toggleSingleLineRows = useSessionDisplayStore((state) => state.toggleSidebarSingleLineRows);
   const sidebarZoneOrder = useSessionDisplayStore((state) => state.sidebarZoneOrder);
   const setSidebarZoneOrder = useSessionDisplayStore((state) => state.setSidebarZoneOrder);
   const zoneOrderIsDefault = sidebarZoneOrder.every((zone, index) => zone === DEFAULT_SIDEBAR_ZONE_ORDER[index]);
@@ -296,11 +296,12 @@ export function SidebarHeader(props: Props): React.ReactNode {
         togglePinnedSection();
         void updateDesktopSettings({ sidebarShowPinnedSection: !showPinnedSection });
       })}
-      {/* List rows always carry two lines; Tree keeps In work on one unless asked. */}
-      {!timelineView ? toggleItem('sessions.sidebar.header.displayMode.detailedZoneRows', detailedZoneRows, () => {
-        setDetailedZoneRows(!detailedZoneRows);
-        void updateDesktopSettings({ sidebarDetailedZoneRows: !detailedZoneRows });
-      }) : null}
+      {/* Timeline-style rows on one line (on by default); off brings the
+          branch line back. */}
+      {toggleItem('sessions.sidebar.header.displayMode.singleLineRows', singleLineRows, () => {
+        toggleSingleLineRows();
+        void updateDesktopSettings({ sidebarSingleLineRows: !singleLineRows });
+      })}
       {/* Zones are reordered by dragging their headers or from their menu;
           this is the way back to the order the sidebar ships with. */}
       <DropdownMenuItem

@@ -492,6 +492,7 @@ export const dict = {
   'sessions.sidebar.header.displayMode.detailedZoneRows': 'Ayrıntılı satırlar',
   'sessions.sidebar.activity.pinnedTitle': 'Sabitlenenler',
   'sessions.sidebar.header.displayMode.showAttention': 'Dikkat gereken bölümünü göster',
+  'sessions.sidebar.header.displayMode.singleLineRows': 'Tek satırlı satırlar',
   'sessions.sidebar.header.displayMode.showArchived': 'Arşivlenmiş session\'ları göster',
   'sessions.sidebar.header.displayMode.collapseAll': 'Tümünü daralt',
   'sessions.sidebar.header.displayMode.expandAll': 'Tümünü genişlet',
