@@ -87,7 +87,8 @@ time; the reducer trims by creation time).
 The composer's top rows render inside the box and inside the mobile pill, so
 the surface stays one shape. Top to bottom: worktree setup and a message
 waiting for its space (`ComposerStatusStrip`), the goal (`SessionGoalRow`), a
-running review loop (`AutoReviewStrip`), background commands, a staged revert
+running review loop (`AutoReviewStrip`), background commands, the subagents
+chip (`SubagentsStrip`), a staged revert
 (`RevertedMessagesStrip`), the queue (`QueuedMessagesStrip`),
 the "looks done" hint or the review offer, the suggestion
 (`SessionSuggestionChip`). BTW hides all of them. A pending form, a nonempty
@@ -135,6 +136,19 @@ reports its command ended, and a failed call makes its commands stoppable again.
 new-session drafts. The elapsed text is a leaf on the shared one-second
 ticker, and the tree is compared as a string, so neither the tick nor
 session-list updates re-render the composer.
+
+`SubagentsStrip` is the quick way into a subagent's transcript: a chip with
+the count of the session's child sessions (sessions whose `parentID` is the
+session's, read off the global sessions store's shared parent index in
+`sync/session-children.ts`, archived ones excluded) and how many still run.
+It opens a menu of them, running first then newest created, capped at twenty,
+each with a status dot, title, model and the live turn timer or the age; a
+pick opens the child the way the transcript's Task tool does (a side-panel
+tab next to the main chat, in place in a pinned column, navigation on mobile
+and VS Code). Hidden in BTW and new-session drafts; a read-only chat mounts no
+composer, so a subagent's own chat shows no chip. The sidebar only marks a
+session that has subagents (`SubagentsRowMarker`, count in the row's meta
+cluster, tinted while one runs, named in the row tooltip); it grows no tree.
 
 The "looks done" hint (`SessionDoneHintRow`) and the review offer
 (`SessionReviewHintRow`, "Changes are ready to look over") take the same

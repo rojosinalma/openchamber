@@ -228,6 +228,7 @@ import { SessionDoneHintRow } from '@/components/chat/SessionDoneHintRow';
 import { SessionReviewHintRow } from '@/components/chat/SessionReviewHintRow';
 import { BackgroundShellsStrip } from '@/components/chat/BackgroundShellsStrip';
 import { ComposerStatusStrip } from '@/components/chat/ComposerStatusStrip';
+import { SubagentsStrip } from '@/components/chat/SubagentsStrip';
 import { useWorktreeBootstrapPending } from '@/hooks/useWorktreeBootstrapPending';
 import { FormDock } from '@/components/chat/FormDock';
 import { PermissionDock } from '@/components/chat/PermissionDock';
@@ -3879,6 +3880,15 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
             directory={currentSessionDirectoryForSync ?? currentDirectory}
         />
     ) : null;
+    // The session's subagents, right under what runs in the background: the
+    // chip is the quick way into a child session's transcript. Not in a draft
+    // (no session yet) nor in the btw sheet, whose fork has no children.
+    const subagentsRow = !isBtwActive && !newSessionDraftOpen ? (
+        <SubagentsStrip
+            sessionId={currentSessionId}
+            directory={currentSessionDirectoryForSync ?? currentDirectory}
+        />
+    ) : null;
     // A new worktree still running its setup commands, first of all: until it
     // ends, a first prompt can wait with nothing else saying why.
     const worktreeSetupDirectory = currentSessionDirectoryForSync ?? currentDirectory ?? null;
@@ -3914,13 +3924,14 @@ const ChatInputComponent: React.FC<ChatInputProps> = ({
     ) : null;
     // Null exactly when the suggestion row alone would have been: the mobile
     // pill picks its shape from whether a top row exists.
-    const composerTopRows = worktreeSetupRow || spaceWaitRow || goalRow || autoReviewRow || backgroundShellsRow || revertRow || queueRow || doneHintRow || reviewHintRow || suggestionRow ? (
+    const composerTopRows = worktreeSetupRow || spaceWaitRow || goalRow || autoReviewRow || backgroundShellsRow || subagentsRow || revertRow || queueRow || doneHintRow || reviewHintRow || suggestionRow ? (
         <>
             {worktreeSetupRow}
             {spaceWaitRow}
             {goalRow}
             {autoReviewRow}
             {backgroundShellsRow}
+            {subagentsRow}
             {revertRow}
             {queueRow}
             {doneHintRow}

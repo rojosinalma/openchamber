@@ -38,6 +38,9 @@ type Props = {
   statusDot: React.ReactNode;
   /** Pin glyph shown in the meta cluster while the row is pinned. */
   pinnedMarker: React.ReactNode;
+  /** Fork glyph and count while the session has subagents; sits in the meta
+      cluster on both row shapes, so the mark reads the same in each. */
+  subagentsMarker?: React.ReactNode;
   /** Elapsed-turn counter while running/unread, otherwise the compact date. */
   timeSlot: React.ReactNode;
   directoryIndicator: React.ReactNode;
@@ -108,6 +111,7 @@ export const SessionTimelineRowBody: React.FC<Props> = ({
   metaLineLead = null,
   statusDot,
   pinnedMarker,
+  subagentsMarker = null,
   timeSlot,
   directoryIndicator,
   prBadge,
@@ -130,6 +134,7 @@ export const SessionTimelineRowBody: React.FC<Props> = ({
     {compact ? badges : null}
     {compact && providerId ? <ProviderLogo providerId={providerId} className="h-3 w-3 flex-shrink-0 opacity-45" /> : null}
     {directoryIndicator}
+    {subagentsMarker}
     {pinnedMarker}
     {doneHint}
     {statusDot}
