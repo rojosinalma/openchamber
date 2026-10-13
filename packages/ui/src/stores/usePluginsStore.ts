@@ -26,6 +26,12 @@ export interface PluginEntry {
   parsedKind: PluginParsedKind;
   /** The config file that declares the entry; relative path specs resolve against its directory. */
   sourcePath?: string;
+  /** Path specs only: where the spec points, as resolved by the server. */
+  absolutePath?: string;
+  /** Path specs only: `absolutePath` with symlinks resolved; what OpenCode reports for a loaded local plugin sits under it. */
+  realPath?: string;
+  /** The discovered plugin file or package this entry names (same real path): the two are one plugin and render as one row. */
+  fileId?: string;
 }
 
 export interface PluginFile {
@@ -35,6 +41,10 @@ export interface PluginFile {
   /** `file` is a `.ts`/`.js` OpenChamber can open; `package` is a plugin directory (or a v1 `plugin/` file) OpenCode loads but the page only lists. */
   kind: 'file' | 'package';
   absolutePath?: string;
+  /** `absolutePath` with symlinks resolved. */
+  realPath?: string;
+  /** The config entry that names this file (same real path); the entry's row stands for both. */
+  configEntryId?: string;
 }
 
 export interface PluginDraft {

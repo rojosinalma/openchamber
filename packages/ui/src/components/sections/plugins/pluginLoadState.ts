@@ -19,7 +19,8 @@ import type { PluginRuntimeInfo } from '@/lib/opencode/plugins';
 
 export type PluginRuntimeTarget =
   | { kind: 'package'; target: string }
-  | { kind: 'local'; path: string };
+  /** `realPath` is the server-resolved path with symlinks followed; OpenCode reports a loaded plugin under it. */
+  | { kind: 'local'; path: string; realPath?: string };
 
 export type PluginLoadState =
   /** OpenCode reported it and it is running. */
@@ -60,26 +61,34 @@ const fileUrlToPath = (value: string): string | null => {
   }
 };
 
+const localTarget = (path: string, realPath: string | undefined): PluginRuntimeTarget => {
+  const normalized = normalizePath(path);
+  const real = realPath ? normalizePath(realPath) : undefined;
+  return real && real !== normalized ? { kind: 'local', path: normalized, realPath: real } : { kind: 'local', path: normalized };
+};
+
 /**
  * What OpenCode will report for a config entry. `sourcePath` is the config
  * file that declares it; without it a relative path cannot be resolved and
- * the entry has no runtime identity.
+ * the entry has no runtime identity. `realPath` (server-resolved, symlinks
+ * followed) is matched as well: a plugins directory that is a symlink makes
+ * OpenCode report the real location.
  */
-export function configEntryRuntimeTarget(spec: string, sourcePath: string | undefined): PluginRuntimeTarget | null {
+export function configEntryRuntimeTarget(spec: string, sourcePath: string | undefined, realPath?: string): PluginRuntimeTarget | null {
   if (spec.startsWith('file://')) {
     const path = fileUrlToPath(spec);
-    return path ? { kind: 'local', path: normalizePath(path) } : null;
+    return path ? localTarget(path, realPath) : null;
   }
   if (spec.startsWith('./') || spec.startsWith('../')) {
-    return sourcePath ? { kind: 'local', path: normalizePath(`${dirname(sourcePath)}/${spec}`) } : null;
+    return sourcePath ? localTarget(`${dirname(sourcePath)}/${spec}`, realPath) : null;
   }
-  if (isAbsolutePath(spec)) return { kind: 'local', path: normalizePath(spec) };
+  if (isAbsolutePath(spec)) return localTarget(spec, realPath);
   return { kind: 'package', target: spec };
 }
 
 /** A plugin file or package directory OpenCode discovers from a `plugins/` folder. */
-export function pluginFileRuntimeTarget(absolutePath: string | undefined): PluginRuntimeTarget | null {
-  return absolutePath ? { kind: 'local', path: normalizePath(absolutePath) } : null;
+export function pluginFileRuntimeTarget(absolutePath: string | undefined, realPath?: string): PluginRuntimeTarget | null {
+  return absolutePath ? localTarget(absolutePath, realPath) : null;
 }
 
 const matches = (target: PluginRuntimeTarget, info: PluginRuntimeInfo): boolean => {
@@ -88,7 +97,8 @@ const matches = (target: PluginRuntimeTarget, info: PluginRuntimeInfo): boolean 
   }
   if (info.source.kind !== 'local') return false;
   const reported = normalizePath(info.source.path);
-  return reported === target.path || reported.startsWith(`${target.path}/`);
+  const under = (root: string): boolean => reported === root || reported.startsWith(`${root}/`);
+  return under(target.path) || (target.realPath !== undefined && under(target.realPath));
 };
 
 export function findRuntimeMatches(target: PluginRuntimeTarget, inventory: readonly PluginRuntimeInfo[]): PluginRuntimeInfo[] {

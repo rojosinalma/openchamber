@@ -373,7 +373,8 @@ all / Expand all.
 - Zone and project headers are sticky in both views; there is no user toggle.
   Both views draw the same zone headers, with the leading icon that turns
   into the collapse chevron on hover and the Chats new-chat button; project
-  headers are shared too, with the same hover actions and menu.
+  headers are shared too, with the same hover actions and menu, but their
+  icon stays on hover (the chevron replaces it only on touch surfaces).
 - Below Needs attention, Pinned, Chats and In work it renders one project
   header per project followed by that project's non-archived root sessions
   from every worktree and space, in the shared lifecycle order with pinned

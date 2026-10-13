@@ -167,7 +167,7 @@ function RunSidebarRowComponent({
         aria-label={t('sessions.sidebar.run.openOverviewAria', { title: run.title })}
       >
         <ArrowsMerge className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <span dir="auto" className={cn('oc-ui-start-align block min-w-0 flex-1 truncate typography-ui-label font-normal', titleClassName)}>{run.title}</span>
+        <span dir="auto" className={cn('oc-ui-start-align block min-w-0 flex-1 truncate typography-ui-label oc-sidebar-row-title font-normal', titleClassName)}>{run.title}</span>
         <ProviderLogos providerIDs={run.providerIDs} ringClass="ring-sidebar" />
         {activity}
       </button>

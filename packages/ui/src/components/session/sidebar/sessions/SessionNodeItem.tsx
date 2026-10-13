@@ -372,12 +372,15 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
   // session menu only.
   const canTrackWork = sessionWorkEnabled && !archivedBucket && !node.session.parentID && !isChatDirectoryPath(node.session.directory);
   const showWorkAction = canTrackWork && !alwaysShowActions;
-  // Hover-revealed actions besides the menu: work, quick archive, and in VS
-  // Code open-in-editor.
-  const extraHoverActions = (showWorkAction ? 1 : 0) + (showQuickArchiveAction ? 1 : 0) + (showOpenInEditorAction ? 1 : 0);
+  // Pin / unpin on hover, like Track / Done: a live row with a directory to
+  // pin under, where the actions are hover-revealed (touch keeps it in the menu).
+  const showPinAction = !archivedBucket && !mobileVariant && !alwaysShowActions && Boolean(node.session.directory ?? groupDirectory);
+  // Hover-revealed actions besides the menu: work, pin, quick archive, and in
+  // VS Code open-in-editor.
+  const extraHoverActions = (showWorkAction ? 1 : 0) + (showPinAction ? 1 : 0) + (showQuickArchiveAction ? 1 : 0) + (showOpenInEditorAction ? 1 : 0);
   // VS Code reveals its permanent-size actions on hover, so the title makes
   // room for them there.
-  const vscodeAlwaysActionPaddingClass = ['group-hover:pe-8', 'group-hover:pe-14', 'group-hover:pe-18', 'group-hover:pe-22'][extraHoverActions];
+  const vscodeAlwaysActionPaddingClass = ['group-hover:pe-8', 'group-hover:pe-14', 'group-hover:pe-18', 'group-hover:pe-22', 'group-hover:pe-26'][extraHoverActions];
   const alwaysActionPaddingClass = showQuickArchiveAction ? 'pe-13' : 'pe-7';
   const suppressNextSelectRef = React.useRef(false);
   const [isTouchPressed, setIsTouchPressed] = React.useState(false);
@@ -895,7 +898,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
         data-session-rename-form={sessionRowKey}
         // Exactly one text line tall: the input and its two icon buttons must
         // not make the row taller than the title they replace.
-        className="flex h-[1lh] w-full items-center gap-2 typography-ui-label"
+        className="flex h-[1lh] w-full items-center gap-2 typography-ui-label oc-sidebar-row-title"
         onSubmit={(event) => {
           event.preventDefault();
           handleSaveEdit(renameDraft);
@@ -905,7 +908,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
           ref={renameInputRef}
           value={renameDraft}
           onChange={(event) => setEditTitle(event.target.value)}
-          className="flex-1 min-w-0 bg-transparent typography-ui-label outline-none placeholder:text-muted-foreground"
+          className="flex-1 min-w-0 bg-transparent typography-ui-label oc-sidebar-row-title outline-none placeholder:text-muted-foreground"
           autoFocus
           placeholder={t('sessions.sidebar.session.menu.rename')}
           onKeyDown={(event) => handleSessionRenameKeyDown(event, handleCancelEdit)}
@@ -1006,8 +1009,8 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
   // width less the 6px they sit nearer the row edge (16px buttons, 20px on
   // two-line timeline rows, 2px apart).
   const actionsReserveClass = isTimelineRow && !isCompactTimelineRow
-    ? ['[--oc-actions-reserve:14px]', '[--oc-actions-reserve:36px]', '[--oc-actions-reserve:58px]', '[--oc-actions-reserve:80px]'][extraHoverActions]
-    : ['[--oc-actions-reserve:10px]', '[--oc-actions-reserve:28px]', '[--oc-actions-reserve:46px]', '[--oc-actions-reserve:64px]'][extraHoverActions];
+    ? ['[--oc-actions-reserve:14px]', '[--oc-actions-reserve:36px]', '[--oc-actions-reserve:58px]', '[--oc-actions-reserve:80px]', '[--oc-actions-reserve:102px]'][extraHoverActions]
+    : ['[--oc-actions-reserve:10px]', '[--oc-actions-reserve:28px]', '[--oc-actions-reserve:46px]', '[--oc-actions-reserve:64px]', '[--oc-actions-reserve:82px]'][extraHoverActions];
   // An open row menu (dropdown or right-click) keeps the actions shown, so
   // what they cover gives way too, hover or not.
   const actionsMaskClass = alwaysShowActions
@@ -1153,8 +1156,30 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
       handleOpenInSidePanel();
       return;
     }
+    if (event?.ctrlKey && !event.metaKey) {
+      togglePinFromRow(event);
+      return;
+    }
     if (event?.currentTarget) holdSessionRowPosition(event.currentTarget);
     handleSessionSelect(session.id, sessionDirectory);
+  };
+
+  // Ctrl+click pins or unpins the row in place, the same toggle the menu
+  // item runs. The browsers' Ctrl+click = context menu convention (macOS)
+  // is knowingly shadowed; the menu stays on the right button. Where the
+  // press arrives as a contextmenu event instead of a click, that event
+  // does the toggle and no click follows.
+  const togglePinFromRow = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!sessionDirectory) return;
+    togglePinnedSession({ directory: sessionDirectory, sessionId: session.id });
+  };
+  const handleRowContextMenu: React.ComponentProps<typeof ContextMenu.Trigger>['onContextMenu'] = (event) => {
+    if (!event.ctrlKey || event.metaKey || event.button !== 0 || selectionModeEnabled) return;
+    event.preventBaseUIHandler();
+    suppressNextSelectRef.current = false;
+    togglePinFromRow(event);
   };
 
   // The selection/active highlight covers the WHOLE row box (gutter, edge
@@ -1171,12 +1196,13 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
   };
 
   const handleRowMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button === 2 || (event.button === 0 && event.ctrlKey && !selectionModeEnabled)) {
+    if (event.button === 2) {
       suppressNextSelectRef.current = true;
     }
-    // Shift-click opens the session in the side panel; without this the
-    // browser extends the text selection across the sidebar.
-    if (event.button === 0 && event.shiftKey && !selectionModeEnabled) {
+    // Shift-click opens the session in the side panel and Ctrl-click toggles
+    // its pin; without this the browser extends the text selection across
+    // the sidebar.
+    if (event.button === 0 && (event.shiftKey || event.ctrlKey) && !selectionModeEnabled) {
       event.preventDefault();
     }
   };
@@ -1565,6 +1591,13 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
     event.stopPropagation();
     void toggleSessionWork();
   };
+  const pinActionLabel = isPinnedSession ? t('sessions.sidebar.session.menu.unpin') : t('sessions.sidebar.session.menu.pin');
+  const handlePinToggleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!sessionDirectory) return;
+    togglePinnedSession({ directory: sessionDirectory, sessionId: session.id });
+  };
 
   // Three-line timeline rows are taller, so their hover actions step up one
   // size to match the metadata they replace (the pin marker, the dot, the time).
@@ -1761,6 +1794,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
       <DraggableSessionRow sessionId={session.id} dragKey={dragKey ?? sessionRowKey} ownerKey={folderOwnerKey ?? selectionScopeKey} sessionDirectory={sessionDirectory ?? null} sessionTitle={sessionTitle} archivedBucket={archivedBucket}>
         <ContextMenu.Root open={isContextMenuOpen} onOpenChange={handleContextMenuOpenChange} onOpenChangeComplete={handleMenuOpenChangeComplete}>
           <ContextMenu.Trigger
+            onContextMenu={handleRowContextMenu}
             render={
               <div
                 data-session-row={session.id}
@@ -1918,6 +1952,31 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
                 </TooltipTrigger>
                 <TooltipContent side="top" sideOffset={6}>
                   {workActionLabel}
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
+            {showPinAction ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      'inline-flex items-center justify-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-opacity',
+                      actionButtonSizeClass,
+                      isPinnedSession ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+                    )}
+                    aria-label={pinActionLabel}
+                    aria-pressed={isPinnedSession}
+                    onPointerDown={handleRowActionPointerDown}
+                    onMouseDown={handleRowActionMouseDown}
+                    onClick={handlePinToggleClick}
+                    onKeyDown={(event) => event.stopPropagation()}
+                  >
+                    <Icon name={isPinnedSession ? 'pushpin-fill' : 'pushpin'} className={actionIconSizeClass} />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" sideOffset={6}>
+                  {pinActionLabel}
                 </TooltipContent>
               </Tooltip>
             ) : null}

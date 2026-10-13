@@ -141,7 +141,7 @@ export const SessionTimelineRowBody: React.FC<Props> = ({
     <span className="typography-micro leading-none text-muted-foreground/50 tabular-nums">{timeSlot}</span>
   </span>;
   const titleLine = (
-    <div dir="auto" className={cn('oc-ui-start-align min-w-0 flex-1 truncate typography-ui-label font-normal', actionsMaskClass, titleClassName)}>{title}</div>
+    <div dir="auto" className={cn('oc-ui-start-align min-w-0 flex-1 truncate typography-ui-label oc-sidebar-row-title font-normal', actionsMaskClass, titleClassName)}>{title}</div>
   );
   if (compact) {
     return <div className={cn('@container relative flex w-full min-w-0 items-center gap-1', actionsReserveClass)}>

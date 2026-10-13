@@ -655,13 +655,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                                     {/* peek: the action row is suppressed, so reserve only its
                                         gap to the next message, OUTSIDE the bubble background. */}
                                     <div className={cn('max-w-[85%]', chatSurfaceMode === 'peek' ? 'pb-3' : undefined)}>
+                                        {/* The selection surface, not the theme's tinted
+                                            bubble colour: a quiet grey that sits in the
+                                            canvas in every theme (Dracula's current line),
+                                            with the surface's own paired foreground. */}
                                         <div
                                             style={{
-                                                backgroundColor: 'var(--chat-user-message-bg)',
                                                 borderRadius: userMessageRadius,
                                                 borderBottomRightRadius: 'var(--radius-sm)',
                                             }}
-                                            className="px-5 py-3 shadow-none border border-primary/5"
+                                            className="bg-interactive-selection px-5 py-3 shadow-none border border-border/40"
                                             data-user-message-bubble=""
                                         >
                                             <MessageBody

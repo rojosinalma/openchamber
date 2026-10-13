@@ -63,6 +63,17 @@ describe('runtime matching', () => {
     expect(resolveLoadState(findRuntimeMatches(target, [local('/home/u/.config/opencode/plugins/notify.ts')]))).toEqual({ kind: 'active', version: null });
   });
 
+  test('a symlinked plugins directory matches what OpenCode reports under the real path', () => {
+    const entry = configEntryRuntimeTarget('./plugins/foo', '/home/u/.config/opencode/opencode.json', '/home/u/dev/plugins/foo');
+    const file = pluginFileRuntimeTarget('/home/u/.config/opencode/plugins/foo', '/home/u/dev/plugins/foo');
+    if (!entry || !file) throw new Error('target missing');
+    expect(entry).toEqual({ kind: 'local', path: '/home/u/.config/opencode/plugins/foo', realPath: '/home/u/dev/plugins/foo' });
+    const inventory = [local('/home/u/dev/plugins/foo/index.ts'), local('/home/u/dev/plugins/foobar/index.ts')];
+    expect(findRuntimeMatches(entry, inventory)).toEqual([inventory[0]]);
+    expect(findRuntimeMatches(file, inventory)).toEqual([inventory[0]]);
+    expect(pluginFileRuntimeTarget('/opt/plugins/foo', '/opt/plugins/foo')).toEqual({ kind: 'local', path: '/opt/plugins/foo' });
+  });
+
   test('absent from a complete inventory reads as not reported', () => {
     expect(resolveLoadState([])).toEqual({ kind: 'notReported' });
   });

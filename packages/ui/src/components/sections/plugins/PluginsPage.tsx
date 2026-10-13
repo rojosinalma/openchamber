@@ -158,11 +158,11 @@ export const PluginsPage: React.FC = () => {
   );
 
   const selectedEntryTarget = React.useMemo(
-    () => (selectedEntry ? configEntryRuntimeTarget(selectedEntry.spec, selectedEntry.sourcePath) : null),
+    () => (selectedEntry ? configEntryRuntimeTarget(selectedEntry.spec, selectedEntry.sourcePath, selectedEntry.realPath) : null),
     [selectedEntry],
   );
   const selectedFileTarget = React.useMemo(
-    () => (selectedFile ? pluginFileRuntimeTarget(selectedFile.absolutePath) : null),
+    () => (selectedFile ? pluginFileRuntimeTarget(selectedFile.absolutePath, selectedFile.realPath) : null),
     [selectedFile],
   );
 

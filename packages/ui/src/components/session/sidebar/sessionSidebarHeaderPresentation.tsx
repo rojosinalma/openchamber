@@ -8,6 +8,17 @@ import type { SessionSidebarActivityKey } from './sessionSidebarRowModel';
 import type { SortableZoneHandleProps } from './projects/sortableItems';
 
 const ACTIVITY_ICON = { attention: 'notification-3', pinned: 'pushpin', work: 'eye', chats: 'chat-4', projects: 'folders' } as const;
+// Zone icons carry the zone's tint (theme tokens, so every theme paints
+// them): attention asks like an error, pinned sits where the pin marker's
+// warning tone does, work is informational, chats read as settled (success),
+// projects take the accent.
+const ACTIVITY_ICON_TINT = {
+  attention: 'text-status-error',
+  pinned: 'text-status-warning',
+  work: 'text-status-info',
+  chats: 'text-status-success',
+  projects: 'text-primary',
+} as const;
 const ACTIVITY_TITLE_KEY = {
   attention: 'sessions.sidebar.attention.title',
   pinned: 'sessions.sidebar.pinned.title',
@@ -129,13 +140,15 @@ export const SessionSidebarActivityHeader: React.FC<{
       aria-expanded={!collapsed}
     >
       <span className="inline-flex h-3.5 w-3.5 items-center justify-center">
-        <Icon name={ACTIVITY_ICON[activityKey]} className={cn('h-3.5 w-3.5 text-muted-foreground/80', !forceExpanded && 'group-hover:hidden')} />
+        <Icon name={ACTIVITY_ICON[activityKey]} className={cn('h-3.5 w-3.5', ACTIVITY_ICON_TINT[activityKey], !forceExpanded && 'group-hover:hidden')} />
         {!forceExpanded ? <span className="hidden h-3.5 w-3.5 items-center justify-center text-muted-foreground group-hover:inline-flex">
           <Icon name={collapsed ? 'arrow-right-s' : 'arrow-down-s'} className="h-3.5 w-3.5" />
         </span> : null}
       </span>
-      {/* The size of project headers: zones and projects are sections of equal weight. */}
-      <span className="typography-ui-header font-semibold text-foreground">{title}</span>
+      {/* A muted caps label at the project headers' size, set apart by case,
+          weight and colour: zones are the sidebar's chapters, the projects
+          inside them the sections. */}
+      <span className="typography-ui-label font-medium uppercase tracking-wide text-muted-foreground">{title}</span>
     </button>
   );
 
