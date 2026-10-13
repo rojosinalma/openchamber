@@ -30,6 +30,7 @@ import { isInputHistoryLimit, isInputHistoryScope, type InputHistoryScope } from
 import { normalizeMobileKeyboardMode } from '@/lib/mobileKeyboardMode';
 import { isTerminalShell } from '@/lib/terminalShell';
 import { sanitizeWorkStatusHiddenSections, sanitizeWorkStatusSectionOrder } from '@/components/chat/work-status/sections';
+import { normalizeSidebarZoneAppearance } from '@/lib/fork/zoneAppearance';
 import { useInputHistoryStore } from '@/stores/useInputHistoryStore';
 import { useMessageQueueStore } from '@/stores/messageQueueStore';
 import {
@@ -386,6 +387,10 @@ export const SETTINGS_REGISTRY = {
   // Timeline-style session rows on one line (no branch line). Per surface:
   // a wide desktop may want the branch line back where a phone drawer does not.
   sidebarSingleLineRows: field({ scope: 'profile', perSurface: true, parse: parseBoolean, ui: sessionDisplayField('sidebarSingleLineRows') }),
+  // Per-zone icon and tint overrides (`lib/fork/zoneAppearance.ts`). One map
+  // for every surface, like the zone order: a look chosen on the desktop is
+  // the look on the phone. Unknown zones, icons and colours drop on read.
+  sidebarZoneAppearance: field({ scope: 'profile', parse: mapParser(fromSchema(z.record(z.string(), z.unknown())), normalizeSidebarZoneAppearance), ui: sessionDisplayField('sidebarZoneAppearance') }),
 
   // ── Work status ──
   workStatusSectionOrder: field({

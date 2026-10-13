@@ -266,6 +266,22 @@ preference is the `sidebarZoneOrder` settings-registry field (profile scope, dis
 the mobile sheet renders its cross-project sections in the same order. Zones and projects are
 sections of equal weight, so the gap between them is the same whatever the order.
 
+## Zone appearance (`sidebarZoneAppearance`)
+
+Every zone header paints a glyph in a tint: defaults per zone in
+`lib/fork/zoneAppearance.ts` (`DEFAULT_ZONE_APPEARANCE`: pinned `pushpin`/warning, attention
+`notification-3`/error, work `eye`/info, chats `chat-4`/success, projects `folders`/primary). The
+header's `⋯` menu carries, under Move up / Move down, an inline Appearance group
+(`SessionSidebarZoneAppearance.tsx`, no dialog): a row of twelve tint swatches (theme tokens —
+status, accent and syntax colours — stored by key, never hex, so a pick survives a theme change) and a
+grid of sixteen sprite glyphs, the current pick marked, plus "Reset to default". A pick applies at
+once and the menu stays open; the map `zone → { icon?, color? }` is the `sidebarZoneAppearance`
+settings-registry field (profile scope, one map for every surface, display store v14). Only fields
+that differ from the default are stored; `normalizeSidebarZoneAppearance` (and the server's
+sanitizer, which mirrors the two key sets) drops unknown zones, icons and colours, so a stale value
+falls back to the default. The mobile sheet's Pinned / Needs attention / In work sections follow the
+same picks.
+
 ## Needs attention and Pinned
 
 Two optional zones, `attention` ("Needs attention") and `pinned` ("Pinned"),

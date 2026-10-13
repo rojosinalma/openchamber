@@ -99,6 +99,15 @@ export const createSettingsHelpers = (dependencies) => {
   // Whole hours, 1 h to 30 days; mirrors `lib/sidebarTimeWindows.ts` in the UI.
   const SIDEBAR_WINDOW_HOURS_MIN = 1;
   const SIDEBAR_WINDOW_HOURS_MAX = 720;
+  // The zone appearance picker's curated sets; mirrors `ZONE_ICONS` and
+  // `ZONE_COLORS` in packages/ui/src/lib/fork/zoneAppearance.ts.
+  const SIDEBAR_ZONE_APPEARANCE_ICONS = new Set([
+    'pushpin', 'notification-3', 'eye', 'chat-4', 'folders', 'play', 'chat-thread', 'folder-open',
+    'star', 'book-marked', 'target', 'rocket', 'git-fork', 'inbox-unarchive', 'timer', 'lightbulb',
+  ]);
+  const SIDEBAR_ZONE_APPEARANCE_COLORS = new Set([
+    'error', 'warning', 'success', 'info', 'primary', 'keyword', 'string', 'number', 'type', 'function', 'variable', 'muted',
+  ]);
   const HIDDEN_MODELS_MAX = 1024;
   const RECENT_EFFORTS_MAX_KEYS = 128;
   const RECENT_EFFORTS_MAX_VARIANTS_PER_KEY = 5;
@@ -388,6 +397,19 @@ export const createSettingsHelpers = (dependencies) => {
     }
     if (typeof candidate.sidebarSingleLineRows === 'boolean') {
       result.sidebarSingleLineRows = candidate.sidebarSingleLineRows;
+    }
+    if (candidate.sidebarZoneAppearance && typeof candidate.sidebarZoneAppearance === 'object' && !Array.isArray(candidate.sidebarZoneAppearance)) {
+      // Known zones with known icon/colour keys only; an entry left with
+      // neither field is dropped, so an unknown value falls back to the default.
+      const appearance = {};
+      for (const [zone, value] of Object.entries(candidate.sidebarZoneAppearance)) {
+        if (!SIDEBAR_ZONE_KEYS.has(zone) || !value || typeof value !== 'object' || Array.isArray(value)) continue;
+        const entry = {};
+        if (SIDEBAR_ZONE_APPEARANCE_ICONS.has(value.icon)) entry.icon = value.icon;
+        if (SIDEBAR_ZONE_APPEARANCE_COLORS.has(value.color)) entry.color = value.color;
+        if (entry.icon || entry.color) appearance[zone] = entry;
+      }
+      result.sidebarZoneAppearance = appearance;
     }
 
     if (Array.isArray(candidate.securityScopedBookmarks)) {

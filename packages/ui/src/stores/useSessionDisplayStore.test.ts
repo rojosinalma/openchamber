@@ -122,8 +122,39 @@ describe('useSessionDisplayStore attention and pinned zones', () => {
     expect(migrated.showPinnedSection).toBe(true);
   });
 
-  test('persists at version 13', () => {
-    expect(useSessionDisplayStore.persist.getOptions().version).toBe(13);
+  test('persists at version 14', () => {
+    expect(useSessionDisplayStore.persist.getOptions().version).toBe(14);
+  });
+});
+
+describe('useSessionDisplayStore zone appearance', () => {
+  test('starts without overrides', () => {
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({});
+  });
+
+  test('v13→v14 adds an empty map and keeps what a newer snapshot stored, cleaned', () => {
+    expect(migrateSessionDisplayState({ sidebarSingleLineRows: false }, 13).sidebarZoneAppearance).toEqual({});
+    const migrated = migrateSessionDisplayState({
+      sidebarZoneAppearance: { chats: { icon: 'star', color: 'nope' }, bogus: { icon: 'star' }, work: { icon: 'unknown-glyph' } },
+    }, 13);
+    expect(migrated.sidebarZoneAppearance).toEqual({ chats: { icon: 'star' } });
+  });
+
+  test('the setters store only what differs from the default, the reset clears the zone', () => {
+    const store = useSessionDisplayStore.getState();
+    store.setZoneAppearance('chats', { color: 'keyword' });
+    store.setZoneAppearance('chats', { icon: 'star' });
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({ chats: { icon: 'star', color: 'keyword' } });
+    // Back on the default icon: the field goes, the colour stays.
+    store.setZoneAppearance('chats', { icon: 'chat-4' });
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({ chats: { color: 'keyword' } });
+    store.setZoneAppearance('work', { icon: 'play' });
+    store.resetZoneAppearance('chats');
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({ work: { icon: 'play' } });
+    store.setSidebarZoneAppearance({ pinned: { color: 'string' }, work: 'garbage' });
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({ pinned: { color: 'string' } });
+    store.setSidebarZoneAppearance(null);
+    expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({});
   });
 });
 
@@ -288,7 +319,8 @@ describe('useSessionDisplayStore animated activity', () => {
       expect(useSessionDisplayStore.getState().sidebarZoneOrder).toEqual(['pinned', 'attention', 'work', 'chats', 'projects']);
       expect(useSessionDisplayStore.getState().sidebarAttentionWindowHours).toBe(48);
       expect(useSessionDisplayStore.getState().sidebarSingleLineRows).toBe(true);
-      expect(useSessionDisplayStore.persist.getOptions().version).toBe(13);
+      expect(useSessionDisplayStore.getState().sidebarZoneAppearance).toEqual({});
+      expect(useSessionDisplayStore.persist.getOptions().version).toBe(14);
       useSessionDisplayStore.getState().setAnimatedActivityIndicators(true);
       const enabledSnapshot = stored;
       useSessionDisplayStore.setState({ animatedActivityIndicators: false });
