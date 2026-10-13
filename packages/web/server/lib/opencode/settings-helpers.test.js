@@ -145,6 +145,33 @@ describe('settings helpers', () => {
     const next = helpers.mergePersistedSettings(reloaded, helpers.sanitizeSettingsUpdate({ sidebarShowPinnedSection: true }));
     expect(helpers.formatSettingsResponse(next).sidebarSingleLineRows).toBe(false);
   });
+
+  it('keeps known zone appearance overrides and drops unknown zones, icons and colours', () => {
+    const helpers = createTestHelpers();
+    const changes = helpers.sanitizeSettingsUpdate({
+      sidebarZoneAppearance: {
+        chats: { icon: 'star', color: 'keyword' },
+        work: { icon: 'not-a-glyph', color: 'info' },
+        pinned: { icon: 'rocket', color: '#ff0000' },
+        projects: { icon: 42, color: 'nope' },
+        bogus: { icon: 'star' },
+        attention: 'star',
+      },
+    });
+    expect(changes.sidebarZoneAppearance).toEqual({
+      chats: { icon: 'star', color: 'keyword' },
+      work: { color: 'info' },
+      pinned: { icon: 'rocket' },
+    });
+    const saved = helpers.mergePersistedSettings({}, changes);
+    const reloaded = helpers.formatSettingsResponse(JSON.parse(JSON.stringify(saved)));
+    expect(reloaded.sidebarZoneAppearance).toEqual(changes.sidebarZoneAppearance);
+    const next = helpers.mergePersistedSettings(reloaded, helpers.sanitizeSettingsUpdate({ sidebarShowPinnedSection: true }));
+    expect(helpers.formatSettingsResponse(next).sidebarZoneAppearance).toEqual(changes.sidebarZoneAppearance);
+    expect(helpers.sanitizeSettingsUpdate({ sidebarZoneAppearance: ['chats'] }).sidebarZoneAppearance).toBeUndefined();
+    expect(helpers.sanitizeSettingsUpdate({ sidebarZoneAppearance: 'chats' }).sidebarZoneAppearance).toBeUndefined();
+    expect(helpers.sanitizeSettingsUpdate({ sidebarZoneAppearance: {} }).sidebarZoneAppearance).toEqual({});
+  });
   it('round-trips telemetry opt-in with the hidden list and preserves it across unrelated writes', () => {
     const helpers = createTestHelpers();
     const legacy = helpers.sanitizeSettingsUpdate({ workStatusHiddenSections: [] });
@@ -879,7 +906,7 @@ describe('settings registry gate', () => {
     tunnelProvider: 'cloudflare', tunnelMode: 'quick', tunnelBootstrapTtlMs: 600000, tunnelSessionTtlMs: 86400000, managedLocalTunnelConfigPath: '/tmp/x',
     managedRemoteTunnelHostname: 'x.example', managedRemoteTunnelToken: 'token', managedRemoteTunnelPresets: [{ id: 'a', name: 'A', hostname: 'a.example' }],
     managedRemoteTunnelSelectedPresetId: 'a', managedRemoteTunnelPresetTokens: { a: 'token' },
-    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'], sidebarAttentionWindowHours: 96, sidebarSingleLineRows: false,
+    sidebarProjectDisplayMode: 'all', sidebarViewMode: 'timeline', sidebarProjectSortOrder: 'manual', sidebarWorktreeSortOrder: 'recent', sidebarShowAttentionSection: true, sidebarShowPinnedSection: true, sidebarZoneOrder: ['projects', 'chats'], sidebarAttentionWindowHours: 96, sidebarSingleLineRows: false, sidebarZoneAppearance: { chats: { icon: 'star', color: 'keyword' } },
     workStatusPanelEnabled: true, workStatusHiddenSections: ['mcp'], workStatusHiddenSectionsExplicit: true, workStatusSectionOrder: ['mcp', 'session'],
     showReasoningTraces: true, streamingAutoFollowEnabled: true, collapsibleThinkingBlocks: true, expandReasoningWhileStreaming: true, showTextJustificationActivity: true,
     chatRenderMode: 'live', activityRenderMode: 'summary', mermaidRenderingMode: 'svg', userMessageRenderingMode: 'markdown', collapsibleUserMessages: true,

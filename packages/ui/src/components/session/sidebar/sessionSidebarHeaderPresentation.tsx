@@ -3,22 +3,16 @@ import { Icon } from '@/components/icon/Icon';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { resolveZoneAppearance } from '@/lib/fork/zoneAppearance';
 import { useI18n } from '@/lib/i18n';
+import { useSessionDisplayStore } from '@/stores/useSessionDisplayStore';
 import type { SessionSidebarActivityKey } from './sessionSidebarRowModel';
 import type { SortableZoneHandleProps } from './projects/sortableItems';
+import { SessionSidebarZoneAppearanceGroup } from './SessionSidebarZoneAppearance';
 
-const ACTIVITY_ICON = { attention: 'notification-3', pinned: 'pushpin', work: 'eye', chats: 'chat-4', projects: 'folders' } as const;
 // Zone icons carry the zone's tint (theme tokens, so every theme paints
-// them): attention asks like an error, pinned sits where the pin marker's
-// warning tone does, work is informational, chats read as settled (success),
-// projects take the accent.
-const ACTIVITY_ICON_TINT = {
-  attention: 'text-status-error',
-  pinned: 'text-status-warning',
-  work: 'text-status-info',
-  chats: 'text-status-success',
-  projects: 'text-primary',
-} as const;
+// them). Defaults and the user's per-zone overrides (the Appearance group
+// of the zone menu) live in `lib/fork/zoneAppearance.ts`.
 const ACTIVITY_TITLE_KEY = {
   attention: 'sessions.sidebar.attention.title',
   pinned: 'sessions.sidebar.activity.pinnedTitle',
@@ -50,6 +44,8 @@ export const SessionSidebarActivityHeader: React.FC<{
 }> = ({ activityKey, collapsed, forceExpanded, alwaysShowActions, onToggle, onNewChat, dragHandle, reorder }) => {
   const { t } = useI18n();
   const chats = activityKey === 'chats';
+  const appearance = useSessionDisplayStore((state) => state.sidebarZoneAppearance);
+  const { icon, colorCss } = resolveZoneAppearance(activityKey, appearance);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [contextMenuOpen, setContextMenuOpen] = React.useState(false);
   // The mouse-up that ends a drag also fires a click on the header; that
@@ -106,8 +102,9 @@ export const SessionSidebarActivityHeader: React.FC<{
           <Icon name="more-2" className="h-3.5 w-3.5" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[160px]">
+      <DropdownMenuContent align="end" className="min-w-[220px]">
         {renderMoveItems(DropdownMenuItem)}
+        <SessionSidebarZoneAppearanceGroup zone={activityKey} />
       </DropdownMenuContent>
     </DropdownMenu>
   ) : null;
@@ -140,7 +137,7 @@ export const SessionSidebarActivityHeader: React.FC<{
       aria-expanded={!collapsed}
     >
       <span className="inline-flex h-3.5 w-3.5 items-center justify-center">
-        <Icon name={ACTIVITY_ICON[activityKey]} className={cn('h-3.5 w-3.5', ACTIVITY_ICON_TINT[activityKey], !forceExpanded && 'group-hover:hidden')} />
+        <Icon name={icon} data-zone-icon={icon} className={cn('h-3.5 w-3.5', !forceExpanded && 'group-hover:hidden')} style={{ color: colorCss }} />
         {!forceExpanded ? <span className="hidden h-3.5 w-3.5 items-center justify-center text-muted-foreground group-hover:inline-flex">
           <Icon name={collapsed ? 'arrow-right-s' : 'arrow-down-s'} className="h-3.5 w-3.5" />
         </span> : null}

@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS, normalizeSidebarWindowHours } from '@/lib/sidebarTimeWindows';
+import {
+  normalizeSidebarZoneAppearance,
+  withZoneAppearance,
+  withoutZoneAppearance,
+  type SidebarZoneAppearance,
+  type ZoneAppearanceOverride,
+} from '@/lib/fork/zoneAppearance';
 
 export {
   DEFAULT_SIDEBAR_ATTENTION_WINDOW_HOURS,
@@ -123,6 +130,8 @@ type SessionDisplayStore = {
   sidebarAttentionWindowHours: number;
   /** One-line timeline-style session rows; see `DEFAULT_SIDEBAR_SINGLE_LINE_ROWS`. */
   sidebarSingleLineRows: boolean;
+  /** Per-zone icon and tint overrides; absent zones paint their default (`lib/fork/zoneAppearance.ts`). */
+  sidebarZoneAppearance: SidebarZoneAppearance;
   setShowChatsSection: (show: boolean) => void;
   setShowWorkSection: (show: boolean) => void;
   setShowAttentionSection: (show: boolean) => void;
@@ -140,6 +149,12 @@ type SessionDisplayStore = {
   setSidebarAttentionWindowHours: (hours: unknown) => void;
   setSidebarSingleLineRows: (on: boolean) => void;
   toggleSidebarSingleLineRows: () => void;
+  /** Replaces the whole map (settings sync); normalised on the way in. */
+  setSidebarZoneAppearance: (appearance: unknown) => void;
+  /** Changes one zone's icon and/or tint; a value equal to the default clears that field. */
+  setZoneAppearance: (zone: SidebarZoneKey, patch: ZoneAppearanceOverride) => void;
+  /** Puts one zone back on its default icon and tint. */
+  resetZoneAppearance: (zone: SidebarZoneKey) => void;
 };
 
 export const migrateSessionDisplayState = (
@@ -203,6 +218,12 @@ export const migrateSessionDisplayState = (
     // is one toggle away); a value from a newer build that was downgraded is kept.
     if (typeof state.sidebarSingleLineRows !== 'boolean') state.sidebarSingleLineRows = DEFAULT_SIDEBAR_SINGLE_LINE_ROWS;
   }
+  if (version < 14) {
+    // v14 adds the per-zone appearance overrides. Everyone starts on the
+    // defaults; a value from a newer build that was downgraded keeps what it
+    // can be read as.
+    state.sidebarZoneAppearance = normalizeSidebarZoneAppearance(state.sidebarZoneAppearance);
+  }
   return state;
 };
 
@@ -252,10 +273,14 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       sidebarSingleLineRows: DEFAULT_SIDEBAR_SINGLE_LINE_ROWS,
       setSidebarSingleLineRows: (on) => set({ sidebarSingleLineRows: on }),
       toggleSidebarSingleLineRows: () => set((state) => ({ sidebarSingleLineRows: !state.sidebarSingleLineRows })),
+      sidebarZoneAppearance: {},
+      setSidebarZoneAppearance: (appearance) => set({ sidebarZoneAppearance: normalizeSidebarZoneAppearance(appearance) }),
+      setZoneAppearance: (zone, patch) => set((state) => ({ sidebarZoneAppearance: withZoneAppearance(state.sidebarZoneAppearance, zone, patch) })),
+      resetZoneAppearance: (zone) => set((state) => ({ sidebarZoneAppearance: withoutZoneAppearance(state.sidebarZoneAppearance, zone) })),
     }),
     {
       name: 'session-display-mode',
-      version: 13,
+      version: 14,
       // v1→v2 adds projectSortOrder using the canonical manual ordering.
       // v2→v3 replaces the previously shipped recent default with manual.
       // v3→v4 removes displayMode (single sidebar row layout).
@@ -269,6 +294,7 @@ export const useSessionDisplayStore = create<SessionDisplayStore>()(
       // v10→v11 adds sidebarZoneOrder (the fixed order the sidebar had before).
       // v11→v12 adds sidebarAttentionWindowHours (48).
       // v12→v13 adds sidebarSingleLineRows (on).
+      // v13→v14 adds sidebarZoneAppearance (no overrides).
       migrate: migrateSessionDisplayState,
     },
   ),

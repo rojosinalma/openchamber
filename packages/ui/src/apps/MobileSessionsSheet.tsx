@@ -33,7 +33,6 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { DirectoryExplorerDialog } from '@/components/session/DirectoryExplorerDialog';
 import { Icon } from '@/components/icon/Icon';
-import type { IconName } from '@/components/icon/icons';
 import { NewWorktreeDialog } from '@/components/session/NewWorktreeDialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -73,7 +72,8 @@ import { refreshGlobalSessions, useGlobalSessionsStore } from '@/stores/useGloba
 import { useMobileSessionExpansionStore } from '@/stores/useMobileSessionExpansionStore';
 import { useMobileSessionTreeStore } from '@/stores/useMobileSessionTreeStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
-import { useSessionDisplayStore, type ProjectSortOrder } from '@/stores/useSessionDisplayStore';
+import { useSessionDisplayStore, type ProjectSortOrder, type SidebarZoneKey } from '@/stores/useSessionDisplayStore';
+import { resolveZoneAppearance } from '@/lib/fork/zoneAppearance';
 import { isSessionPinned, useSessionPinnedStore } from '@/stores/useSessionPinnedStore';
 import { orderWorktrees, useWorktreeOrderStore } from '@/stores/useWorktreeOrderStore';
 import {
@@ -818,6 +818,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   const storedProjectSortOrder = useSessionDisplayStore((state) => state.projectSortOrder);
   const setProjectSortOrder = useSessionDisplayStore((state) => state.setProjectSortOrder);
   const sidebarViewMode = useSessionDisplayStore((state) => state.sidebarViewMode);
+  const sidebarZoneAppearance = useSessionDisplayStore((state) => state.sidebarZoneAppearance);
   // The timeline keeps projects in the user's own order, as on desktop;
   // reordering is its only sort.
   const projectSortOrder = sidebarViewMode === 'timeline' ? 'manual' : storedProjectSortOrder;
@@ -1924,13 +1925,15 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   /** Needs attention, Pinned or In work: a collapsible section over its timeline rows; nothing when empty. */
   const renderZoneSection = (
     sectionId: string,
-    icon: IconName,
+    zone: SidebarZoneKey,
     label: string,
     entries: readonly TimelineEntry[],
   ): React.ReactNode => {
     // The count is the rows: a run's lanes share one, and a session whose
     // project is unresolved has none.
     if (entries.length === 0) return null;
+    // The zone's icon and tint follow the desktop's per-zone appearance picks.
+    const { icon: iconName, colorCss } = resolveZoneAppearance(zone, sidebarZoneAppearance);
     const expanded = projectExpandedMap[sectionId] ?? true;
     return (
       <section>
@@ -1952,8 +1955,8 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
           }
           style={{ touchAction: 'manipulation' }}
         >
-          <span className="flex size-8 shrink-0 items-center justify-center text-muted-foreground">
-            <Icon name={icon} className="size-5" />
+          <span className="flex size-8 shrink-0 items-center justify-center" style={{ color: colorCss }}>
+            <Icon name={iconName} className="size-5" />
           </span>
           <span className="block min-w-0 flex-1 truncate typography-ui-header font-semibold text-foreground">
             {label}
@@ -2251,11 +2254,11 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
               {sidebarZoneOrder.map((zone) => {
                 switch (zone) {
                   case 'pinned':
-                    return <React.Fragment key={zone}>{renderZoneSection(PINNED_SECTION_ID, 'pushpin', t('sessions.sidebar.activity.pinnedTitle'), pinnedTimelineEntries)}</React.Fragment>;
+                    return <React.Fragment key={zone}>{renderZoneSection(PINNED_SECTION_ID, 'pinned', t('sessions.sidebar.activity.pinnedTitle'), pinnedTimelineEntries)}</React.Fragment>;
                   case 'attention':
-                    return <React.Fragment key={zone}>{renderZoneSection(ATTENTION_SECTION_ID, 'notification-3', t('sessions.sidebar.attention.title'), attentionTimelineEntries)}</React.Fragment>;
+                    return <React.Fragment key={zone}>{renderZoneSection(ATTENTION_SECTION_ID, 'attention', t('sessions.sidebar.attention.title'), attentionTimelineEntries)}</React.Fragment>;
                   case 'work':
-                    return <React.Fragment key={zone}>{renderZoneSection(WORK_SECTION_ID, 'eye', t('sessions.sidebar.work.title'), workTimelineEntries)}</React.Fragment>;
+                    return <React.Fragment key={zone}>{renderZoneSection(WORK_SECTION_ID, 'work', t('sessions.sidebar.work.title'), workTimelineEntries)}</React.Fragment>;
                   case 'chats':
                     return <React.Fragment key={zone}>{(() => {
                 const chatsExpanded = projectExpandedMap[CHAT_DRAFT_PROJECT_ID] ?? true;
