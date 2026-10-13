@@ -52,6 +52,9 @@ import { formatProjectLabel, formatSessionCompactDateLabel, formatSessionDateLab
 import { useProjectsStore } from '@/stores/useProjectsStore';
 import { useOpenOnBoard } from '@/components/sourceBoard/openOnBoard';
 import { RowMarkTooltip } from './RowMarkTooltip';
+import { SubagentsRowMarker } from './SubagentsRowMarker';
+import { useSubagentsSummaryLabel } from './useSubagentsSummaryLabel';
+import { useRunningSessionCount, useSessionChildIds } from '@/sync/session-children';
 import { SessionMenuItemHint } from '../../SessionMenuItemHint';
 import { SIDEBAR_REF_TOOLTIP_CLOSE_DELAY_MS, SidebarRefLinks, type SidebarRefLink } from './SidebarRefLinks';
 import { useScrollDismissedTooltip } from './useScrollDismissedTooltip';
@@ -683,6 +686,12 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
     hasForm: hasPendingForm,
   } = useSessionBlockingRequests(blockingBadgeSessionScopes);
   const isSubtaskSession = Boolean(resolvedSession.parentID);
+  // The session's subagents, from the global store's shared parent index: one
+  // Map lookup per row, and the running count re-renders the row only when it
+  // changes, not on every status tick of a child.
+  const subagentIds = useSessionChildIds(session.id);
+  const runningSubagents = useRunningSessionCount(subagentIds);
+  const subagentsSummaryLabel = useSubagentsSummaryLabel(subagentIds.length, runningSubagents);
   const unseenCount = useSessionUnseenCount(session.id);
   const attentionWindowHours = useSessionDisplayStore((state) => state.sidebarAttentionWindowHours);
   // Two unread signals, one marker: the in-memory notification is instant and
@@ -1724,6 +1733,7 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
       spaceMark={branchInSpace ? t('sessions.sidebar.group.space') : null}
       statusDot={stateInSlot ? null : liveStateMark}
       pinnedMarker={isPinnedSession && !isSessionActionPending && !hidePinnedMarker ? pinnedMarkerContent : null}
+      subagentsMarker={subagentIds.length > 0 ? <SubagentsRowMarker count={subagentIds.length} running={runningSubagents} /> : null}
       timeSlot={showActivityDuration
         ? <SessionActivityDuration sessionId={session.id} running={isStreaming} className="typography-micro" />
         : sessionCompactUpdatedLabel}
@@ -1916,6 +1926,12 @@ function SessionNodeItemComponent(props: SessionNodeItemProps): React.ReactNode 
                           ? <Icon name="box-3" className="h-3 w-3 flex-shrink-0" aria-hidden={false} role="img" aria-label={t('sessions.sidebar.group.space')} />
                           : <Icon name="git-branch" className={cn('h-3 w-3 flex-shrink-0', branchPrIconColor && 'oc-ref-tint')} style={branchPrIconColor ? refTintStyle(branchPrIconColor) : undefined} />}
                         <span className="min-w-0 truncate">{tooltipBranchLabel}</span>
+                      </div>
+                    ) : null}
+                    {subagentIds.length > 0 ? (
+                      <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                        <Icon name="git-fork" className={cn('h-3 w-3 flex-shrink-0', runningSubagents > 0 && 'text-[var(--status-info)]')} />
+                        <span className="min-w-0 truncate">{subagentsSummaryLabel}</span>
                       </div>
                     ) : null}
                     {refLines.length > 0 ? <SidebarRefLinks items={refLines} directory={sessionDirectory} /> : null}
