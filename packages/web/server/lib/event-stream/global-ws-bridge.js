@@ -112,7 +112,7 @@ export function createGlobalMessageStreamWsBridge({
           removeClient(socket);
         }
       }
-    });
+    }, event.translated());
   }, { spaces: true });
 
   const unsubscribeStatus = globalHub.subscribeStatus((status) => {

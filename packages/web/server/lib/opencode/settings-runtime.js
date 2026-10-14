@@ -3,6 +3,7 @@ import {
   buildPreferencesFields,
   flattenPreferences,
   instancePartOf,
+  invalidateSettingsFileCache,
   legacySettingsDocumentOf,
   profilePartOf,
   isDeviceSettingsKey,
@@ -10,8 +11,11 @@ import {
   normalizeSettingsSurface,
   parsePreferencesDocument,
   preferencesFilePathFor,
+  readSettingsFileCache,
   seedPreferencesFrom,
   serializePreferencesDocument,
+  settingsFileSignatureOf,
+  storeSettingsFileCache,
 } from './settings-files.js';
 
 const DEFAULT_NOTIFICATION_TEMPLATES = {
@@ -535,18 +539,47 @@ export const createSettingsRuntime = (deps) => {
     }
   };
 
+  // Both files are read on nearly every request (~45 call sites), so the text
+  // is cached per path and revalidated with one stat: the cache hands back the
+  // same bytes while inode, size and mtime hold, and a fresh parse of them
+  // gives every caller its own object, as a fresh read did.
+  const RAW_KIND = 'raw';
+
+  const statSignature = async (filePath) => {
+    try {
+      return settingsFileSignatureOf(await fsPromises.stat(filePath));
+    } catch (error) {
+      if (error && typeof error === 'object' && error.code === 'ENOENT') return null;
+      throw error;
+    }
+  };
+
+  /** `{ signature, raw }`; `raw` is null for a missing file. Read errors other than ENOENT propagate. */
+  const readRawCached = async (filePath) => {
+    const signature = await statSignature(filePath);
+    if (signature === null) return { signature, raw: null };
+    const cached = readSettingsFileCache(RAW_KIND, filePath, signature);
+    if (cached) return { signature, raw: cached.value };
+    try {
+      const raw = await fsPromises.readFile(filePath, 'utf8');
+      storeSettingsFileCache(RAW_KIND, filePath, signature, raw);
+      return { signature, raw };
+    } catch (error) {
+      if (error && typeof error === 'object' && error.code === 'ENOENT') return { signature: null, raw: null };
+      throw error;
+    }
+  };
+
   const readInstanceSettingsFromDisk = async () => {
     try {
-      const raw = await fsPromises.readFile(SETTINGS_FILE_PATH, 'utf8');
+      const { raw } = await readRawCached(SETTINGS_FILE_PATH);
+      if (raw === null) return {};
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
         return parsed;
       }
       return {};
     } catch (error) {
-      if (error && typeof error === 'object' && error.code === 'ENOENT') {
-        return {};
-      }
       console.warn('Failed to read settings file:', error);
       return {};
     }
@@ -560,11 +593,11 @@ export const createSettingsRuntime = (deps) => {
   const readPreferenceFields = async () => {
     let raw;
     try {
-      raw = await fsPromises.readFile(PREFERENCES_FILE_PATH, 'utf8');
-    } catch (error) {
-      if (error && typeof error === 'object' && error.code === 'ENOENT') {
+      raw = (await readRawCached(PREFERENCES_FILE_PATH)).raw;
+      if (raw === null) {
         return { status: 'missing' };
       }
+    } catch (error) {
       if (!preferencesFailureLogged) {
         preferencesFailureLogged = true;
         console.warn('Failed to read preferences file:', error);
@@ -593,12 +626,11 @@ export const createSettingsRuntime = (deps) => {
   // seed preferences.json. settings.json keeps a copy of the profile's base
   // values on every write too, so an older build (which reads only that file)
   // still finds everything where it used to be.
-  const readSettingsFromDisk = async ({ surface = null } = {}) => {
-    const instance = await readInstanceSettingsFromDisk();
-    const preferences = await readPreferenceFields();
+  const readSettingsParts = async () => {
+    const [instance, preferences] = await Promise.all([readInstanceSettingsFromDisk(), readPreferenceFields()]);
     if (preferences.status === 'failed') {
       preferencesUnavailable = true;
-      return instance;
+      return { instance, fields: null };
     }
     preferencesUnavailable = false;
     if (preferences.status === 'missing') {
@@ -608,10 +640,16 @@ export const createSettingsRuntime = (deps) => {
       } catch (error) {
         console.warn('Failed to seed preferences file:', error);
       }
-      return instance;
+      return { instance, fields: null };
     }
-    return { ...instance, ...flattenPreferences(preferences.fields, normalizeSettingsSurface(surface)) };
+    return { instance, fields: preferences.fields };
   };
+
+  const mergeSettingsParts = ({ instance, fields }, surface = null) => (
+    fields ? { ...instance, ...flattenPreferences(fields, normalizeSettingsSurface(surface)) } : instance
+  );
+
+  const readSettingsFromDisk = async ({ surface = null } = {}) => mergeSettingsParts(await readSettingsParts(), surface);
 
   // Strict variant for callers that REGENERATE persisted identity when a key is
   // absent (relay signing/encryption keys). The lenient reader above maps every
@@ -710,6 +748,11 @@ export const createSettingsRuntime = (deps) => {
       await fsPromises.rm(tmp, { force: true }).catch(() => {});
       console.warn(`Failed to write ${path.basename(filePath)}:`, error);
       throw error;
+    } finally {
+      // The stat signature catches this too; dropping the entry here closes
+      // the window where a same-millisecond rewrite could still match.
+      invalidateSettingsFileCache(filePath);
+      migratedCache = null;
     }
   };
 
@@ -1042,12 +1085,29 @@ export const createSettingsRuntime = (deps) => {
 
   let hasCleanedOrphanedTempFiles = false;
 
-  const readSettingsFromDiskMigrated = async ({ surface = null } = {}) => {
+  // The migrated document is a pure function of the two files once the
+  // one-shot storage moves have run, so it is kept (as text, so every caller
+  // gets its own object) under the stat signature of both files. Concurrent
+  // readers under one signature share a single computation.
+  let migratedCache = null;
+  let migratedInFlight = null;
+
+  const migratedSignatureOf = async () => {
+    const [settings, preferences] = await Promise.all([
+      statSignature(SETTINGS_FILE_PATH).catch(() => undefined),
+      statSignature(PREFERENCES_FILE_PATH).catch(() => undefined),
+    ]);
+    // An unreadable stat yields no signature, which disables the cache for that read.
+    return settings === undefined || preferences === undefined ? null : `${settings}|${preferences}`;
+  };
+
+  const computeMigratedSettings = async () => {
     if (!hasCleanedOrphanedTempFiles) {
       hasCleanedOrphanedTempFiles = true;
       await cleanupOrphanedSettingsTempFiles(path.dirname(SETTINGS_FILE_PATH));
     }
-    const current = await readSettingsFromDisk();
+    const parts = await readSettingsParts();
+    const current = mergeSettingsParts(parts);
     const migration1 = await migrateSettingsFromLegacyLastDirectory(current);
     const migration2 = await migrateSettingsFromLegacyThemePreferences(migration1.settings);
     const migration3 = await migrateSettingsFromLegacyCollapsedProjects(migration2.settings);
@@ -1056,12 +1116,48 @@ export const createSettingsRuntime = (deps) => {
     const migration6 = normalizeSettingsPaths(migration5.settings);
     const migration7 = await migrateSettingsToDeterministicProjectIds(migration6.settings);
     const migration8 = migrateSettingsRemoveApprovedDirectories(migration7.settings);
-    if (migration1.changed || migration2.changed || migration3.changed || migration4.changed || migration5.changed || migration6.changed || migration7.changed || migration8.changed) {
+    const changed = migration1.changed || migration2.changed || migration3.changed || migration4.changed
+      || migration5.changed || migration6.changed || migration7.changed || migration8.changed;
+    if (changed) {
       await writeSettingsToDisk(migration8.settings);
     }
     // Migrations run on the base view; a surface asks for its own resolution
-    // of the per-surface keys on top of the migrated files.
-    return normalizeSettingsSurface(surface) ? readSettingsFromDisk({ surface }) : migration8.settings;
+    // of the per-surface keys on top of the migrated files. After a migration
+    // write the files hold the migrated document, so they are read once more;
+    // otherwise the parts already read are the files.
+    return { base: migration8.settings, parts: changed ? await readSettingsParts() : parts };
+  };
+
+  const readSettingsFromDiskMigrated = async ({ surface = null } = {}) => {
+    const normalizedSurface = normalizeSettingsSurface(surface);
+    const signature = await migratedSignatureOf();
+    let result;
+    if (signature !== null && migratedCache?.signature === signature) {
+      result = migratedCache.result;
+    } else {
+      if (!migratedInFlight || migratedInFlight.signature !== signature) {
+        const promise = computeMigratedSettings().finally(() => {
+          if (migratedInFlight?.promise === promise) migratedInFlight = null;
+        });
+        migratedInFlight = { signature, promise };
+      }
+      const computed = await migratedInFlight.promise;
+      result = {
+        baseText: JSON.stringify(computed.base),
+        instanceText: JSON.stringify(computed.parts.instance),
+        fieldsText: computed.parts.fields ? JSON.stringify(computed.parts.fields) : null,
+      };
+      // A migration write moved the files past the signature read above, so
+      // the entry is kept only when nothing was written meanwhile.
+      if (signature !== null && (await migratedSignatureOf()) === signature) {
+        migratedCache = { signature, result };
+      }
+    }
+    if (!normalizedSurface) return JSON.parse(result.baseText);
+    return mergeSettingsParts({
+      instance: JSON.parse(result.instanceText),
+      fields: result.fieldsText ? JSON.parse(result.fieldsText) : null,
+    }, normalizedSurface);
   };
 
   const persistSettings = async (changes, { surface = null } = {}) => {

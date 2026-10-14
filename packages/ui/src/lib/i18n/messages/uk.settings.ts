@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsUk } from './extensions.settings/uk';
+import { guestIntegrationsUk } from './guest-integrations/uk';
+import { linearIntegrationUk } from './linear-integration/uk';
+import { thirdPartyIntegrationUk } from './third-party-integrations/uk';
+import { extensionCatalogUk } from './extension-catalog/uk';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH-ключі',
   'settings.sourceControl.ssh.load': 'Показати ключі',
@@ -2530,11 +2530,11 @@ export const settingsDict = {
   "settings.openchamber.visual.field.enterToSendHint": "Виберіть комбінацію для надсилання у стандартному композері. У розгорнутому композері Enter завжди додає новий рядок, а Ctrl/Cmd+Enter надсилає.",
   "settings.openchamber.visual.option.enterToSend.enter.label": "Надсилати клавішею Enter",
   "settings.openchamber.visual.option.enterToSend.modifier.label": "Надсилати за допомогою Ctrl/Cmd+Enter",
-  ...linearIntegrationI18n.uk,
-  ...thirdPartyIntegrationI18n.uk,
-  ...extensionCatalogI18n.uk,
-  ...guestIntegrationsI18n.uk,
-  ...extensionsSettingsI18n.uk,
+  ...linearIntegrationUk,
+  ...thirdPartyIntegrationUk,
+  ...extensionCatalogUk,
+  ...guestIntegrationsUk,
+  ...extensionsSettingsUk,
   'settings.page.integrations.title': 'Інтеграції',
   'settings.page.integrations.description': 'Підключіть сервіси та підписки, з якими працює OpenChamber.',
   'settings.agents.page.field.steps': 'Максимум кроків',

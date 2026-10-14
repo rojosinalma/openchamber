@@ -1,23 +1,23 @@
 import type { I18nKey } from './en';
 import { settingsDict } from './es.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerEs } from './linear-issue-picker/es';
+import { referencePickerEs } from './reference-picker/es';
+import { sessionMenuHintsEs } from './session-menu-hints/es';
+import { projectKnowledgeEs } from './project-knowledge/es';
+import { linearPanelEs } from './linear-panel/es';
+import { routingEs } from './routing/es';
+import { pluginPanelEs } from './plugin-panel/es';
+import { surfacePanelEs } from './surface-panel/es';
+import { fileArtifactsEs } from './file-artifacts/es';
+import { usageStatsEs } from './usage-stats/es';
+import { webSearchEs } from './websearch/es';
+import { isolatedSpacesEs } from './isolated-spaces/es';
+import { sourceBoardEs } from './source-board/es';
+import { projectActionsEs } from './project-actions/es';
+import { environmentEs } from './environment/es';
+import { providersEs } from './providers/es';
+import { mcpGridEs } from './mcp-grid/es';
+import { pluginsGridEs } from './plugins-grid/es';
 
 export const dict: Record<I18nKey, string> = {
   "opencodeCompatibility.bundled": "OpenCode viene incluido en OpenChamber. Actualiza OpenChamber para obtener OpenCode v2.",
@@ -137,24 +137,24 @@ export const dict: Record<I18nKey, string> = {
   'gitView.publish.stale': 'La rama o sus remotos cambiaron mientras tanto. No se envió nada; elige otra vez adónde hacer push.',
   'gitView.publish.cancelled': 'Push cancelado. No se envió nada.',
   'gitView.publish.succeeded': 'Push hecho',
-  ...linearIssuePickerI18n.es,
-  ...referencePickerI18n.es,
-  ...sessionMenuHintsI18n.es,
-  ...projectKnowledgeI18n.es,
-  ...linearPanelI18n.es,
-  ...routingI18n.es,
-  ...pluginPanelI18n.es,
-  ...surfacePanelI18n.es,
-  ...fileArtifactsI18n.es,
-  ...usageStatsI18n.es,
-  ...webSearchI18n.es,
-  ...isolatedSpacesI18n.es,
-  ...sourceBoardI18n.es,
-  ...projectActionsI18n.es,
-  ...environmentI18n.es,
-  ...providersI18n.es,
-  ...mcpGridI18n.es,
-  ...pluginsGridI18n.es,
+  ...linearIssuePickerEs,
+  ...referencePickerEs,
+  ...sessionMenuHintsEs,
+  ...projectKnowledgeEs,
+  ...linearPanelEs,
+  ...routingEs,
+  ...pluginPanelEs,
+  ...surfacePanelEs,
+  ...fileArtifactsEs,
+  ...usageStatsEs,
+  ...webSearchEs,
+  ...isolatedSpacesEs,
+  ...sourceBoardEs,
+  ...projectActionsEs,
+  ...environmentEs,
+  ...providersEs,
+  ...mcpGridEs,
+  ...pluginsGridEs,
   'terminalView.actions.attachSelection': 'Adjuntar salida seleccionada',
   'terminalView.actions.copySelection': 'Copiar salida seleccionada',
   'terminalView.toast.selectionCopied': 'Salida copiada',

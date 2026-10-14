@@ -194,21 +194,87 @@ export const seedPreferencesFrom = (document, now) => buildPreferencesFields({},
  * keys on a hot path (small-model resolution, goal/assist toggles). A missing
  * or unreadable preferences file contributes nothing, and the caller's own
  * default applies — the same "missing is not default" rule the clients use.
+ *
+ * Parsed documents are cached per path and revalidated with one `stat` per
+ * read: a file whose size, mtime or inode changed is read again, so writes by
+ * this process (which `invalidateSettingsFileCache` also announces) and by
+ * other processes are both seen.
  */
 export const readMergedSettingsSync = ({ fs, path, settingsFilePath }) => {
-  let settings = {};
-  try {
-    const parsed = JSON.parse(fs.readFileSync(settingsFilePath, 'utf8'));
-    if (isPlainObject(parsed)) settings = parsed;
-  } catch {
-    settings = {};
-  }
-  let preferences = {};
-  try {
-    const parsed = parsePreferencesDocument(fs.readFileSync(preferencesFilePathFor(settingsFilePath, path), 'utf8'));
-    if (parsed.ok) preferences = flattenPreferences(parsed.fields);
-  } catch {
-    preferences = {};
-  }
+  const settings = readCachedFileSync(fs, settingsFilePath, (raw) => {
+    const parsed = JSON.parse(raw);
+    return isPlainObject(parsed) ? parsed : {};
+  }, {});
+  const preferences = readCachedFileSync(fs, preferencesFilePathFor(settingsFilePath, path), (raw) => {
+    const document = parsePreferencesDocument(raw);
+    return document.ok ? flattenPreferences(document.fields) : {};
+  }, {});
   return { ...settings, ...preferences };
+};
+
+// ---------------------------------------------------------------------------
+// File cache shared by the sync reader above and the async settings runtime.
+// Keyed by path and by what was derived from the file (the sync reader keeps
+// the flattened profile, the runtime the raw fields); each entry remembers the
+// stat signature it was read under.
+
+const fileCache = new Map();
+const cacheKeyOf = (kind, filePath) => `${kind}\0${filePath}`;
+const SYNC_KIND = 'sync';
+
+/** A string that changes whenever the file content may have: `null` when the file is absent. */
+export const settingsFileSignatureOf = (stats) => (
+  stats ? `${stats.ino}:${stats.size}:${stats.mtimeMs}` : null
+);
+
+const statSignatureSync = (fs, filePath) => {
+  try {
+    return settingsFileSignatureOf(fs.statSync(filePath));
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * `derive(raw)` turns the file text into the cached value; `missing` is
+ * returned (and cached) for an absent or unreadable file. The cached value is
+ * shared, so callers must treat it as read-only — the sync reader spreads it.
+ */
+const readCachedFileSync = (fs, filePath, derive, missing) => {
+  const signature = statSignatureSync(fs, filePath);
+  const key = cacheKeyOf(SYNC_KIND, filePath);
+  const cached = fileCache.get(key);
+  if (cached && cached.signature === signature) return cached.value;
+  let value = missing;
+  if (signature !== null) {
+    try {
+      value = derive(fs.readFileSync(filePath, 'utf8'));
+    } catch {
+      value = missing;
+    }
+  }
+  fileCache.set(key, { signature, value });
+  return value;
+};
+
+/** Stores what `kind` derived from the file under `signature`; `readSettingsFileCache` hands it back while the signature holds. */
+export const storeSettingsFileCache = (kind, filePath, signature, value) => {
+  fileCache.set(cacheKeyOf(kind, filePath), { signature, value });
+};
+
+export const readSettingsFileCache = (kind, filePath, signature) => {
+  const cached = fileCache.get(cacheKeyOf(kind, filePath));
+  return cached && cached.signature === signature ? cached : null;
+};
+
+/** Drops every entry for the path (all paths when omitted). Called after each write this process makes. */
+export const invalidateSettingsFileCache = (filePath) => {
+  if (filePath === undefined) {
+    fileCache.clear();
+    return;
+  }
+  const suffix = `\0${filePath}`;
+  for (const key of fileCache.keys()) {
+    if (key.endsWith(suffix)) fileCache.delete(key);
+  }
 };

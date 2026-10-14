@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsUk = {
+  'filesView.artifact.image.fit': 'Вписати',
+  'filesView.artifact.image.fitTitle': 'Вписати зображення в панель',
+  'filesView.artifact.image.actualTitle': 'Показати зображення у справжньому розмірі',
+  'filesView.artifact.image.zoomOut': 'Зменшити',
+  'filesView.artifact.image.zoomIn': 'Збільшити',
+  'filesView.artifact.media.unplayable': 'Цей файл тут не відтворюється. Завантажте його, щоб відкрити в іншому застосунку.',
+  'filesView.artifact.font.sample': 'Чуєш їх, доцю, га? Кумедна ж ти, прощайся без ґольфів!',
+  'filesView.artifact.font.loadFailed': 'Не вдалося завантажити цей шрифт.',
+  'filesView.artifact.table.rowsSingle': '{rows} рядок · {columns} стовпців',
+  'filesView.artifact.table.rowsPlural': '{rows} рядків · {columns} стовпців',
+  'filesView.artifact.table.truncated': 'Показано перші {shown} з {total} рядків',
+  'filesView.artifact.table.empty': 'У цьому файлі немає рядків.',
+  'filesView.artifact.table.showTable': 'Показати як таблицю',
+  'filesView.artifact.table.showSource': 'Показати вихідний текст',
+  'filesView.artifact.binary.title': 'Для цього файлу немає перегляду',
+  'filesView.artifact.binary.description': 'OpenChamber не декодує файли такого типу. Завантажте його, щоб відкрити в іншому застосунку.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber не декодує файли {extension}. Завантажте його, щоб відкрити в іншому застосунку.',
+} as const;

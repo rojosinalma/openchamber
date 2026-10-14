@@ -1,22 +1,22 @@
 import { settingsDict } from './ar.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerAr } from './linear-issue-picker/ar';
+import { referencePickerAr } from './reference-picker/ar';
+import { sessionMenuHintsAr } from './session-menu-hints/ar';
+import { projectKnowledgeAr } from './project-knowledge/ar';
+import { linearPanelAr } from './linear-panel/ar';
+import { routingAr } from './routing/ar';
+import { pluginPanelAr } from './plugin-panel/ar';
+import { surfacePanelAr } from './surface-panel/ar';
+import { fileArtifactsAr } from './file-artifacts/ar';
+import { usageStatsAr } from './usage-stats/ar';
+import { webSearchAr } from './websearch/ar';
+import { isolatedSpacesAr } from './isolated-spaces/ar';
+import { sourceBoardAr } from './source-board/ar';
+import { projectActionsAr } from './project-actions/ar';
+import { environmentAr } from './environment/ar';
+import { providersAr } from './providers/ar';
+import { mcpGridAr } from './mcp-grid/ar';
+import { pluginsGridAr } from './plugins-grid/ar';
 
 export const dict = {
   'opencodeCompatibility.bundled': 'يأتي OpenCode مضمّنًا مع OpenChamber. حدّث OpenChamber للحصول على OpenCode v2.',
@@ -3777,24 +3777,24 @@ export const dict = {
   'sessions.scheduledTasks.dialog.toast.alreadyQueued': 'هذه المهمة في قائمة الانتظار بالفعل وستعمل عند توفر مكان',
   'chat.modelControls.agentFavoriteAdd': 'إضافة إلى المفضلة. عند وجود مفضلة، يتنقل Tab بينها فقط',
   ...settingsDict,
-  ...linearIssuePickerI18n.ar,
-  ...referencePickerI18n.ar,
-  ...sessionMenuHintsI18n.ar,
-  ...projectKnowledgeI18n.ar,
-  ...linearPanelI18n.ar,
-  ...routingI18n.ar,
-  ...pluginPanelI18n.ar,
-  ...surfacePanelI18n.ar,
-  ...fileArtifactsI18n.ar,
-  ...usageStatsI18n.ar,
-  ...webSearchI18n.ar,
-  ...isolatedSpacesI18n.ar,
-  ...sourceBoardI18n.ar,
-  ...projectActionsI18n.ar,
-  ...environmentI18n.ar,
-  ...providersI18n.ar,
-  ...mcpGridI18n.ar,
-  ...pluginsGridI18n.ar,
+  ...linearIssuePickerAr,
+  ...referencePickerAr,
+  ...sessionMenuHintsAr,
+  ...projectKnowledgeAr,
+  ...linearPanelAr,
+  ...routingAr,
+  ...pluginPanelAr,
+  ...surfacePanelAr,
+  ...fileArtifactsAr,
+  ...usageStatsAr,
+  ...webSearchAr,
+  ...isolatedSpacesAr,
+  ...sourceBoardAr,
+  ...projectActionsAr,
+  ...environmentAr,
+  ...providersAr,
+  ...mcpGridAr,
+  ...pluginsGridAr,
   'settings.usage.page.state.claudeSignedOutTitle': 'لم يتم تسجيل الدخول إلى Claude Code',
   'settings.usage.page.state.claudeSignInCommand': 'شغّل هذا الأمر في الطرفية:',
   'settings.openchamber.visual.field.confirmFileTreeMove': 'التأكيد قبل نقل الملفات',

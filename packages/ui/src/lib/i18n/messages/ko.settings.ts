@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsKo } from './extensions.settings/ko';
+import { guestIntegrationsKo } from './guest-integrations/ko';
+import { linearIntegrationKo } from './linear-integration/ko';
+import { thirdPartyIntegrationKo } from './third-party-integrations/ko';
+import { extensionCatalogKo } from './extension-catalog/ko';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH 키',
   'settings.sourceControl.ssh.load': '키 보기',
@@ -2530,11 +2530,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.enterToSendHint': '일반 작성기의 전송 단축키를 선택하세요. 확장 작성기에서는 Enter가 항상 줄바꿈을 하고 Ctrl/Cmd+Enter로 전송합니다.',
   'settings.openchamber.visual.option.enterToSend.enter.label': 'Enter로 전송',
   'settings.openchamber.visual.option.enterToSend.modifier.label': 'Ctrl/Cmd+Enter로 전송',
-  ...linearIntegrationI18n.ko,
-  ...thirdPartyIntegrationI18n.ko,
-  ...extensionCatalogI18n.ko,
-  ...guestIntegrationsI18n.ko,
-  ...extensionsSettingsI18n.ko,
+  ...linearIntegrationKo,
+  ...thirdPartyIntegrationKo,
+  ...extensionCatalogKo,
+  ...guestIntegrationsKo,
+  ...extensionsSettingsKo,
   'settings.page.integrations.title': '통합',
   'settings.page.integrations.description': 'OpenChamber와 함께 쓰는 서비스와 구독을 연결합니다.',
   'settings.agents.page.field.steps': '최대 단계 수',

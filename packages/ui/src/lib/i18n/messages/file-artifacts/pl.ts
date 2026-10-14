@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsPl = {
+  'filesView.artifact.image.fit': 'Dopasuj',
+  'filesView.artifact.image.fitTitle': 'Dopasuj obraz do panelu',
+  'filesView.artifact.image.actualTitle': 'Pokaż obraz w rzeczywistym rozmiarze',
+  'filesView.artifact.image.zoomOut': 'Pomniejsz',
+  'filesView.artifact.image.zoomIn': 'Powiększ',
+  'filesView.artifact.media.unplayable': 'Tego pliku nie można tu odtworzyć. Pobierz go, aby otworzyć w innej aplikacji.',
+  'filesView.artifact.font.sample': 'Pchnąć w tę łódź jeża lub ośm skrzyń fig',
+  'filesView.artifact.font.loadFailed': 'Nie udało się wczytać tej czcionki.',
+  'filesView.artifact.table.rowsSingle': '{rows} wiersz · {columns} kolumn',
+  'filesView.artifact.table.rowsPlural': '{rows} wierszy · {columns} kolumn',
+  'filesView.artifact.table.truncated': 'Wyświetlono pierwsze {shown} z {total} wierszy',
+  'filesView.artifact.table.empty': 'Ten plik nie ma wierszy.',
+  'filesView.artifact.table.showTable': 'Pokaż jako tabelę',
+  'filesView.artifact.table.showSource': 'Pokaż źródło',
+  'filesView.artifact.binary.title': 'Brak podglądu dla tego pliku',
+  'filesView.artifact.binary.description': 'OpenChamber nie dekoduje tego rodzaju plików. Pobierz go, aby otworzyć w innej aplikacji.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber nie dekoduje plików {extension}. Pobierz go, aby otworzyć w innej aplikacji.',
+} as const;

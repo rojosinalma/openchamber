@@ -12,7 +12,9 @@ import { getMarkdownSelectionText, type RenderedCopyFormat } from './selectionMa
 // Shared decoration context
 // ---------------------------------------------------------------------------
 
-export type MermaidRender = { svg?: string; ascii?: string };
+// `pending`: the diagram renderer is still downloading; the block shows the
+// source and is re-decorated once the renderer arrives.
+export type MermaidRender = { svg?: string; ascii?: string; pending?: boolean };
 
 export type DecorateLabels = {
   copy: string;
@@ -676,7 +678,7 @@ const decorateMermaid = (root: HTMLElement, ctx: DecorateContext): void => {
         toolbar.appendChild(download);
       }
     } else {
-      block.setAttribute('data-mermaid-render', 'ascii');
+      block.setAttribute('data-mermaid-render', rendered.pending ? 'pending' : 'ascii');
       const asciiPre = document.createElement('pre');
       asciiPre.setAttribute('data-markdown', 'mermaid-ascii');
       asciiPre.textContent = rendered.ascii || source;

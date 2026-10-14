@@ -1,22 +1,22 @@
 import { settingsDict } from './de.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerDe } from './linear-issue-picker/de';
+import { referencePickerDe } from './reference-picker/de';
+import { sessionMenuHintsDe } from './session-menu-hints/de';
+import { projectKnowledgeDe } from './project-knowledge/de';
+import { linearPanelDe } from './linear-panel/de';
+import { routingDe } from './routing/de';
+import { pluginPanelDe } from './plugin-panel/de';
+import { surfacePanelDe } from './surface-panel/de';
+import { fileArtifactsDe } from './file-artifacts/de';
+import { usageStatsDe } from './usage-stats/de';
+import { webSearchDe } from './websearch/de';
+import { isolatedSpacesDe } from './isolated-spaces/de';
+import { sourceBoardDe } from './source-board/de';
+import { projectActionsDe } from './project-actions/de';
+import { environmentDe } from './environment/de';
+import { providersDe } from './providers/de';
+import { mcpGridDe } from './mcp-grid/de';
+import { pluginsGridDe } from './plugins-grid/de';
 
 export const dict = {
   "opencodeCompatibility.bundled": "OpenCode ist in OpenChamber enthalten. Aktualisieren Sie OpenChamber, um OpenCode v2 zu erhalten.",
@@ -126,24 +126,24 @@ export const dict = {
   'gitView.publish.stale': 'Der Branch oder seine Remotes haben sich inzwischen geändert. Es wurde nichts gepusht; wähle das Ziel erneut.',
   'gitView.publish.cancelled': 'Push abgebrochen. Es wurde nichts gesendet.',
   'gitView.publish.succeeded': 'Gepusht',
-  ...linearIssuePickerI18n.de,
-  ...referencePickerI18n.de,
-  ...sessionMenuHintsI18n.de,
-  ...projectKnowledgeI18n.de,
-  ...linearPanelI18n.de,
-  ...routingI18n.de,
-  ...pluginPanelI18n.de,
-  ...surfacePanelI18n.de,
-  ...fileArtifactsI18n.de,
-  ...usageStatsI18n.de,
-  ...webSearchI18n.de,
-  ...isolatedSpacesI18n.de,
-  ...sourceBoardI18n.de,
-  ...projectActionsI18n.de,
-  ...environmentI18n.de,
-  ...providersI18n.de,
-  ...mcpGridI18n.de,
-  ...pluginsGridI18n.de,
+  ...linearIssuePickerDe,
+  ...referencePickerDe,
+  ...sessionMenuHintsDe,
+  ...projectKnowledgeDe,
+  ...linearPanelDe,
+  ...routingDe,
+  ...pluginPanelDe,
+  ...surfacePanelDe,
+  ...fileArtifactsDe,
+  ...usageStatsDe,
+  ...webSearchDe,
+  ...isolatedSpacesDe,
+  ...sourceBoardDe,
+  ...projectActionsDe,
+  ...environmentDe,
+  ...providersDe,
+  ...mcpGridDe,
+  ...pluginsGridDe,
   'common.language.german': 'Deutsch',
   'common.loading': 'Wird geladen...',
   'common.unavailable': 'Nicht verfügbar',

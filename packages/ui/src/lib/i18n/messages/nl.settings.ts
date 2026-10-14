@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsNl } from './extensions.settings/nl';
+import { guestIntegrationsNl } from './guest-integrations/nl';
+import { linearIntegrationNl } from './linear-integration/nl';
+import { thirdPartyIntegrationNl } from './third-party-integrations/nl';
+import { extensionCatalogNl } from './extension-catalog/nl';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH-sleutels',
   'settings.sourceControl.ssh.load': 'Sleutels tonen',
@@ -2520,11 +2520,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.inputHistoryLimitDescription': 'Een lager getal verwijdert oudere prompts uit uw geschiedenis.',
   'settings.openchamber.visual.field.inputHistoryLimitAria': 'Te onthouden prompts',
   'settings.openchamber.visual.field.inputHistoryLimitUnit': 'prompts',
-  ...linearIntegrationI18n.nl,
-  ...thirdPartyIntegrationI18n.nl,
-  ...extensionCatalogI18n.nl,
-  ...guestIntegrationsI18n.nl,
-  ...extensionsSettingsI18n.nl,
+  ...linearIntegrationNl,
+  ...thirdPartyIntegrationNl,
+  ...extensionCatalogNl,
+  ...guestIntegrationsNl,
+  ...extensionsSettingsNl,
   'settings.page.integrations.title': 'Integraties',
   'settings.page.integrations.description': 'Verbind GitHub en Linear zodat OpenChamber met uw issues en pull requests kan werken.',
   'settings.agents.page.field.steps': 'Max. stappen',

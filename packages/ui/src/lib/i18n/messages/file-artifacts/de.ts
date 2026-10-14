@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsDe = {
+  'filesView.artifact.image.fit': 'Einpassen',
+  'filesView.artifact.image.fitTitle': 'Bild in das Panel einpassen',
+  'filesView.artifact.image.actualTitle': 'Bild in Originalgröße anzeigen',
+  'filesView.artifact.image.zoomOut': 'Verkleinern',
+  'filesView.artifact.image.zoomIn': 'Vergrößern',
+  'filesView.artifact.media.unplayable': 'Diese Datei kann hier nicht abgespielt werden. Lade sie herunter, um sie in einer anderen App zu öffnen.',
+  'filesView.artifact.font.sample': 'Franz jagt im komplett verwahrlosten Taxi quer durch Bayern',
+  'filesView.artifact.font.loadFailed': 'Diese Schrift konnte nicht geladen werden.',
+  'filesView.artifact.table.rowsSingle': '{rows} Zeile · {columns} Spalten',
+  'filesView.artifact.table.rowsPlural': '{rows} Zeilen · {columns} Spalten',
+  'filesView.artifact.table.truncated': 'Die ersten {shown} von {total} Zeilen werden angezeigt',
+  'filesView.artifact.table.empty': 'Diese Datei enthält keine Zeilen.',
+  'filesView.artifact.table.showTable': 'Als Tabelle anzeigen',
+  'filesView.artifact.table.showSource': 'Quelltext anzeigen',
+  'filesView.artifact.binary.title': 'Keine Vorschau für diese Datei',
+  'filesView.artifact.binary.description': 'OpenChamber kann diese Art von Datei nicht dekodieren. Lade sie herunter, um sie in einer anderen App zu öffnen.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber kann {extension}-Dateien nicht dekodieren. Lade sie herunter, um sie in einer anderen App zu öffnen.',
+} as const;

@@ -540,6 +540,25 @@ describe('session goal runtime', () => {
     expect(emitGoalNotification).not.toHaveBeenCalled();
   });
 
+  it('does not read the goal on a usage tick, only on a real session update', async () => {
+    const store = wired({ openchamber: { goal: activeGoal({ turnsUsed: 3 }) } });
+    const { runtime } = makeRuntime(store);
+
+    runtime.processPayload({
+      type: 'session.updated',
+      properties: { sessionID: SESSION_ID, info: { id: SESSION_ID, directory: '/repo', cost: 0.2, tokens: { input: 10, output: 5 }, time: { updated: 1 } } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(store.readSessionMetadata).not.toHaveBeenCalled();
+
+    runtime.processPayload({
+      type: 'session.updated',
+      properties: { sessionID: SESSION_ID, info: { id: SESSION_ID, directory: '/repo', title: 'Renamed', time: { updated: 2 } } },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    expect(store.readSessionMetadata).toHaveBeenCalledTimes(1);
+  });
+
   it('explains itself once, not on every event', () => {
     const log = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { runtime } = makeRuntime();

@@ -50,11 +50,9 @@ export const createOpenCodeWatcherRuntime = (deps) => {
       // The events of isolated spaces feed this watcher too, so live status, unread marks and
       // notifications work for a space's sessions as for the host's.
       unsubscribeEvent = globalEventHub.subscribeEvent((event) => {
-        const payload = unwrapGlobalEventPayload(event.payload);
-        if (!payload || typeof payload !== 'object') {
-          return;
-        }
-        emitTranslated(payload);
+        // The hub translates each event once and memoizes it; the other
+        // server-side subscribers read the same result.
+        for (const translated of event.translated()) onPayload(translated);
       }, { spaces: true });
       unsubscribeStatus = globalEventHub.subscribeStatus((status) => {
         if (signal.aborted) {

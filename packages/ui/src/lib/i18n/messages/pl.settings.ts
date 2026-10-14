@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsPl } from './extensions.settings/pl';
+import { guestIntegrationsPl } from './guest-integrations/pl';
+import { linearIntegrationPl } from './linear-integration/pl';
+import { thirdPartyIntegrationPl } from './third-party-integrations/pl';
+import { extensionCatalogPl } from './extension-catalog/pl';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'Klucze SSH',
   'settings.sourceControl.ssh.load': 'Pokaż klucze',
@@ -2523,11 +2523,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.enterToSendHint': 'Wybierz skrót wysyłania dla standardowego komponentu. W rozszerzonym komponencie Enter zawsze dodaje nowy wiersz, a Ctrl/Cmd+Enter wysyła.',
   'settings.openchamber.visual.option.enterToSend.enter.label': 'Wyślij klawiszem Enter',
   'settings.openchamber.visual.option.enterToSend.modifier.label': 'Wyślij klawiszami Ctrl/Cmd+Enter',
-  ...linearIntegrationI18n.pl,
-  ...thirdPartyIntegrationI18n.pl,
-  ...extensionCatalogI18n.pl,
-  ...guestIntegrationsI18n.pl,
-  ...extensionsSettingsI18n.pl,
+  ...linearIntegrationPl,
+  ...thirdPartyIntegrationPl,
+  ...extensionCatalogPl,
+  ...guestIntegrationsPl,
+  ...extensionsSettingsPl,
   'settings.page.integrations.title': 'Integracje',
   'settings.page.integrations.description': 'Połącz usługi i subskrypcje, z którymi pracuje OpenChamber.',
   'settings.appearance.language.select': 'Select language',

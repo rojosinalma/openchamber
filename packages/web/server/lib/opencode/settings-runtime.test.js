@@ -632,3 +632,61 @@ describe('settings runtime: per-surface profile keys', () => {
     }
   });
 });
+
+describe('settings runtime: read cache', () => {
+  it('serves repeated migrated reads from the cache and drops it on every write path', async () => {
+    const readFile = vi.spyOn(fsPromises, 'readFile');
+    const { runtime, settingsFilePath, tempRoot, cleanup } = await createRuntime();
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ lightThemeId: 'a', darkThemeId: 'b', fontSize: 12 }), 'utf8');
+      const first = await runtime.readSettingsFromDiskMigrated();
+      expect(first.fontSize).toBe(12);
+      // The first read seeds preferences.json; a second read of unchanged files
+      // reads nothing and still hands out a fresh object.
+      await runtime.readSettingsFromDiskMigrated();
+      readFile.mockClear();
+      const second = await runtime.readSettingsFromDiskMigrated();
+      const surfaced = await runtime.readSettingsFromDiskMigrated({ surface: 'web' });
+      expect(readFile).not.toHaveBeenCalled();
+      expect(second).toEqual(first);
+      expect(second).not.toBe(first);
+      expect(surfaced.fontSize).toBe(12);
+      second.fontSize = 99;
+      expect((await runtime.readSettingsFromDiskMigrated()).fontSize).toBe(12);
+
+      // A write through the runtime is seen at once.
+      await runtime.persistSettings({ fontSize: 14 });
+      expect((await runtime.readSettingsFromDiskMigrated()).fontSize).toBe(14);
+      expect((await runtime.readSettingsFromDisk()).fontSize).toBe(14);
+
+      // So is a write by another process (a new inode via rename, as the
+      // VS Code host and Electron main write it).
+      const tmp = path.join(tempRoot, 'settings.json.other');
+      const onDisk = JSON.parse(await fsPromises.readFile(settingsFilePath, 'utf8'));
+      await fsPromises.writeFile(tmp, JSON.stringify({ ...onDisk, publicOrigin: 'https://example.test' }), 'utf8');
+      await fsPromises.rename(tmp, settingsFilePath);
+      expect((await runtime.readSettingsFromDiskMigrated()).publicOrigin).toBe('https://example.test');
+    } finally {
+      readFile.mockRestore();
+      await cleanup();
+    }
+  });
+
+  it('coalesces concurrent migrated reads of the same files into one computation', async () => {
+    const readFile = vi.spyOn(fsPromises, 'readFile');
+    const { runtime, settingsFilePath, cleanup } = await createRuntime();
+    try {
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ lightThemeId: 'a', darkThemeId: 'b', fontSize: 12 }), 'utf8');
+      await runtime.readSettingsFromDiskMigrated();
+      await fsPromises.writeFile(settingsFilePath, JSON.stringify({ lightThemeId: 'a', darkThemeId: 'b', fontSize: 12, publicOrigin: 'https://one.test' }), 'utf8');
+      readFile.mockClear();
+      const results = await Promise.all([1, 2, 3, 4].map(() => runtime.readSettingsFromDiskMigrated()));
+      expect(results.every((settings) => settings.publicOrigin === 'https://one.test')).toBe(true);
+      // Only the changed settings.json is read, once; preferences.json still matches its signature.
+      expect(readFile).toHaveBeenCalledTimes(1);
+    } finally {
+      readFile.mockRestore();
+      await cleanup();
+    }
+  });
+});

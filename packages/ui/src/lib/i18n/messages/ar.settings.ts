@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsAr } from './extensions.settings/ar';
+import { guestIntegrationsAr } from './guest-integrations/ar';
+import { linearIntegrationAr } from './linear-integration/ar';
+import { thirdPartyIntegrationAr } from './third-party-integrations/ar';
+import { extensionCatalogAr } from './extension-catalog/ar';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'مفاتيح SSH',
   'settings.sourceControl.ssh.load': 'إظهار المفاتيح',
@@ -2566,9 +2566,9 @@ export const settingsDict = {
   'settings.agents.sidebar.toast.agentEnabled': 'فُعّل {name} مجددًا',
   'settings.agents.sidebar.toast.disableFailed': 'تعذّر تعطيل الوكيل: تعذّرت كتابة ملف إعداداته',
   'settings.agents.sidebar.toast.enableFailed': 'تعذّر تفعيل الوكيل: تعذّرت كتابة ملف إعداداته',
-  ...linearIntegrationI18n.ar,
-  ...thirdPartyIntegrationI18n.ar,
-  ...extensionCatalogI18n.ar,
-  ...guestIntegrationsI18n.ar,
-  ...extensionsSettingsI18n.ar,
+  ...linearIntegrationAr,
+  ...thirdPartyIntegrationAr,
+  ...extensionCatalogAr,
+  ...guestIntegrationsAr,
+  ...extensionsSettingsAr,
 } as const;

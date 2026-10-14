@@ -1,108 +1,37 @@
 /** Linear issue picker / composer strings — merged into each locale's main dictionary. */
+// Every locale in one object, for the key-parity tests. Runtime code imports the
+// per-locale modules under ./linear-issue-picker/ so the English startup bundle does not
+// carry the other translations.
+import { linearIssuePickerEn } from './linear-issue-picker/en';
+import { linearIssuePickerNl } from './linear-issue-picker/nl';
+import { linearIssuePickerDe } from './linear-issue-picker/de';
+import { linearIssuePickerFr } from './linear-issue-picker/fr';
+import { linearIssuePickerEs } from './linear-issue-picker/es';
+import { linearIssuePickerJa } from './linear-issue-picker/ja';
+import { linearIssuePickerPtBR } from './linear-issue-picker/pt-BR';
+import { linearIssuePickerUk } from './linear-issue-picker/uk';
+import { linearIssuePickerKo } from './linear-issue-picker/ko';
+import { linearIssuePickerPl } from './linear-issue-picker/pl';
+import { linearIssuePickerZhCN } from './linear-issue-picker/zh-CN';
+import { linearIssuePickerZhTW } from './linear-issue-picker/zh-TW';
+import { linearIssuePickerTr } from './linear-issue-picker/tr';
+import { linearIssuePickerAr } from './linear-issue-picker/ar';
+import { linearIssuePickerHe } from './linear-issue-picker/he';
+
 export const linearIssuePickerI18n = {
-  en: {
-    'chat.chatInput.actions.linkLinearIssue': 'Link Linear Issue',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Open issue in Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Remove linked Linear issue',
-    'chat.workStatus.linkedIssues.openLinear': 'Open {identifier} in Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'A Linear issue',
-  },
-  nl: {
-    'chat.chatInput.actions.linkLinearIssue': 'Linear-issue koppelen',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Issue in Linear openen',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Gekoppeld Linear-issue verwijderen',
-    'chat.workStatus.linkedIssues.openLinear': '{identifier} in Linear openen',
-    'session.newWorktree.actions.startFromLinearIssue': 'Starten vanuit Linear-issue',
-  },
-  de: {
-    'chat.chatInput.actions.linkLinearIssue': 'Linear-Issue verknüpfen',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Issue in Linear öffnen',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Verknüpftes Linear-Issue entfernen',
-    'chat.workStatus.linkedIssues.openLinear': '{identifier} in Linear öffnen',
-    'session.newWorktree.actions.startFromLinearIssue': 'Von Linear-Issue starten',
-  },
-  fr: {
-    'chat.chatInput.actions.linkLinearIssue': 'Lier un ticket Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Ouvrir le ticket dans Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Retirer le ticket Linear lié',
-    'chat.workStatus.linkedIssues.openLinear': 'Ouvrir {identifier} dans Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Démarrer depuis un ticket Linear',
-  },
-  es: {
-    'chat.chatInput.actions.linkLinearIssue': 'Vincular issue de Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Abrir issue en Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Quitar issue de Linear vinculado',
-    'chat.workStatus.linkedIssues.openLinear': 'Abrir {identifier} en Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Empezar desde un issue de Linear',
-  },
-  ja: {
-    'chat.chatInput.actions.linkLinearIssue': 'Linear Issueをリンク',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'LinearでIssueを開く',
-    'chat.chatInput.linked.linearIssue.removeAria': 'リンクしたLinear Issueを削除',
-    'chat.workStatus.linkedIssues.openLinear': 'Linearで {identifier} を開く',
-    'session.newWorktree.actions.startFromLinearIssue': 'Linear Issueから開始',
-  },
-  'pt-BR': {
-    'chat.chatInput.actions.linkLinearIssue': 'Vincular issue do Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Abrir issue no Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Remover issue do Linear vinculada',
-    'chat.workStatus.linkedIssues.openLinear': 'Abrir {identifier} no Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Começar a partir de uma issue do Linear',
-  },
-  uk: {
-    'chat.chatInput.actions.linkLinearIssue': 'Прив’язати Linear issue',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Відкрити issue в Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Прибрати прив’язаний Linear issue',
-    'chat.workStatus.linkedIssues.openLinear': 'Відкрити {identifier} у Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Почати з Linear issue',
-  },
-  ko: {
-    'chat.chatInput.actions.linkLinearIssue': 'Linear 이슈 연결',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Linear에서 이슈 열기',
-    'chat.chatInput.linked.linearIssue.removeAria': '연결된 Linear 이슈 제거',
-    'chat.workStatus.linkedIssues.openLinear': 'Linear에서 {identifier} 열기',
-    'session.newWorktree.actions.startFromLinearIssue': 'Linear 이슈에서 시작',
-  },
-  pl: {
-    'chat.chatInput.actions.linkLinearIssue': 'Powiąż zgłoszenie Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'Otwórz zgłoszenie w Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'Usuń powiązane zgłoszenie Linear',
-    'chat.workStatus.linkedIssues.openLinear': 'Otwórz {identifier} w Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Zacznij od zgłoszenia Linear',
-  },
-  'zh-CN': {
-    'chat.chatInput.actions.linkLinearIssue': '关联 Linear Issue',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': '在 Linear 中打开 Issue',
-    'chat.chatInput.linked.linearIssue.removeAria': '移除已关联的 Linear Issue',
-    'chat.workStatus.linkedIssues.openLinear': '在 Linear 中打开 {identifier}',
-    'session.newWorktree.actions.startFromLinearIssue': '从 Linear Issue 开始',
-  },
-  'zh-TW': {
-    'chat.chatInput.actions.linkLinearIssue': '關聯 Linear Issue',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': '在 Linear 中開啟 Issue',
-    'chat.chatInput.linked.linearIssue.removeAria': '移除已關聯的 Linear Issue',
-    'chat.workStatus.linkedIssues.openLinear': '在 Linear 中開啟 {identifier}',
-    'session.newWorktree.actions.startFromLinearIssue': '從 Linear Issue 開始',
-  },
-  tr: {
-    'chat.chatInput.actions.linkLinearIssue': 'Linear Issue bağla',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': "Issue'u Linear'da aç",
-    'chat.chatInput.linked.linearIssue.removeAria': "Bağlı Linear issue'u kaldır",
-    'chat.workStatus.linkedIssues.openLinear': "{identifier} issue'unu Linear'da aç",
-    'session.newWorktree.actions.startFromLinearIssue': "Linear Issue'dan başla",
-  },
-  ar: {
-    'chat.chatInput.actions.linkLinearIssue': 'ربط مهمة Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'فتح المهمة في Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'إزالة مهمة Linear المرتبطة',
-    'chat.workStatus.linkedIssues.openLinear': 'فتح {identifier} في Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'مهمة Linear',
-  },
-  he: {
-    'chat.chatInput.actions.linkLinearIssue': 'קשר Issue מ-Linear',
-    'chat.chatInput.linked.linearIssue.openInBrowserAria': 'פתח את ה-Issue ב-Linear',
-    'chat.chatInput.linked.linearIssue.removeAria': 'הסר את ה-Issue המקושר מ-Linear',
-    'chat.workStatus.linkedIssues.openLinear': 'פתח את {identifier} ב-Linear',
-    'session.newWorktree.actions.startFromLinearIssue': 'Issue מ-Linear',
-  },
+  en: linearIssuePickerEn,
+  nl: linearIssuePickerNl,
+  de: linearIssuePickerDe,
+  fr: linearIssuePickerFr,
+  es: linearIssuePickerEs,
+  ja: linearIssuePickerJa,
+  'pt-BR': linearIssuePickerPtBR,
+  uk: linearIssuePickerUk,
+  ko: linearIssuePickerKo,
+  pl: linearIssuePickerPl,
+  'zh-CN': linearIssuePickerZhCN,
+  'zh-TW': linearIssuePickerZhTW,
+  tr: linearIssuePickerTr,
+  ar: linearIssuePickerAr,
+  he: linearIssuePickerHe,
 } as const;

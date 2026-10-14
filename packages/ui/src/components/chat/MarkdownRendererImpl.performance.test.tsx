@@ -91,6 +91,9 @@ let clearDetachedMarkdownDomCache: () => void;
 // The worker is mocked; a test that needs highlighting swaps this in.
 let highlightCodeForTest: (code: string, lang: string) => Promise<string | null> = async () => null;
 let detachedMarkdownDomCacheStats: () => { sessions: number; entries: number };
+type MermaidLoader = typeof import('./markdown/mermaidLoader');
+let loadMermaidModule: MermaidLoader['loadMermaidModule'];
+let getLoadedMermaidModule: MermaidLoader['getLoadedMermaidModule'];
 
 const makeCounts = (): OperationCounts => ({
   innerHTMLWrites: 0,
@@ -137,6 +140,9 @@ const mountFixture = async (rendererCount: number): Promise<{
   operations: OperationCounts;
   counts: FixtureMetrics;
 }> => {
+  // The diagram renderer is lazy; these fixtures measure the mount with it
+  // already present, as on any page that has shown a diagram before.
+  await loadMermaidModule();
   const counts = makeCounts();
   activeCounts = counts;
   const host = document.createElement('div');
@@ -348,6 +354,9 @@ const initializePerformanceDom = async (): Promise<void> => {
   const { detachedMarkdownDomCache } = await import('./markdown/detachedMarkdownDomCache');
   clearDetachedMarkdownDomCache = () => detachedMarkdownDomCache.clear();
   detachedMarkdownDomCacheStats = () => detachedMarkdownDomCache.stats();
+  const mermaidLoader = await import('./markdown/mermaidLoader');
+  loadMermaidModule = mermaidLoader.loadMermaidModule;
+  getLoadedMermaidModule = mermaidLoader.getLoadedMermaidModule;
 };
 
 await initializePerformanceDom();
@@ -360,6 +369,38 @@ afterAll(() => {
 });
 
 describe('MarkdownRenderer DOM mount performance contract', () => {
+  // Must run before anything loads the diagram renderer: it exercises the
+  // state every fresh page starts in, where beautiful-mermaid is not yet here.
+  test('shows the diagram source until the lazy mermaid renderer arrives, then the diagram', async () => {
+    expect(getLoadedMermaidModule()).toBeNull();
+    const content = ['```mermaid', 'graph TD', '  A[Start] --> B[Finish]', '```'].join('\n');
+    const host = document.createElement('div');
+    document.body.replaceChildren(host);
+    const root = createRoot(host);
+    try {
+      // Synchronous act: the first paint is a layout effect, and the (mocked)
+      // module import resolves on the microtask queue right after it. Querying
+      // before the next await observes the page as a real user sees it while
+      // the chunk is still on the wire.
+      act(() => {
+        root.render(<MarkdownRenderer content={content} messageId="lazy-mermaid" isAnimated={false} isStreaming={false} enableFileReferences={false} />);
+      });
+      const pending = host.querySelector('[data-mermaid-render="pending"]');
+      expect(pending).not.toBeNull();
+      expect(pending?.querySelector('[data-markdown="mermaid-ascii"]')?.textContent).toContain('A[Start] --> B[Finish]');
+      expect(host.querySelectorAll('[data-markdown="mermaid"] svg')).toHaveLength(0);
+
+      await act(async () => waitForSettledEffects());
+      await act(async () => waitForSettledEffects());
+      expect(getLoadedMermaidModule()).not.toBeNull();
+      expect(host.querySelector('[data-mermaid-render="pending"]')).toBeNull();
+      expect(host.querySelectorAll('[data-mermaid-render="svg"]')).toHaveLength(1);
+      expect(host.querySelectorAll('[data-markdown="mermaid"] svg')).toHaveLength(1);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   test('does not annotate app links with file-looking labels as internal file links', async () => {
     fileLinkTestDirectory = '/repo';
     const host = document.createElement('div');

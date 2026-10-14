@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsPtBR } from './extensions.settings/pt-BR';
+import { guestIntegrationsPtBR } from './guest-integrations/pt-BR';
+import { linearIntegrationPtBR } from './linear-integration/pt-BR';
+import { thirdPartyIntegrationPtBR } from './third-party-integrations/pt-BR';
+import { extensionCatalogPtBR } from './extension-catalog/pt-BR';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'Chaves SSH',
   'settings.sourceControl.ssh.load': 'Mostrar chaves',
@@ -2530,11 +2530,11 @@ export const settingsDict = {
   "settings.openchamber.visual.field.enterToSendHint": "Escolha o atalho de envio para o compositor padrão. No compositor expandido, Enter sempre cria uma nova linha e Ctrl/Cmd+Enter envia.",
   "settings.openchamber.visual.option.enterToSend.enter.label": "Enviar com Enter",
   "settings.openchamber.visual.option.enterToSend.modifier.label": "Enviar com Ctrl/Cmd+Enter",
-  ...linearIntegrationI18n['pt-BR'],
-  ...thirdPartyIntegrationI18n['pt-BR'],
-  ...extensionCatalogI18n['pt-BR'],
-  ...guestIntegrationsI18n['pt-BR'],
-  ...extensionsSettingsI18n['pt-BR'],
+  ...linearIntegrationPtBR,
+  ...thirdPartyIntegrationPtBR,
+  ...extensionCatalogPtBR,
+  ...guestIntegrationsPtBR,
+  ...extensionsSettingsPtBR,
   'settings.page.integrations.title': 'Integrações',
   'settings.page.integrations.description': 'Conecte os serviços e assinaturas com os quais o OpenChamber trabalha.',
   'settings.agents.page.field.steps': 'Passos máximos',

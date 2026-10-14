@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsTr } from './extensions.settings/tr';
+import { guestIntegrationsTr } from './guest-integrations/tr';
+import { linearIntegrationTr } from './linear-integration/tr';
+import { thirdPartyIntegrationTr } from './third-party-integrations/tr';
+import { extensionCatalogTr } from './extension-catalog/tr';
 export const settingsDict = {
   'settings.themeImport.selectAll': 'Tümünü seç',
   'settings.themeImport.deselectAll': 'Tümünün seçimini kaldır',
@@ -2469,7 +2469,7 @@ export const settingsDict = {
   'settings.openchamber.visual.field.sessionTabsAria': 'Başlıktaki session sekmelerini aç/kapat',
   'settings.openchamber.visual.field.sessionTabsInfo': 'Açtığınız session\'lar başlıkta sekmeler olarak dizilir. Kapatırsanız düz session başlığına döner.',
   'settings.page.integrations.title': 'Entegrasyonlar',
-  ...linearIntegrationI18n.tr,
+  ...linearIntegrationTr,
   'settings.sourceControl.ssh.title': 'SSH anahtarları',
   'settings.sourceControl.ssh.load': 'Anahtarları göster',
   'settings.sourceControl.ssh.discover': '~/.ssh içinde anahtar ara',
@@ -2523,9 +2523,9 @@ export const settingsDict = {
   'settings.sourceControl.transport.anonymous': 'Anonim HTTPS, salt okunur',
   'settings.sourceControl.transport.loading': 'Repository aktarımı yükleniyor…',
   'settings.page.integrations.description': 'OpenChamber’ın birlikte çalıştığı hizmetleri ve abonelikleri bağlayın.',
-  ...linearIntegrationI18n.tr,
-  ...thirdPartyIntegrationI18n.tr,
-  ...extensionCatalogI18n.tr,
+  ...linearIntegrationTr,
+  ...thirdPartyIntegrationTr,
+  ...extensionCatalogTr,
   'settings.agents.page.field.steps': 'En fazla adım',
   'settings.agents.page.field.stepsTooltip': 'Ajanın bir turda durmadan önce yapabileceği araç adımı sayısı.',
   'settings.agents.page.field.clearStepsAria': 'En fazla adımı temizle',
@@ -2559,8 +2559,8 @@ export const settingsDict = {
   'settings.mcp.page.advanced.oauthMetadataUrlHint': 'OAuth veya OpenID Connect yetkilendirme sunucusu meta veri belgesi. MCP sunucusu, yetkilendirme sunucusunu belirten korumalı kaynak meta verisi yayımlamıyorsa bunu ayarlayın.',
   'settings.mcp.page.advanced.oauthMetadataUrlPlaceholder': 'https://example.com/.well-known/oauth-authorization-server',
   'settings.mcp.page.advanced.oauthMetadataUrlInvalid': 'Tam bir http:// veya https:// adresi girin.',
-  ...guestIntegrationsI18n.tr,
-  ...extensionsSettingsI18n.tr,
+  ...guestIntegrationsTr,
+  ...extensionsSettingsTr,
   'settings.magicPrompts.page.block.codeFusionInstructions': 'Kod fusion talimatları',
   'settings.openchamber.desktopNetwork.field.linuxNativeFrame': 'Sistem başlık çubuğunu kullan',
   'settings.openchamber.desktopNetwork.field.linuxNativeFrameDescription': 'Uygulamanın yeniden başlatılmasını gerektirir. Pencere, OpenChamber başlığının üstünde masaüstü ortamınızın kendi başlık çubuğunu ve düğmelerini alır.',

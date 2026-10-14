@@ -24,11 +24,91 @@ export const createStaticRoutesRuntime = (dependencies) => {
     return path.join(__dirname, '..', 'dist');
   };
 
+  const HASHED_ASSET_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+  // Preference order when the client accepts both; `precompress-dist.mjs`
+  // writes these siblings at build time.
+  const PRECOMPRESSED_VARIANTS = [
+    { encoding: 'br', suffix: '.br' },
+    { encoding: 'gzip', suffix: '.gz' },
+  ];
+
+  const isFile = (filePath) => {
+    try {
+      return fs.statSync(filePath).isFile();
+    } catch {
+      return false;
+    }
+  };
+
+  /**
+   * Serves `dist/assets/*` with a precompressed sibling when the client
+   * accepts its encoding, falling through to express.static otherwise. The
+   * sibling carries the original's Content-Type and the same immutable cache
+   * header; the `compression` middleware leaves an already-encoded response
+   * alone, so nothing is compressed twice.
+   */
+  const createPrecompressedAssetHandler = (distPath) => {
+    const assetsDir = path.join(distPath, 'assets');
+    const assetsPrefix = assetsDir + path.sep;
+    return (req, res, next) => {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+      // Mounted at /assets, so req.path is relative to that prefix.
+      let relative;
+      try {
+        relative = decodeURIComponent(req.path.replace(/^\/+/, ''));
+      } catch {
+        return next();
+      }
+      if (!relative || relative.includes('\0')) return next();
+      const original = path.resolve(assetsDir, relative);
+      if (!original.startsWith(assetsPrefix)) return next();
+      if (!isFile(original)) return next();
+      // Our order, not the client's: browsers list gzip first with equal
+      // weight, and brotli is the smaller of the two.
+      const variant = PRECOMPRESSED_VARIANTS.find((candidate) => (
+        req.acceptsEncodings(candidate.encoding) && isFile(`${original}${candidate.suffix}`)
+      ));
+      if (!variant) return next();
+      const variantPath = `${original}${variant.suffix}`;
+      res.setHeader('Content-Encoding', variant.encoding);
+      res.setHeader('Vary', 'Accept-Encoding');
+      res.type(path.extname(original));
+      res.sendFile(variantPath, {
+        cacheControl: false,
+        headers: { 'Cache-Control': HASHED_ASSET_CACHE_CONTROL },
+      }, (error) => {
+        if (!error || res.headersSent) return;
+        res.removeHeader('Content-Encoding');
+        next(error.status === 404 ? undefined : error);
+      });
+    };
+  };
+
+  let hashedAssetsRegistered = false;
+  /**
+   * Mounts the hashed-asset handler on its own. Static assets are public (the
+   * app shell loads before the UI password prompt), so index.js can mount this
+   * ahead of the API middleware stack and spare every chunk request the walk
+   * through it. `registerStaticRoutes` then skips the duplicate.
+   */
+  const registerHashedAssetRoutes = (app) => {
+    const distPath = resolveDistPath();
+    if (hashedAssetsRegistered || !fs.existsSync(distPath)) return false;
+    hashedAssetsRegistered = true;
+    app.use('/assets', createPrecompressedAssetHandler(distPath));
+    app.use('/assets', express.static(path.join(distPath, 'assets'), {
+      immutable: true,
+      maxAge: '1y',
+    }));
+    return true;
+  };
+
   const registerStaticRoutes = (app) => {
     const distPath = resolveDistPath();
 
     if (fs.existsSync(distPath)) {
       console.log(`Serving static files from ${distPath}`);
+      registerHashedAssetRoutes(app);
       const hashedAssetsPrefix = path.join(distPath, 'assets') + path.sep;
       app.use(express.static(distPath, {
         setHeaders(res, filePath) {
@@ -270,6 +350,7 @@ export const createStaticRoutesRuntime = (dependencies) => {
 
   return {
     registerApiOnlyFallbackRoutes,
+    registerHashedAssetRoutes,
     registerStaticRoutes,
   };
 };

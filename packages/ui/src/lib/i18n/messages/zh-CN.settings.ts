@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsZhCN } from './extensions.settings/zh-CN';
+import { guestIntegrationsZhCN } from './guest-integrations/zh-CN';
+import { linearIntegrationZhCN } from './linear-integration/zh-CN';
+import { thirdPartyIntegrationZhCN } from './third-party-integrations/zh-CN';
+import { extensionCatalogZhCN } from './extension-catalog/zh-CN';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH 密钥',
   'settings.sourceControl.ssh.load': '显示密钥',
@@ -2530,11 +2530,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.enterToSendHint': '请选择标准输入框的发送快捷键。在展开的输入框中，Enter 始终换行，Ctrl/Cmd+Enter 发送。',
   'settings.openchamber.visual.option.enterToSend.enter.label': '按 Enter 发送',
   'settings.openchamber.visual.option.enterToSend.modifier.label': '按 Ctrl/Cmd+Enter 发送',
-  ...linearIntegrationI18n['zh-CN'],
-  ...thirdPartyIntegrationI18n['zh-CN'],
-  ...extensionCatalogI18n['zh-CN'],
-  ...guestIntegrationsI18n['zh-CN'],
-  ...extensionsSettingsI18n['zh-CN'],
+  ...linearIntegrationZhCN,
+  ...thirdPartyIntegrationZhCN,
+  ...extensionCatalogZhCN,
+  ...guestIntegrationsZhCN,
+  ...extensionsSettingsZhCN,
   'settings.page.integrations.title': '集成',
   'settings.page.integrations.description': '连接 OpenChamber 所使用的服务和订阅。',
   'settings.agents.page.field.steps': '最大步数',

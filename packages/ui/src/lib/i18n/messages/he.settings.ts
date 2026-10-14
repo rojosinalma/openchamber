@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsHe } from './extensions.settings/he';
+import { guestIntegrationsHe } from './guest-integrations/he';
+import { linearIntegrationHe } from './linear-integration/he';
+import { thirdPartyIntegrationHe } from './third-party-integrations/he';
+import { extensionCatalogHe } from './extension-catalog/he';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'מפתחות SSH',
   'settings.sourceControl.ssh.load': 'הצג מפתחות',
@@ -2566,9 +2566,9 @@ export const settingsDict = {
   'settings.agents.sidebar.toast.agentEnabled': '{name} הופעל שוב',
   'settings.agents.sidebar.toast.disableFailed': 'לא ניתן היה להשבית את הסוכן: לא ניתן היה לכתוב את קובץ ההגדרות שלו',
   'settings.agents.sidebar.toast.enableFailed': 'לא ניתן היה להפעיל את הסוכן: לא ניתן היה לכתוב את קובץ ההגדרות שלו',
-  ...linearIntegrationI18n.he,
-  ...thirdPartyIntegrationI18n.he,
-  ...extensionCatalogI18n.he,
-  ...guestIntegrationsI18n.he,
-  ...extensionsSettingsI18n.he,
+  ...linearIntegrationHe,
+  ...thirdPartyIntegrationHe,
+  ...extensionCatalogHe,
+  ...guestIntegrationsHe,
+  ...extensionsSettingsHe,
 } as const;

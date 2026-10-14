@@ -148,10 +148,21 @@ const extractAbortedAssistant = (payload) => {
   return { sessionId: properties.sessionID };
 };
 
+// The v2 translator turns `session.usage.updated` into a `session.updated`
+// carrying only these keys. Such a tick says nothing about a goal, and a busy
+// session emits one per step, so it must not cost an upstream read.
+const USAGE_ONLY_INFO_KEYS = new Set(['id', 'directory', 'cost', 'tokens', 'time']);
+
+const isUsageOnlyInfo = (info) => {
+  const keys = Object.keys(info);
+  return (keys.includes('cost') || keys.includes('tokens')) && keys.every((key) => USAGE_ONLY_INFO_KEYS.has(key));
+};
+
 const extractSessionUpdate = (payload) => {
   if (!payload || payload.type !== 'session.updated') return null;
   const info = payload.properties?.info;
   if (!info || typeof info !== 'object' || typeof info.id !== 'string' || !info.id) return null;
+  if (isUsageOnlyInfo(info)) return null;
   // No goal here any more: the record OpenCode publishes carries only what
   // OpenCode owns, and the goal lives in OpenChamber's own metadata store. A
   // new or resumed goal reaches this runtime through `notifyGoalChanged`.

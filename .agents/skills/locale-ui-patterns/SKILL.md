@@ -116,7 +116,7 @@ A new locale code lands in all of these in one change:
 
 - `packages/ui/src/lib/i18n/runtime.ts`: the `Locale` union, `LOCALES`, `LOCALE_LABEL_KEYS`, and `normalizeLocale` (include legacy tags the platforms still send, such as `iw` for Hebrew). A right-to-left language also joins `RTL_LOCALES`; the layout side is owned by `rtl-layout`.
 - `store.ts` (lazy import), `intl.ts` (Intl tag), `bootstrap.ts` (startup strings), `messages.test.ts`.
-- `messages/<locale>.ts` and `messages/<locale>.settings.ts`, a `<locale>` block in every `messages/*.i18n.ts`, and a `common.language.<name>` label in every existing dictionary.
+- `messages/<locale>.ts` and `messages/<locale>.settings.ts`, a `messages/<name>/<locale>.ts` module for every feature table (`messages/<name>.i18n.ts` lists them; the dictionaries import the per-locale module, never the full table, so the English startup bundle carries no other locale), the locale's suffix in `LOCALE_SUFFIX` of `packages/ui/scripts/split-i18n-tables.mjs` (the script regenerates the split after taking upstream's one-object tables on a rebase), and a `common.language.<name>` label in every existing dictionary.
 - `packages/electron/menu-locales.mjs` (see above).
 - `packages/web/server/lib/opencode/settings-helpers.js` `UI_LOCALE_VALUES`: without it the server drops the saved choice. `packages/web/server/lib/walkthrough/languages.js` names the language for walkthrough prompts.
 

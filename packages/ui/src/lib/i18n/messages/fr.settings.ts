@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsFr } from './extensions.settings/fr';
+import { guestIntegrationsFr } from './guest-integrations/fr';
+import { linearIntegrationFr } from './linear-integration/fr';
+import { thirdPartyIntegrationFr } from './third-party-integrations/fr';
+import { extensionCatalogFr } from './extension-catalog/fr';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'Clés SSH',
   'settings.sourceControl.ssh.load': 'Afficher les clés',
@@ -2530,11 +2530,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.enterToSendHint': 'Choisissez le raccourci d\'envoi pour le composeur standard. Dans le composeur étendu, Entrée ajoute toujours une nouvelle ligne et Ctrl/Cmd+Entrée envoie.',
   'settings.openchamber.visual.option.enterToSend.enter.label': 'Envoyer avec Entrée',
   'settings.openchamber.visual.option.enterToSend.modifier.label': 'Envoyer avec Ctrl/Cmd+Entrée',
-  ...linearIntegrationI18n.fr,
-  ...thirdPartyIntegrationI18n.fr,
-  ...extensionCatalogI18n.fr,
-  ...guestIntegrationsI18n.fr,
-  ...extensionsSettingsI18n.fr,
+  ...linearIntegrationFr,
+  ...thirdPartyIntegrationFr,
+  ...extensionCatalogFr,
+  ...guestIntegrationsFr,
+  ...extensionsSettingsFr,
   'settings.page.integrations.title': 'Intégrations',
   'settings.page.integrations.description': 'Connectez les services et abonnements avec lesquels OpenChamber travaille.',
   'settings.agents.page.field.steps': 'Étapes max',

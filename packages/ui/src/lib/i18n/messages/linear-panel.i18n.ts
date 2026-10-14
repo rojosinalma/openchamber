@@ -1,93 +1,37 @@
 /** Linear priority names, shown by the reference picker and the board. Merged into each locale's main dictionary. */
+// Every locale in one object, for the key-parity tests. Runtime code imports the
+// per-locale modules under ./linear-panel/ so the English startup bundle does not
+// carry the other translations.
+import { linearPanelEn } from './linear-panel/en';
+import { linearPanelNl } from './linear-panel/nl';
+import { linearPanelDe } from './linear-panel/de';
+import { linearPanelFr } from './linear-panel/fr';
+import { linearPanelEs } from './linear-panel/es';
+import { linearPanelJa } from './linear-panel/ja';
+import { linearPanelKo } from './linear-panel/ko';
+import { linearPanelPl } from './linear-panel/pl';
+import { linearPanelPtBR } from './linear-panel/pt-BR';
+import { linearPanelUk } from './linear-panel/uk';
+import { linearPanelZhCN } from './linear-panel/zh-CN';
+import { linearPanelZhTW } from './linear-panel/zh-TW';
+import { linearPanelTr } from './linear-panel/tr';
+import { linearPanelAr } from './linear-panel/ar';
+import { linearPanelHe } from './linear-panel/he';
+
 export const linearPanelI18n = {
-  en: {
-    'contextPanel.linear.priority.urgent': 'Urgent',
-    'contextPanel.linear.priority.high': 'High',
-    'contextPanel.linear.priority.medium': 'Medium',
-    'contextPanel.linear.priority.low': 'Low',
-  },
-  nl: {
-    'contextPanel.linear.priority.urgent': 'Urgent',
-    'contextPanel.linear.priority.high': 'Hoog',
-    'contextPanel.linear.priority.medium': 'Gemiddeld',
-    'contextPanel.linear.priority.low': 'Laag',
-  },
-  de: {
-    'contextPanel.linear.priority.urgent': 'Dringend',
-    'contextPanel.linear.priority.high': 'Hoch',
-    'contextPanel.linear.priority.medium': 'Mittel',
-    'contextPanel.linear.priority.low': 'Niedrig',
-  },
-  fr: {
-    'contextPanel.linear.priority.urgent': 'Urgente',
-    'contextPanel.linear.priority.high': 'Haute',
-    'contextPanel.linear.priority.medium': 'Moyenne',
-    'contextPanel.linear.priority.low': 'Basse',
-  },
-  es: {
-    'contextPanel.linear.priority.urgent': 'Urgente',
-    'contextPanel.linear.priority.high': 'Alta',
-    'contextPanel.linear.priority.medium': 'Media',
-    'contextPanel.linear.priority.low': 'Baja',
-  },
-  ja: {
-    'contextPanel.linear.priority.urgent': '緊急',
-    'contextPanel.linear.priority.high': '高',
-    'contextPanel.linear.priority.medium': '中',
-    'contextPanel.linear.priority.low': '低',
-  },
-  ko: {
-    'contextPanel.linear.priority.urgent': '긴급',
-    'contextPanel.linear.priority.high': '높음',
-    'contextPanel.linear.priority.medium': '보통',
-    'contextPanel.linear.priority.low': '낮음',
-  },
-  pl: {
-    'contextPanel.linear.priority.urgent': 'Pilne',
-    'contextPanel.linear.priority.high': 'Wysoki',
-    'contextPanel.linear.priority.medium': 'Średni',
-    'contextPanel.linear.priority.low': 'Niski',
-  },
-  'pt-BR': {
-    'contextPanel.linear.priority.urgent': 'Urgente',
-    'contextPanel.linear.priority.high': 'Alta',
-    'contextPanel.linear.priority.medium': 'Média',
-    'contextPanel.linear.priority.low': 'Baixa',
-  },
-  uk: {
-    'contextPanel.linear.priority.urgent': 'Терміновий',
-    'contextPanel.linear.priority.high': 'Високий',
-    'contextPanel.linear.priority.medium': 'Середній',
-    'contextPanel.linear.priority.low': 'Низький',
-  },
-  'zh-CN': {
-    'contextPanel.linear.priority.urgent': '紧急',
-    'contextPanel.linear.priority.high': '高',
-    'contextPanel.linear.priority.medium': '中',
-    'contextPanel.linear.priority.low': '低',
-  },
-  'zh-TW': {
-    'contextPanel.linear.priority.urgent': '緊急',
-    'contextPanel.linear.priority.high': '高',
-    'contextPanel.linear.priority.medium': '中',
-    'contextPanel.linear.priority.low': '低',
-  },
-  tr: {
-    'contextPanel.linear.priority.urgent': 'Acil',
-    'contextPanel.linear.priority.high': 'Yüksek',
-    'contextPanel.linear.priority.medium': 'Orta',
-    'contextPanel.linear.priority.low': 'Düşük',
-  },
-  ar: {
-    'contextPanel.linear.priority.urgent': 'عاجلة',
-    'contextPanel.linear.priority.high': 'عالية',
-    'contextPanel.linear.priority.medium': 'متوسطة',
-    'contextPanel.linear.priority.low': 'منخفضة',
-  },
-  he: {
-    'contextPanel.linear.priority.urgent': 'דחוף',
-    'contextPanel.linear.priority.high': 'גבוהה',
-    'contextPanel.linear.priority.medium': 'בינונית',
-    'contextPanel.linear.priority.low': 'נמוכה',
-  },
+  en: linearPanelEn,
+  nl: linearPanelNl,
+  de: linearPanelDe,
+  fr: linearPanelFr,
+  es: linearPanelEs,
+  ja: linearPanelJa,
+  ko: linearPanelKo,
+  pl: linearPanelPl,
+  'pt-BR': linearPanelPtBR,
+  uk: linearPanelUk,
+  'zh-CN': linearPanelZhCN,
+  'zh-TW': linearPanelZhTW,
+  tr: linearPanelTr,
+  ar: linearPanelAr,
+  he: linearPanelHe,
 } as const;

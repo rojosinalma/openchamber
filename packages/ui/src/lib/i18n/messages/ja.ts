@@ -1,23 +1,23 @@
 import type { I18nKey } from './en';
 import { settingsDict } from './ja.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerJa } from './linear-issue-picker/ja';
+import { referencePickerJa } from './reference-picker/ja';
+import { sessionMenuHintsJa } from './session-menu-hints/ja';
+import { projectKnowledgeJa } from './project-knowledge/ja';
+import { linearPanelJa } from './linear-panel/ja';
+import { routingJa } from './routing/ja';
+import { pluginPanelJa } from './plugin-panel/ja';
+import { surfacePanelJa } from './surface-panel/ja';
+import { fileArtifactsJa } from './file-artifacts/ja';
+import { usageStatsJa } from './usage-stats/ja';
+import { webSearchJa } from './websearch/ja';
+import { isolatedSpacesJa } from './isolated-spaces/ja';
+import { sourceBoardJa } from './source-board/ja';
+import { projectActionsJa } from './project-actions/ja';
+import { environmentJa } from './environment/ja';
+import { providersJa } from './providers/ja';
+import { mcpGridJa } from './mcp-grid/ja';
+import { pluginsGridJa } from './plugins-grid/ja';
 
 export const dict: Record<I18nKey, string> = {
   "opencodeCompatibility.bundled": "OpenCode は OpenChamber に同梱されています。OpenCode v2 を利用するには OpenChamber を更新してください。",
@@ -127,24 +127,24 @@ export const dict: Record<I18nKey, string> = {
   'gitView.publish.stale': 'その間にブランチかそのリモートが変わりました。何も push していません。push 先をもう一度選んでください。',
   'gitView.publish.cancelled': 'push をキャンセルしました。何も送信していません。',
   'gitView.publish.succeeded': 'push しました',
-  ...linearIssuePickerI18n.ja,
-  ...referencePickerI18n.ja,
-  ...sessionMenuHintsI18n.ja,
-  ...projectKnowledgeI18n.ja,
-  ...linearPanelI18n.ja,
-  ...routingI18n.ja,
-  ...pluginPanelI18n.ja,
-  ...surfacePanelI18n.ja,
-  ...fileArtifactsI18n.ja,
-  ...usageStatsI18n.ja,
-  ...webSearchI18n.ja,
-  ...isolatedSpacesI18n.ja,
-  ...sourceBoardI18n.ja,
-  ...projectActionsI18n.ja,
-  ...environmentI18n.ja,
-  ...providersI18n.ja,
-  ...mcpGridI18n.ja,
-  ...pluginsGridI18n.ja,
+  ...linearIssuePickerJa,
+  ...referencePickerJa,
+  ...sessionMenuHintsJa,
+  ...projectKnowledgeJa,
+  ...linearPanelJa,
+  ...routingJa,
+  ...pluginPanelJa,
+  ...surfacePanelJa,
+  ...fileArtifactsJa,
+  ...usageStatsJa,
+  ...webSearchJa,
+  ...isolatedSpacesJa,
+  ...sourceBoardJa,
+  ...projectActionsJa,
+  ...environmentJa,
+  ...providersJa,
+  ...mcpGridJa,
+  ...pluginsGridJa,
   'terminalView.actions.attachSelection': '選択した出力を添付',
   'terminalView.actions.copySelection': '選択した出力をコピー',
   'terminalView.toast.selectionCopied': '出力をコピーしました',
