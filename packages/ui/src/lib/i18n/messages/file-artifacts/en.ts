@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsEn = {
+  'filesView.artifact.image.fit': 'Fit',
+  'filesView.artifact.image.fitTitle': 'Fit the image to the panel',
+  'filesView.artifact.image.actualTitle': 'Show the image at its actual size',
+  'filesView.artifact.image.zoomOut': 'Zoom out',
+  'filesView.artifact.image.zoomIn': 'Zoom in',
+  'filesView.artifact.media.unplayable': 'This file cannot be played here. Download it to open it in another app.',
+  'filesView.artifact.font.sample': 'The quick brown fox jumps over the lazy dog',
+  'filesView.artifact.font.loadFailed': 'This font could not be loaded.',
+  'filesView.artifact.table.rowsSingle': '{rows} row · {columns} columns',
+  'filesView.artifact.table.rowsPlural': '{rows} rows · {columns} columns',
+  'filesView.artifact.table.truncated': 'Showing the first {shown} of {total} rows',
+  'filesView.artifact.table.empty': 'This file has no rows.',
+  'filesView.artifact.table.showTable': 'Show as table',
+  'filesView.artifact.table.showSource': 'Show source',
+  'filesView.artifact.binary.title': 'No preview for this file',
+  'filesView.artifact.binary.description': 'OpenChamber does not decode this kind of file. Download it to open it in another app.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber does not decode {extension} files. Download it to open it in another app.',
+} as const;

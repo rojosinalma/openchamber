@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsAr = {
+  'filesView.artifact.image.fit': 'ملاءمة',
+  'filesView.artifact.image.fitTitle': 'ملاءمة الصورة مع اللوحة',
+  'filesView.artifact.image.actualTitle': 'عرض الصورة بحجمها الفعلي',
+  'filesView.artifact.image.zoomOut': 'تصغير',
+  'filesView.artifact.image.zoomIn': 'تكبير',
+  'filesView.artifact.media.unplayable': 'لا يمكن تشغيل هذا الملف هنا. نزّله لفتحه في تطبيق آخر.',
+  'filesView.artifact.font.sample': 'نص حكيم له سر قاطع وذو شأن عظيم مكتوب على ثوب أخضر ومغلف بجلد أزرق',
+  'filesView.artifact.font.loadFailed': 'تعذّر تحميل هذا الخط.',
+  'filesView.artifact.table.rowsSingle': '{rows} صف · {columns} أعمدة',
+  'filesView.artifact.table.rowsPlural': '{rows} صفوف · {columns} أعمدة',
+  'filesView.artifact.table.truncated': 'عرض أول {shown} من {total} صفوف',
+  'filesView.artifact.table.empty': 'لا يحتوي هذا الملف على صفوف.',
+  'filesView.artifact.table.showTable': 'العرض كجدول',
+  'filesView.artifact.table.showSource': 'عرض المصدر',
+  'filesView.artifact.binary.title': 'لا توجد معاينة لهذا الملف',
+  'filesView.artifact.binary.description': 'لا يفك OpenChamber ترميز هذا النوع من الملفات. نزّله لفتحه في تطبيق آخر.',
+  'filesView.artifact.binary.descriptionWithType': 'لا يفك OpenChamber ترميز ملفات {extension}. نزّله لفتحه في تطبيق آخر.',
+} as const;

@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsPtBR = {
+  'filesView.artifact.image.fit': 'Ajustar',
+  'filesView.artifact.image.fitTitle': 'Ajustar a imagem ao painel',
+  'filesView.artifact.image.actualTitle': 'Mostrar a imagem no tamanho real',
+  'filesView.artifact.image.zoomOut': 'Diminuir zoom',
+  'filesView.artifact.image.zoomIn': 'Aumentar zoom',
+  'filesView.artifact.media.unplayable': 'Este arquivo não pode ser reproduzido aqui. Baixe-o para abrir em outro aplicativo.',
+  'filesView.artifact.font.sample': 'Luís argüia à Júlia que brações, fé, chá, óxido, pôr, zângão eram palavras do português',
+  'filesView.artifact.font.loadFailed': 'Não foi possível carregar esta fonte.',
+  'filesView.artifact.table.rowsSingle': '{rows} linha · {columns} colunas',
+  'filesView.artifact.table.rowsPlural': '{rows} linhas · {columns} colunas',
+  'filesView.artifact.table.truncated': 'Mostrando as primeiras {shown} de {total} linhas',
+  'filesView.artifact.table.empty': 'Este arquivo não tem linhas.',
+  'filesView.artifact.table.showTable': 'Mostrar como tabela',
+  'filesView.artifact.table.showSource': 'Mostrar código-fonte',
+  'filesView.artifact.binary.title': 'Sem pré-visualização para este arquivo',
+  'filesView.artifact.binary.description': 'O OpenChamber não decodifica este tipo de arquivo. Baixe-o para abrir em outro aplicativo.',
+  'filesView.artifact.binary.descriptionWithType': 'O OpenChamber não decodifica arquivos {extension}. Baixe-o para abrir em outro aplicativo.',
+} as const;

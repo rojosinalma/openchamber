@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsFr = {
+  'filesView.artifact.image.fit': 'Ajuster',
+  'filesView.artifact.image.fitTitle': 'Ajuster l\'image au panneau',
+  'filesView.artifact.image.actualTitle': 'Afficher l\'image à sa taille réelle',
+  'filesView.artifact.image.zoomOut': 'Zoom arrière',
+  'filesView.artifact.image.zoomIn': 'Zoom avant',
+  'filesView.artifact.media.unplayable': 'Ce fichier ne peut pas être lu ici. Téléchargez-le pour l\'ouvrir dans une autre application.',
+  'filesView.artifact.font.sample': 'Portez ce vieux whisky au juge blond qui fume',
+  'filesView.artifact.font.loadFailed': 'Cette police n\'a pas pu être chargée.',
+  'filesView.artifact.table.rowsSingle': '{rows} ligne · {columns} colonnes',
+  'filesView.artifact.table.rowsPlural': '{rows} lignes · {columns} colonnes',
+  'filesView.artifact.table.truncated': 'Affichage des {shown} premières lignes sur {total}',
+  'filesView.artifact.table.empty': 'Ce fichier ne contient aucune ligne.',
+  'filesView.artifact.table.showTable': 'Afficher en tableau',
+  'filesView.artifact.table.showSource': 'Afficher la source',
+  'filesView.artifact.binary.title': 'Aucun aperçu pour ce fichier',
+  'filesView.artifact.binary.description': 'OpenChamber ne décode pas ce type de fichier. Téléchargez-le pour l\'ouvrir dans une autre application.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber ne décode pas les fichiers {extension}. Téléchargez-le pour l\'ouvrir dans une autre application.',
+} as const;

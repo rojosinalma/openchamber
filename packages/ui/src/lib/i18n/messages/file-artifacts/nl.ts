@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsNl = {
+  'filesView.artifact.image.fit': 'Passen',
+  'filesView.artifact.image.fitTitle': 'De afbeelding in het paneel passen',
+  'filesView.artifact.image.actualTitle': 'De afbeelding op werkelijke grootte tonen',
+  'filesView.artifact.image.zoomOut': 'Uitzoomen',
+  'filesView.artifact.image.zoomIn': 'Inzoomen',
+  'filesView.artifact.media.unplayable': 'Dit bestand kan hier niet worden afgespeeld. Download het om het in een andere app te openen.',
+  'filesView.artifact.font.sample': 'De snelle bruine vos springt over de luie hond',
+  'filesView.artifact.font.loadFailed': 'Dit lettertype kon niet worden geladen.',
+  'filesView.artifact.table.rowsSingle': '{rows} rij · {columns} kolommen',
+  'filesView.artifact.table.rowsPlural': '{rows} rijen · {columns} kolommen',
+  'filesView.artifact.table.truncated': 'De eerste {shown} van {total} rijen worden getoond',
+  'filesView.artifact.table.empty': 'Dit bestand heeft geen rijen.',
+  'filesView.artifact.table.showTable': 'Als tabel tonen',
+  'filesView.artifact.table.showSource': 'Bron tonen',
+  'filesView.artifact.binary.title': 'Geen preview voor dit bestand',
+  'filesView.artifact.binary.description': 'OpenChamber kan dit soort bestand niet decoderen. Download het om het in een andere app te openen.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber kan {extension}-bestanden niet decoderen. Download het om het in een andere app te openen.',
+} as const;

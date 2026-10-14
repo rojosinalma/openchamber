@@ -1,24 +1,24 @@
 import type { I18nKey } from './en';
 import { settingsDict } from './ko.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { htmlRenderI18n } from './html-render.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerKo } from './linear-issue-picker/ko';
+import { referencePickerKo } from './reference-picker/ko';
+import { sessionMenuHintsKo } from './session-menu-hints/ko';
+import { projectKnowledgeKo } from './project-knowledge/ko';
+import { linearPanelKo } from './linear-panel/ko';
+import { routingKo } from './routing/ko';
+import { pluginPanelKo } from './plugin-panel/ko';
+import { surfacePanelKo } from './surface-panel/ko';
+import { fileArtifactsKo } from './file-artifacts/ko';
+import { htmlRenderKo } from './html-render/ko';
+import { usageStatsKo } from './usage-stats/ko';
+import { webSearchKo } from './websearch/ko';
+import { isolatedSpacesKo } from './isolated-spaces/ko';
+import { sourceBoardKo } from './source-board/ko';
+import { projectActionsKo } from './project-actions/ko';
+import { environmentKo } from './environment/ko';
+import { providersKo } from './providers/ko';
+import { mcpGridKo } from './mcp-grid/ko';
+import { pluginsGridKo } from './plugins-grid/ko';
 
 export const dict: Record<I18nKey, string> = {
   "opencodeCompatibility.bundled": "OpenCode는 OpenChamber에 포함되어 있습니다. OpenCode v2를 사용하려면 OpenChamber를 업데이트하세요.",
@@ -128,25 +128,25 @@ export const dict: Record<I18nKey, string> = {
   'gitView.publish.stale': '그사이 브랜치나 원격이 바뀌었습니다. 아무것도 push하지 않았으니 push할 곳을 다시 고르세요.',
   'gitView.publish.cancelled': 'push를 취소했습니다. 아무것도 보내지 않았습니다.',
   'gitView.publish.succeeded': 'push 완료',
-  ...linearIssuePickerI18n.ko,
-  ...referencePickerI18n.ko,
-  ...sessionMenuHintsI18n.ko,
-  ...projectKnowledgeI18n.ko,
-  ...linearPanelI18n.ko,
-  ...routingI18n.ko,
-  ...pluginPanelI18n.ko,
-  ...surfacePanelI18n.ko,
-  ...fileArtifactsI18n.ko,
-  ...htmlRenderI18n.ko,
-  ...usageStatsI18n.ko,
-  ...webSearchI18n.ko,
-  ...isolatedSpacesI18n.ko,
-  ...sourceBoardI18n.ko,
-  ...projectActionsI18n.ko,
-  ...environmentI18n.ko,
-  ...providersI18n.ko,
-  ...mcpGridI18n.ko,
-  ...pluginsGridI18n.ko,
+  ...linearIssuePickerKo,
+  ...referencePickerKo,
+  ...sessionMenuHintsKo,
+  ...projectKnowledgeKo,
+  ...linearPanelKo,
+  ...routingKo,
+  ...pluginPanelKo,
+  ...surfacePanelKo,
+  ...fileArtifactsKo,
+  ...htmlRenderKo,
+  ...usageStatsKo,
+  ...webSearchKo,
+  ...isolatedSpacesKo,
+  ...sourceBoardKo,
+  ...projectActionsKo,
+  ...environmentKo,
+  ...providersKo,
+  ...mcpGridKo,
+  ...pluginsGridKo,
   'terminalView.actions.attachSelection': '선택한 출력 첨부',
   'terminalView.actions.copySelection': '선택한 출력 복사',
   'terminalView.toast.selectionCopied': '출력을 복사했습니다',

@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsZhTW = {
+  'filesView.artifact.image.fit': '適應',
+  'filesView.artifact.image.fitTitle': '將圖片適應面板大小',
+  'filesView.artifact.image.actualTitle': '以實際大小顯示圖片',
+  'filesView.artifact.image.zoomOut': '縮小',
+  'filesView.artifact.image.zoomIn': '放大',
+  'filesView.artifact.media.unplayable': '此檔案無法在此播放。請下載後用其他應用程式開啟。',
+  'filesView.artifact.font.sample': '天地玄黃 宇宙洪荒 日月盈昃 辰宿列張',
+  'filesView.artifact.font.loadFailed': '無法載入此字型。',
+  'filesView.artifact.table.rowsSingle': '{rows} 列 · {columns} 欄',
+  'filesView.artifact.table.rowsPlural': '{rows} 列 · {columns} 欄',
+  'filesView.artifact.table.truncated': '顯示前 {shown} 列，共 {total} 列',
+  'filesView.artifact.table.empty': '此檔案沒有資料列。',
+  'filesView.artifact.table.showTable': '以表格顯示',
+  'filesView.artifact.table.showSource': '顯示原始文字',
+  'filesView.artifact.binary.title': '此檔案無法預覽',
+  'filesView.artifact.binary.description': 'OpenChamber 不解碼此類檔案。請下載後用其他應用程式開啟。',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber 不解碼 {extension} 檔案。請下載後用其他應用程式開啟。',
+} as const;

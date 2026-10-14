@@ -1,24 +1,24 @@
 import type { I18nKey } from './en';
 import { settingsDict } from './zh-CN.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { htmlRenderI18n } from './html-render.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerZhCN } from './linear-issue-picker/zh-CN';
+import { referencePickerZhCN } from './reference-picker/zh-CN';
+import { sessionMenuHintsZhCN } from './session-menu-hints/zh-CN';
+import { projectKnowledgeZhCN } from './project-knowledge/zh-CN';
+import { linearPanelZhCN } from './linear-panel/zh-CN';
+import { routingZhCN } from './routing/zh-CN';
+import { pluginPanelZhCN } from './plugin-panel/zh-CN';
+import { surfacePanelZhCN } from './surface-panel/zh-CN';
+import { fileArtifactsZhCN } from './file-artifacts/zh-CN';
+import { htmlRenderZhCN } from './html-render/zh-CN';
+import { usageStatsZhCN } from './usage-stats/zh-CN';
+import { webSearchZhCN } from './websearch/zh-CN';
+import { isolatedSpacesZhCN } from './isolated-spaces/zh-CN';
+import { sourceBoardZhCN } from './source-board/zh-CN';
+import { projectActionsZhCN } from './project-actions/zh-CN';
+import { environmentZhCN } from './environment/zh-CN';
+import { providersZhCN } from './providers/zh-CN';
+import { mcpGridZhCN } from './mcp-grid/zh-CN';
+import { pluginsGridZhCN } from './plugins-grid/zh-CN';
 
 export const dict: Record<I18nKey, string> = {
   "opencodeCompatibility.bundled": "OpenCode 随 OpenChamber 一起提供。请更新 OpenChamber 以获取 OpenCode v2。",
@@ -128,25 +128,25 @@ export const dict: Record<I18nKey, string> = {
   'gitView.publish.stale': '分支或其远程在此期间发生了变化。没有 push 任何内容；请重新选择 push 目标。',
   'gitView.publish.cancelled': '已取消 push，没有发送任何内容。',
   'gitView.publish.succeeded': '已 push',
-  ...linearIssuePickerI18n['zh-CN'],
-  ...referencePickerI18n['zh-CN'],
-  ...sessionMenuHintsI18n['zh-CN'],
-  ...projectKnowledgeI18n['zh-CN'],
-  ...linearPanelI18n['zh-CN'],
-  ...routingI18n['zh-CN'],
-  ...pluginPanelI18n['zh-CN'],
-  ...surfacePanelI18n['zh-CN'],
-  ...fileArtifactsI18n['zh-CN'],
-  ...htmlRenderI18n['zh-CN'],
-  ...usageStatsI18n['zh-CN'],
-  ...webSearchI18n['zh-CN'],
-  ...isolatedSpacesI18n['zh-CN'],
-  ...sourceBoardI18n['zh-CN'],
-  ...projectActionsI18n['zh-CN'],
-  ...environmentI18n['zh-CN'],
-  ...providersI18n['zh-CN'],
-  ...mcpGridI18n['zh-CN'],
-  ...pluginsGridI18n['zh-CN'],
+  ...linearIssuePickerZhCN,
+  ...referencePickerZhCN,
+  ...sessionMenuHintsZhCN,
+  ...projectKnowledgeZhCN,
+  ...linearPanelZhCN,
+  ...routingZhCN,
+  ...pluginPanelZhCN,
+  ...surfacePanelZhCN,
+  ...fileArtifactsZhCN,
+  ...htmlRenderZhCN,
+  ...usageStatsZhCN,
+  ...webSearchZhCN,
+  ...isolatedSpacesZhCN,
+  ...sourceBoardZhCN,
+  ...projectActionsZhCN,
+  ...environmentZhCN,
+  ...providersZhCN,
+  ...mcpGridZhCN,
+  ...pluginsGridZhCN,
   'terminalView.actions.attachSelection': '附加所选输出',
   'terminalView.actions.copySelection': '复制所选输出',
   'terminalView.toast.selectionCopied': '已复制输出',

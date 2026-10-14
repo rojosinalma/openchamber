@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsDe } from './extensions.settings/de';
+import { guestIntegrationsDe } from './guest-integrations/de';
+import { linearIntegrationDe } from './linear-integration/de';
+import { thirdPartyIntegrationDe } from './third-party-integrations/de';
+import { extensionCatalogDe } from './extension-catalog/de';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH-Schlüssel',
   'settings.sourceControl.ssh.load': 'Schlüssel anzeigen',
@@ -2525,11 +2525,11 @@ export const settingsDict = {
   'settings.sourceControl.transport.anonymous': 'Anonymes HTTPS, nur lesend',
   'settings.sourceControl.transport.loading': 'Repository-Transport wird geladen…',
   'chat.message.userText.showFullMessage': 'Ganze Nachricht anzeigen',
-  ...linearIntegrationI18n.de,
-  ...thirdPartyIntegrationI18n.de,
-  ...extensionCatalogI18n.de,
-  ...guestIntegrationsI18n.de,
-  ...extensionsSettingsI18n.de,
+  ...linearIntegrationDe,
+  ...thirdPartyIntegrationDe,
+  ...extensionCatalogDe,
+  ...guestIntegrationsDe,
+  ...extensionsSettingsDe,
   'settings.page.integrations.title': 'Integrationen',
   'settings.page.integrations.description': 'Verbinde die Dienste und Abonnements, mit denen OpenChamber arbeitet.',
   'settings.agents.page.field.steps': 'Max. Schritte',

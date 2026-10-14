@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsTr = {
+  'filesView.artifact.image.fit': 'Sığdır',
+  'filesView.artifact.image.fitTitle': 'Görseli panele sığdır',
+  'filesView.artifact.image.actualTitle': 'Görseli gerçek boyutunda göster',
+  'filesView.artifact.image.zoomOut': 'Uzaklaştır',
+  'filesView.artifact.image.zoomIn': 'Yakınlaştır',
+  'filesView.artifact.media.unplayable': 'Bu dosya burada oynatılamıyor. Başka bir uygulamada açmak için indirin.',
+  'filesView.artifact.font.sample': 'Pijamalı hasta yağız şoföre çabucak güvendi',
+  'filesView.artifact.font.loadFailed': 'Bu yazı tipi yüklenemedi.',
+  'filesView.artifact.table.rowsSingle': '{rows} satır · {columns} sütun',
+  'filesView.artifact.table.rowsPlural': '{rows} satır · {columns} sütun',
+  'filesView.artifact.table.truncated': '{total} satırın ilk {shown} tanesi gösteriliyor',
+  'filesView.artifact.table.empty': 'Bu dosyada satır yok.',
+  'filesView.artifact.table.showTable': 'Tablo olarak göster',
+  'filesView.artifact.table.showSource': 'Kaynağı göster',
+  'filesView.artifact.binary.title': 'Bu dosya için önizleme yok',
+  'filesView.artifact.binary.description': 'OpenChamber bu tür dosyaların kodunu çözmez. Başka bir uygulamada açmak için indirin.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber {extension} dosyalarının kodunu çözmez. Başka bir uygulamada açmak için indirin.',
+} as const;

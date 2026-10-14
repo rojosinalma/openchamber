@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsJa = {
+  'filesView.artifact.image.fit': 'フィット',
+  'filesView.artifact.image.fitTitle': '画像をパネルに合わせる',
+  'filesView.artifact.image.actualTitle': '画像を実際のサイズで表示',
+  'filesView.artifact.image.zoomOut': '縮小',
+  'filesView.artifact.image.zoomIn': '拡大',
+  'filesView.artifact.media.unplayable': 'このファイルはここでは再生できません。ダウンロードして別のアプリで開いてください。',
+  'filesView.artifact.font.sample': 'いろはにほへと ちりぬるを わかよたれそ つねならむ',
+  'filesView.artifact.font.loadFailed': 'このフォントを読み込めませんでした。',
+  'filesView.artifact.table.rowsSingle': '{rows} 行 · {columns} 列',
+  'filesView.artifact.table.rowsPlural': '{rows} 行 · {columns} 列',
+  'filesView.artifact.table.truncated': '{total} 行のうち最初の {shown} 行を表示しています',
+  'filesView.artifact.table.empty': 'このファイルには行がありません。',
+  'filesView.artifact.table.showTable': '表として表示',
+  'filesView.artifact.table.showSource': 'ソースを表示',
+  'filesView.artifact.binary.title': 'このファイルはプレビューできません',
+  'filesView.artifact.binary.description': 'OpenChamber はこの種類のファイルをデコードしません。ダウンロードして別のアプリで開いてください。',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber は {extension} ファイルをデコードしません。ダウンロードして別のアプリで開いてください。',
+} as const;

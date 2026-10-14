@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsHe = {
+  'filesView.artifact.image.fit': 'התאם',
+  'filesView.artifact.image.fitTitle': 'התאם את התמונה לחלונית',
+  'filesView.artifact.image.actualTitle': 'הצג את התמונה בגודלה האמיתי',
+  'filesView.artifact.image.zoomOut': 'הקטן תצוגה',
+  'filesView.artifact.image.zoomIn': 'הגדל תצוגה',
+  'filesView.artifact.media.unplayable': 'אי אפשר להפעיל את הקובץ הזה כאן. אפשר להוריד אותו ולפתוח באפליקציה אחרת.',
+  'filesView.artifact.font.sample': 'דג סקרן שט בים מאוכזב ולפתע מצא חברה',
+  'filesView.artifact.font.loadFailed': 'לא ניתן היה לטעון את הגופן הזה.',
+  'filesView.artifact.table.rowsSingle': 'שורה {rows} · {columns} עמודות',
+  'filesView.artifact.table.rowsPlural': '{rows} שורות · {columns} עמודות',
+  'filesView.artifact.table.truncated': 'מוצגות {shown} השורות הראשונות מתוך {total}',
+  'filesView.artifact.table.empty': 'אין שורות בקובץ הזה.',
+  'filesView.artifact.table.showTable': 'הצג כטבלה',
+  'filesView.artifact.table.showSource': 'הצג מקור',
+  'filesView.artifact.binary.title': 'אין תצוגה מקדימה לקובץ הזה',
+  'filesView.artifact.binary.description': 'OpenChamber לא מפענח קבצים מהסוג הזה. אפשר להוריד את הקובץ ולפתוח אותו באפליקציה אחרת.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber לא מפענח קבצי {extension}. אפשר להוריד את הקובץ ולפתוח אותו באפליקציה אחרת.',
+} as const;

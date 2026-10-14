@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsEs = {
+  'filesView.artifact.image.fit': 'Ajustar',
+  'filesView.artifact.image.fitTitle': 'Ajustar la imagen al panel',
+  'filesView.artifact.image.actualTitle': 'Mostrar la imagen a tamaño real',
+  'filesView.artifact.image.zoomOut': 'Alejar',
+  'filesView.artifact.image.zoomIn': 'Acercar',
+  'filesView.artifact.media.unplayable': 'Este archivo no se puede reproducir aquí. Descárgalo para abrirlo en otra aplicación.',
+  'filesView.artifact.font.sample': 'El veloz murciélago hindú comía feliz cardillo y kiwi',
+  'filesView.artifact.font.loadFailed': 'No se pudo cargar esta fuente.',
+  'filesView.artifact.table.rowsSingle': '{rows} fila · {columns} columnas',
+  'filesView.artifact.table.rowsPlural': '{rows} filas · {columns} columnas',
+  'filesView.artifact.table.truncated': 'Mostrando las primeras {shown} de {total} filas',
+  'filesView.artifact.table.empty': 'Este archivo no tiene filas.',
+  'filesView.artifact.table.showTable': 'Mostrar como tabla',
+  'filesView.artifact.table.showSource': 'Mostrar código fuente',
+  'filesView.artifact.binary.title': 'No hay vista previa para este archivo',
+  'filesView.artifact.binary.description': 'OpenChamber no decodifica este tipo de archivo. Descárgalo para abrirlo en otra aplicación.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber no decodifica archivos {extension}. Descárgalo para abrirlo en otra aplicación.',
+} as const;

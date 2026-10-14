@@ -208,6 +208,14 @@ const fakeReact = {
         // SAFETY: this test hook preserves one mutable ref slot per hook index.
         return hookStates[index] as { current: T };
     },
+    // The renderer's one useState takes a lazy initializer (the mermaid loader,
+    // mocked below to report the module present). This fake React never
+    // re-renders on state, so the initial value is the state throughout and the
+    // setter has nothing to do.
+    useState: <T>(initial: () => T): readonly [T, (value: T) => void] => {
+        hookCursor += 1;
+        return [initial(), () => {}];
+    },
     memo: <T>(component: T): T => component,
     createContext: <T>(defaultValue: T) => ({ Provider: 'provider', defaultValue }),
     useContext: <T>(context: { defaultValue: T }): T => context.defaultValue,
@@ -240,9 +248,16 @@ const fakeJsx = (_type: string, props: FakeJsxProps | null, ...children: FakeEle
 mock.module('react', () => ({ default: fakeReact }));
 mock.module('react/jsx-runtime', () => ({ jsx: fakeJsx, jsxs: fakeJsx, Fragment: 'fragment' }));
 mock.module('react/jsx-dev-runtime', () => ({ jsxDEV: fakeJsx, Fragment: 'fragment' }));
-mock.module('beautiful-mermaid', () => ({
+const fakeMermaidModule = {
     renderMermaidASCII: () => '',
     renderMermaidSVG: (_source: string, colors: { bg: string }) => colors.bg,
+};
+mock.module('beautiful-mermaid', () => fakeMermaidModule);
+// The renderer loads beautiful-mermaid lazily; this fake React cannot
+// re-render on state, so the loader reports the module as already present.
+mock.module('./markdown/mermaidLoader', () => ({
+    getLoadedMermaidModule: () => fakeMermaidModule,
+    loadMermaidModule: async () => fakeMermaidModule,
 }));
 mock.module('@/lib/utils', () => ({ cn: (...values: string[]) => values.filter(Boolean).join(' ') }));
 mock.module('@/lib/i18n', () => ({ useI18n: () => ({ t: (key: string) => `${key}:${currentContextVersion}` }) }));

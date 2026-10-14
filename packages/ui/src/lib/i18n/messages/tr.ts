@@ -1,23 +1,23 @@
 import { settingsDict } from './tr.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { htmlRenderI18n } from './html-render.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerTr } from './linear-issue-picker/tr';
+import { referencePickerTr } from './reference-picker/tr';
+import { sessionMenuHintsTr } from './session-menu-hints/tr';
+import { projectKnowledgeTr } from './project-knowledge/tr';
+import { linearPanelTr } from './linear-panel/tr';
+import { routingTr } from './routing/tr';
+import { pluginPanelTr } from './plugin-panel/tr';
+import { surfacePanelTr } from './surface-panel/tr';
+import { fileArtifactsTr } from './file-artifacts/tr';
+import { htmlRenderTr } from './html-render/tr';
+import { usageStatsTr } from './usage-stats/tr';
+import { webSearchTr } from './websearch/tr';
+import { isolatedSpacesTr } from './isolated-spaces/tr';
+import { sourceBoardTr } from './source-board/tr';
+import { projectActionsTr } from './project-actions/tr';
+import { environmentTr } from './environment/tr';
+import { providersTr } from './providers/tr';
+import { mcpGridTr } from './mcp-grid/tr';
+import { pluginsGridTr } from './plugins-grid/tr';
 
 export const dict = {
   "opencodeCompatibility.bundled": "OpenCode, OpenChamber ile birlikte gelir. OpenCode v2 için OpenChamber’ı güncelleyin.",
@@ -66,25 +66,25 @@ export const dict = {
   'chat.liveActivity.usedSubagents': '{count} alt agent kullanıldı',
   'sessions.sidebar.projectAction.active': 'Proje eylemi çalışıyor',
   ...settingsDict,
-  ...linearIssuePickerI18n.tr,
-  ...referencePickerI18n.tr,
-  ...sessionMenuHintsI18n.tr,
-  ...projectKnowledgeI18n.tr,
-  ...linearPanelI18n.tr,
-  ...routingI18n.tr,
-  ...pluginPanelI18n.tr,
-  ...surfacePanelI18n.tr,
-  ...fileArtifactsI18n.tr,
-  ...htmlRenderI18n.tr,
-  ...usageStatsI18n.tr,
-  ...webSearchI18n.tr,
-  ...isolatedSpacesI18n.tr,
-  ...sourceBoardI18n.tr,
-  ...projectActionsI18n.tr,
-  ...environmentI18n.tr,
-  ...providersI18n.tr,
-  ...mcpGridI18n.tr,
-  ...pluginsGridI18n.tr,
+  ...linearIssuePickerTr,
+  ...referencePickerTr,
+  ...sessionMenuHintsTr,
+  ...projectKnowledgeTr,
+  ...linearPanelTr,
+  ...routingTr,
+  ...pluginPanelTr,
+  ...surfacePanelTr,
+  ...fileArtifactsTr,
+  ...htmlRenderTr,
+  ...usageStatsTr,
+  ...webSearchTr,
+  ...isolatedSpacesTr,
+  ...sourceBoardTr,
+  ...projectActionsTr,
+  ...environmentTr,
+  ...providersTr,
+  ...mcpGridTr,
+  ...pluginsGridTr,
   'terminalView.actions.attachSelection': 'Seçili çıktıyı ekle',
   'terminalView.actions.copySelection': 'Seçili çıktıyı kopyala',
   'terminalView.toast.selectionCopied': 'Çıktı kopyalandı',

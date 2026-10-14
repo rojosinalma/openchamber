@@ -353,15 +353,16 @@ function App({ apis }: AppProps) {
     // The shell is now interactive: fetch the file-type icons off the startup path.
     preloadFileTypeSprite();
 
+    // The React overlay (AppStartupOverlay) starts its own 300 ms fade in this
+    // same render; the HTML splash under it fades in step, and its node goes
+    // once that fade is over. A 150 ms wait before starting used to sit in
+    // front, which only delayed the reveal.
+    const loadingElement = document.getElementById('initial-loading');
+    if (!loadingElement) return;
+    loadingElement.classList.add('fade-out');
     const timer = setTimeout(() => {
-      const loadingElement = document.getElementById('initial-loading');
-      if (loadingElement) {
-        loadingElement.classList.add('fade-out');
-        setTimeout(() => {
-          loadingElement.remove();
-        }, 300);
-      }
-    }, 150);
+      loadingElement.remove();
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [isDesktopRuntime, bootOutcomeKnown]);

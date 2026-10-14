@@ -1,0 +1,20 @@
+/** File viewer artifact strings (media, fonts, tables, images, binaries) — merged into each locale's main dictionary. */
+export const fileArtifactsKo = {
+  'filesView.artifact.image.fit': '맞춤',
+  'filesView.artifact.image.fitTitle': '이미지를 패널에 맞춤',
+  'filesView.artifact.image.actualTitle': '이미지를 실제 크기로 표시',
+  'filesView.artifact.image.zoomOut': '축소',
+  'filesView.artifact.image.zoomIn': '확대',
+  'filesView.artifact.media.unplayable': '이 파일은 여기에서 재생할 수 없습니다. 다운로드하여 다른 앱에서 여세요.',
+  'filesView.artifact.font.sample': '키스의 고유조건은 입술끼리 만나야 하고 특별한 기술은 필요치 않다',
+  'filesView.artifact.font.loadFailed': '이 글꼴을 불러올 수 없습니다.',
+  'filesView.artifact.table.rowsSingle': '{rows}행 · {columns}열',
+  'filesView.artifact.table.rowsPlural': '{rows}행 · {columns}열',
+  'filesView.artifact.table.truncated': '전체 {total}행 중 처음 {shown}행을 표시합니다',
+  'filesView.artifact.table.empty': '이 파일에는 행이 없습니다.',
+  'filesView.artifact.table.showTable': '표로 보기',
+  'filesView.artifact.table.showSource': '원본 보기',
+  'filesView.artifact.binary.title': '이 파일은 미리 볼 수 없습니다',
+  'filesView.artifact.binary.description': 'OpenChamber는 이 종류의 파일을 해석하지 않습니다. 다운로드하여 다른 앱에서 여세요.',
+  'filesView.artifact.binary.descriptionWithType': 'OpenChamber는 {extension} 파일을 해석하지 않습니다. 다운로드하여 다른 앱에서 여세요.',
+} as const;

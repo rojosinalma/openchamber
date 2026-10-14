@@ -1,6 +1,5 @@
 import React from 'react';
 import morphdom from 'morphdom';
-import { renderMermaidASCII, renderMermaidSVG } from 'beautiful-mermaid';
 import type { Part } from '@/lib/opencode/model';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/i18n';
@@ -51,6 +50,7 @@ import { findTextPosition } from './markdown/textPosition';
 import { splitFrontmatter } from './markdown/frontmatter';
 import { FrontmatterProperties } from './markdown/FrontmatterProperties';
 import { createMermaidViewerRegistry, MERMAID_BLOCK_SELECTOR, shouldRefreshMermaidViewers } from './markdown/mermaidViewer';
+import { getLoadedMermaidModule, loadMermaidModule } from './markdown/mermaidLoader';
 import {
   BLOCK_PATH_TOKEN_RE,
   isAbsoluteReferencePath,
@@ -944,19 +944,51 @@ const useDecorateContext = (
     setTableCellWrap(!useUIStore.getState().tableCellWrap);
   }, [setTableCellWrap]);
 
+  // beautiful-mermaid is loaded on the first ```mermaid block instead of with
+  // the renderer; `null` until then, after which the context is rebuilt once.
+  const [mermaidModule, setMermaidModule] = React.useState(getLoadedMermaidModule);
+  const mermaidRequestedRef = React.useRef(false);
+  const mountedRef = React.useRef(true);
+  React.useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  const requestMermaidModule = React.useCallback(() => {
+    if (mermaidRequestedRef.current) return;
+    mermaidRequestedRef.current = true;
+    loadMermaidModule()
+      .then((module) => {
+        if (mountedRef.current) setMermaidModule(module);
+      })
+      .catch((error) => {
+        mermaidRequestedRef.current = false;
+        console.warn('[MarkdownRenderer] mermaid renderer failed to load:', error);
+      });
+  }, []);
+
   const ctx = React.useMemo<DecorateContext>(() => {
     const colors = mermaidColorsFromTheme(currentTheme);
     const mode = useUIStore.getState().mermaidRenderingMode;
     const themeId = currentTheme.metadata?.id ?? 'theme';
-    const renderMermaid = (source: string): MermaidRender =>
-      cachedMermaidRender(`${themeId}:${mode}:${source}`, () => {
+    const renderMermaid = (source: string): MermaidRender => {
+      if (!mermaidModule) {
+        // First diagram of this page: start the layout engine download and
+        // show the source meanwhile. The module arriving changes this context,
+        // which re-decorates every block still carrying the old decoration id.
+        requestMermaidModule();
+        return { pending: true };
+      }
+      return cachedMermaidRender(`${themeId}:${mode}:${source}`, () => {
         try {
-          if (mode === 'ascii') return { ascii: renderMermaidASCII(source) };
-          return { svg: renderMermaidSVG(source, colors) };
+          if (mode === 'ascii') return { ascii: mermaidModule.renderMermaidASCII(source) };
+          return { svg: mermaidModule.renderMermaidSVG(source, colors) };
         } catch {
           return {};
         }
       });
+    };
     return {
       labels,
       mermaidControls,
@@ -968,7 +1000,7 @@ const useDecorateContext = (
       onPreviewLoopback,
       getCopyFormat: readCopyFormat,
     };
-  }, [currentTheme, labels, mermaidControls, codeBlockLineWrap, toggleCodeBlockLineWrap, tableCellWrap, toggleTableCellWrap, onPreviewLoopback]);
+  }, [currentTheme, labels, mermaidControls, mermaidModule, requestMermaidModule, codeBlockLineWrap, toggleCodeBlockLineWrap, tableCellWrap, toggleTableCellWrap, onPreviewLoopback]);
 
   return ctx;
 };

@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsEn } from './extensions.settings/en';
+import { guestIntegrationsEn } from './guest-integrations/en';
+import { linearIntegrationEn } from './linear-integration/en';
+import { thirdPartyIntegrationEn } from './third-party-integrations/en';
+import { extensionCatalogEn } from './extension-catalog/en';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH keys',
   'settings.sourceControl.ssh.load': 'Show keys',
@@ -2524,11 +2524,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.inputHistoryLimitDescription': 'Lowering this number removes older prompts from your history.',
   'settings.openchamber.visual.field.inputHistoryLimitAria': 'Prompts to remember',
   'settings.openchamber.visual.field.inputHistoryLimitUnit': 'prompts',
-  ...linearIntegrationI18n.en,
-  ...thirdPartyIntegrationI18n.en,
-  ...extensionCatalogI18n.en,
-  ...guestIntegrationsI18n.en,
-  ...extensionsSettingsI18n.en,
+  ...linearIntegrationEn,
+  ...thirdPartyIntegrationEn,
+  ...extensionCatalogEn,
+  ...guestIntegrationsEn,
+  ...extensionsSettingsEn,
   'settings.page.integrations.title': 'Integrations',
   'settings.page.integrations.description': 'Connect the services and subscriptions OpenChamber works with.',
   'settings.agents.page.field.steps': 'Max steps',

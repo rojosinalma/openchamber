@@ -1,5 +1,6 @@
 import { installOpenCodeV2, supportsOpenCodeV2Install } from './lib/opencode/v2-install.js';
 import { describeOpenCodeCompatibility, readOpenCodeCliVersion, readExternalOpenCodeVersion } from './lib/opencode/compatibility.js';
+import { createCompatibilityCache, parseCompatibilityCacheMs } from './lib/opencode/compatibility-cache.js';
 import 'reflect-metadata';
 import express from 'express';
 import compression from 'compression';
@@ -220,6 +221,11 @@ const SSE_PATH_PREFIXES = [
 
 function shouldSkipCompression(req, res) {
   if (process.env.OPENCHAMBER_RUNTIME === 'desktop') {
+    return true;
+  }
+
+  // Precompressed static assets arrive already encoded.
+  if (res.getHeader('Content-Encoding')) {
     return true;
   }
 
@@ -1182,13 +1188,15 @@ globalMessageStreamHub.subscribeEvent((event) => {
  * the client). The synthetic OpenChamber frames the UI also expects are derived
  * from the translated event, so the translation happens here.
  */
-const processForwardedEventPayload = (payload, emitSyntheticEvent) => {
+const processForwardedEventPayload = (payload, emitSyntheticEvent, translated = null) => {
   if (!payload || typeof payload !== 'object' || typeof emitSyntheticEvent !== 'function') {
     return;
   }
 
-  for (const translated of translateWireEvent(payload)) {
-    processForwardedServerEvent(translated, emitSyntheticEvent);
+  // The global hub hands over its memoized translation; the per-directory
+  // bridge reads straight from upstream and translates here.
+  for (const event of translated ?? translateWireEvent(payload)) {
+    processForwardedServerEvent(event, emitSyntheticEvent);
   }
 };
 
@@ -1272,6 +1280,7 @@ const serverUtilsRuntime = createServerUtilsRuntime({
   getOpenCodePort: () => openCodePort,
   setOpenCodePortState: (value) => {
     openCodePort = value;
+    invalidateOpenCodeCompatibility();
   },
   syncToHmrState,
   markOpenCodeNotReady: () => {
@@ -1532,7 +1541,7 @@ configureOpenCodeCredentials(openCodeCredentialSource({
 // A new worktree runs the start command OpenCode keeps on the project record.
 configureProjectStartCommandSource(openCodeProjectStartCommandSource({ buildOpenCodeUrl, getOpenCodeAuthHeaders }));
 
-const getOpenCodeCompatibility = async () => {
+const computeOpenCodeCompatibility = async () => {
   if (isExternalOpenCode || ENV_SKIP_OPENCODE_START) {
     const base = ENV_CONFIGURED_OPENCODE_HOST?.origin || openCodeBaseUrl || `http://127.0.0.1:${openCodePort || ENV_EFFECTIVE_PORT}`;
     const version = await readExternalOpenCodeVersion(base, getOpenCodeAuthHeaders()).catch(() => null);
@@ -1545,6 +1554,16 @@ const getOpenCodeCompatibility = async () => {
   const pinnedByPolicy = Boolean(readEnterprisePolicy().opencodeBinary);
   return describeOpenCodeCompatibility(version, installation, supportsOpenCodeV2Install() && !pinnedByPolicy, binary || null);
 };
+
+// Every page load asks before the UI mounts; the answer only changes when the
+// OpenCode process, port or binary does, and those paths invalidate it.
+// OPENCHAMBER_COMPATIBILITY_CACHE_MS overrides the 30 s hold (0 disables).
+const openCodeCompatibilityCache = createCompatibilityCache({
+  compute: computeOpenCodeCompatibility,
+  ttlMs: parseCompatibilityCacheMs(process.env.OPENCHAMBER_COMPATIBILITY_CACHE_MS),
+});
+const getOpenCodeCompatibility = () => openCodeCompatibilityCache.get();
+const invalidateOpenCodeCompatibility = () => openCodeCompatibilityCache.invalidate();
 
 const getOpenCodeUpgradeCapability = () => {
   const activeBinary = lastOpenCodeLaunchDiagnostics?.sourceBinary
@@ -1559,7 +1578,7 @@ const getOpenCodeUpgradeCapability = () => {
   });
 };
 
-const restartOpenCode = (...args) => openCodeLifecycleRuntime.restartOpenCode(...args);
+const restartOpenCode = (...args) => openCodeLifecycleRuntime.restartOpenCode(...args).finally(() => invalidateOpenCodeCompatibility());
 const waitForOpenCodeReady = (...args) => openCodeLifecycleRuntime.waitForOpenCodeReady(...args);
 const waitForAgentPresence = (...args) => openCodeLifecycleRuntime.waitForAgentPresence(...args);
 const refreshOpenCodeAfterConfigChange = (...args) => openCodeLifecycleRuntime.refreshOpenCodeAfterConfigChange(...args);
@@ -1908,6 +1927,7 @@ const gracefulShutdownRuntime = createGracefulShutdownRuntime({
   getOpenCodeProcess: () => openCodeProcess,
   setOpenCodeProcess: (value) => {
     openCodeProcess = value;
+    invalidateOpenCodeCompatibility();
   },
   killProcessOnPort,
   waitForPortRelease,
@@ -2237,6 +2257,12 @@ async function main(options = {}) {
     },
     threshold: 1024,
   }));
+  // Hashed assets are public and immutable: serve them (precompressed when the
+  // build wrote siblings) before the API middleware stack so a chunk request
+  // does not walk the body parsers, auth gate and proxy matchers first.
+  if (!apiOnly) {
+    staticRoutesRuntime.registerHashedAssetRoutes(app);
+  }
   expressApp = app;
   server = http.createServer(app);
   gracefulShutdownRuntime.trackServerConnections(server);
@@ -2513,14 +2539,16 @@ async function main(options = {}) {
       const binary = await installOpenCodeV2({
         env: { ...getLoginShellEnvSnapshot(), ...process.env, PATH: buildManagedOpenCodePath() },
       });
+      invalidateOpenCodeCompatibility();
       await persistSettings({ opencodeBinary: binary });
       await refreshOpenCodeAfterConfigChange('OpenCode v2 installation');
       await waitForOpenCodeReady();
+      invalidateOpenCodeCompatibility();
     },
     upgradeOpenCodeCli: () => runOpenCodeCliUpgrade(
       resolveManagedOpenCodeLaunchSpec(lastOpenCodeLaunchDiagnostics?.sourceBinary || resolvedOpencodeBinary),
       { env: { ...getLoginShellEnvSnapshot(), ...process.env, PATH: buildManagedOpenCodePath() }, cwd: os.homedir() },
-    ),
+    ).finally(() => invalidateOpenCodeCompatibility()),
     formatSettingsResponse,
     readSettingsFromDisk,
     readSettingsFromDiskMigrated,

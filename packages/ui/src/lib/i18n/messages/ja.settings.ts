@@ -1,8 +1,8 @@
-import { extensionsSettingsI18n } from './extensions.settings.i18n';
-import { guestIntegrationsI18n } from './guest-integrations.i18n';
-import { linearIntegrationI18n } from './linear-integration.i18n';
-import { thirdPartyIntegrationI18n } from './third-party-integrations.i18n';
-import { extensionCatalogI18n } from './extension-catalog.i18n';
+import { extensionsSettingsJa } from './extensions.settings/ja';
+import { guestIntegrationsJa } from './guest-integrations/ja';
+import { linearIntegrationJa } from './linear-integration/ja';
+import { thirdPartyIntegrationJa } from './third-party-integrations/ja';
+import { extensionCatalogJa } from './extension-catalog/ja';
 export const settingsDict = {
   'settings.sourceControl.ssh.title': 'SSH キー',
   'settings.sourceControl.ssh.load': 'キーを表示',
@@ -2534,11 +2534,11 @@ export const settingsDict = {
   'settings.openchamber.visual.field.enterToSendHint': '標準コンポーザーの送信ショートカットを選択します。拡張コンポーザーでは、Enter は常に改行し、Ctrl/Cmd+Enter で送信します。',
   'settings.openchamber.visual.option.enterToSend.enter.label': 'Enter で送信',
   'settings.openchamber.visual.option.enterToSend.modifier.label': 'Ctrl/Cmd+Enter で送信',
-  ...linearIntegrationI18n.ja,
-  ...thirdPartyIntegrationI18n.ja,
-  ...extensionCatalogI18n.ja,
-  ...guestIntegrationsI18n.ja,
-  ...extensionsSettingsI18n.ja,
+  ...linearIntegrationJa,
+  ...thirdPartyIntegrationJa,
+  ...extensionCatalogJa,
+  ...guestIntegrationsJa,
+  ...extensionsSettingsJa,
   'settings.page.integrations.title': '連携',
   'settings.page.integrations.description': 'OpenChamber と連携するサービスやサブスクリプションを接続します。',
   'settings.agents.page.field.steps': '最大ステップ数',

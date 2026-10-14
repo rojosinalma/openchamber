@@ -1,24 +1,24 @@
 import type { I18nKey } from './en';
 import { settingsDict } from './pt-BR.settings';
-import { linearIssuePickerI18n } from './linear-issue-picker.i18n';
-import { referencePickerI18n } from './reference-picker.i18n';
-import { sessionMenuHintsI18n } from './session-menu-hints.i18n';
-import { projectKnowledgeI18n } from './project-knowledge.i18n';
-import { linearPanelI18n } from './linear-panel.i18n';
-import { routingI18n } from './routing.i18n';
-import { pluginPanelI18n } from './plugin-panel.i18n';
-import { surfacePanelI18n } from './surface-panel.i18n';
-import { fileArtifactsI18n } from './file-artifacts.i18n';
-import { htmlRenderI18n } from './html-render.i18n';
-import { usageStatsI18n } from './usage-stats.i18n';
-import { webSearchI18n } from './websearch.i18n';
-import { isolatedSpacesI18n } from './isolated-spaces.i18n';
-import { sourceBoardI18n } from './source-board.i18n';
-import { projectActionsI18n } from './project-actions.i18n';
-import { environmentI18n } from './environment.i18n';
-import { providersI18n } from './providers.i18n';
-import { mcpGridI18n } from './mcp-grid.i18n';
-import { pluginsGridI18n } from './plugins-grid.i18n';
+import { linearIssuePickerPtBR } from './linear-issue-picker/pt-BR';
+import { referencePickerPtBR } from './reference-picker/pt-BR';
+import { sessionMenuHintsPtBR } from './session-menu-hints/pt-BR';
+import { projectKnowledgePtBR } from './project-knowledge/pt-BR';
+import { linearPanelPtBR } from './linear-panel/pt-BR';
+import { routingPtBR } from './routing/pt-BR';
+import { pluginPanelPtBR } from './plugin-panel/pt-BR';
+import { surfacePanelPtBR } from './surface-panel/pt-BR';
+import { fileArtifactsPtBR } from './file-artifacts/pt-BR';
+import { htmlRenderPtBR } from './html-render/pt-BR';
+import { usageStatsPtBR } from './usage-stats/pt-BR';
+import { webSearchPtBR } from './websearch/pt-BR';
+import { isolatedSpacesPtBR } from './isolated-spaces/pt-BR';
+import { sourceBoardPtBR } from './source-board/pt-BR';
+import { projectActionsPtBR } from './project-actions/pt-BR';
+import { environmentPtBR } from './environment/pt-BR';
+import { providersPtBR } from './providers/pt-BR';
+import { mcpGridPtBR } from './mcp-grid/pt-BR';
+import { pluginsGridPtBR } from './plugins-grid/pt-BR';
 
 export const dict: Record<I18nKey, string> = {
   "opencodeCompatibility.bundled": "O OpenCode está incluído no OpenChamber. Atualize o OpenChamber para obter o OpenCode v2.",
@@ -138,25 +138,25 @@ export const dict: Record<I18nKey, string> = {
   'gitView.publish.stale': 'A branch ou seus remotos mudaram nesse meio-tempo. Nada foi enviado; escolha de novo para onde fazer push.',
   'gitView.publish.cancelled': 'Push cancelado. Nada foi enviado.',
   'gitView.publish.succeeded': 'Push feito',
-  ...linearIssuePickerI18n['pt-BR'],
-  ...referencePickerI18n['pt-BR'],
-  ...sessionMenuHintsI18n['pt-BR'],
-  ...projectKnowledgeI18n['pt-BR'],
-  ...linearPanelI18n['pt-BR'],
-  ...routingI18n['pt-BR'],
-  ...pluginPanelI18n['pt-BR'],
-  ...surfacePanelI18n['pt-BR'],
-  ...fileArtifactsI18n['pt-BR'],
-  ...htmlRenderI18n['pt-BR'],
-  ...usageStatsI18n['pt-BR'],
-  ...webSearchI18n['pt-BR'],
-  ...isolatedSpacesI18n['pt-BR'],
-  ...sourceBoardI18n['pt-BR'],
-  ...projectActionsI18n['pt-BR'],
-  ...environmentI18n['pt-BR'],
-  ...providersI18n['pt-BR'],
-  ...mcpGridI18n['pt-BR'],
-  ...pluginsGridI18n['pt-BR'],
+  ...linearIssuePickerPtBR,
+  ...referencePickerPtBR,
+  ...sessionMenuHintsPtBR,
+  ...projectKnowledgePtBR,
+  ...linearPanelPtBR,
+  ...routingPtBR,
+  ...pluginPanelPtBR,
+  ...surfacePanelPtBR,
+  ...fileArtifactsPtBR,
+  ...htmlRenderPtBR,
+  ...usageStatsPtBR,
+  ...webSearchPtBR,
+  ...isolatedSpacesPtBR,
+  ...sourceBoardPtBR,
+  ...projectActionsPtBR,
+  ...environmentPtBR,
+  ...providersPtBR,
+  ...mcpGridPtBR,
+  ...pluginsGridPtBR,
   'terminalView.actions.attachSelection': 'Anexar saída selecionada',
   'terminalView.actions.copySelection': 'Copiar saída selecionada',
   'terminalView.toast.selectionCopied': 'Saída copiada',
