@@ -1,5 +1,6 @@
 import type { Session } from '@/lib/opencode/model';
 import { isChatDirectoryPath } from '@/lib/chatDirectories';
+import { isSessionInWork } from '@/lib/sessionWorkMetadata';
 import type { SessionSidebarRenderContext } from '@/components/session/sidebar/sessionSidebarRowModel';
 
 /**
@@ -11,8 +12,10 @@ import type { SessionSidebarRenderContext } from '@/components/session/sidebar/s
  * project, so the upstream files carry nothing but one-line call sites:
  *
  *  - `components/session/sidebar/list/SessionProjectCollection.tsx`
- *      `workSessions` and `attentionSessions` filter with `isZoneCandidate`
- *      (in place of `!parentID && !archived && !isChatDirectoryPath`).
+ *      `workSessions` filters with `isWorkZoneSession` (candidate, in work,
+ *      not listed in the Pinned zone) and `attentionSessions` with
+ *      `isZoneCandidate` (in place of `!parentID && !archived &&
+ *      !isChatDirectoryPath`).
  *  - `components/session/sidebar/sessions/SessionNodeItem.tsx`
  *      `canTrackWork` comes from `canTrackSessionWork`; `timelineProject`
  *      and `tooltipProjectLabel` fall back to `chatZoneProject` /
@@ -27,6 +30,16 @@ import type { SessionSidebarRenderContext } from '@/components/session/sidebar/s
 
 /** Top-level, unarchived: a session the attention and work zones may list, chat or project. */
 export const isZoneCandidate = (session: Session): boolean => !session.parentID && !session.time?.archived;
+
+/**
+ * Membership in the In work zone: a candidate with open work that the Pinned
+ * zone does not list. `pinnedZoneSessionIds` is what the Pinned zone actually
+ * shows (empty while it is hidden, never a chat), so a pinned chat and a pin
+ * behind a hidden Pinned zone stay in In work.
+ */
+export const isWorkZoneSession = (session: Session, pinnedZoneSessionIds: ReadonlySet<string>): boolean => (
+  isZoneCandidate(session) && isSessionInWork(session) && !pinnedZoneSessionIds.has(session.id)
+);
 
 /** Track / Done applies to every top-level live session when the feature is on; the mobile sheet keeps upstream's rule. */
 export const canTrackSessionWork = ({ sessionWorkEnabled, archivedBucket, session }: {

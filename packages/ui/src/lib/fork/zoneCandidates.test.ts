@@ -4,7 +4,7 @@ import { opencodeClient } from '@/lib/opencode/client';
 import { switchRuntimeEndpoint } from '@/lib/runtime-switch';
 import { ensureChatsRootDirectory, isChatDirectoryPath } from '@/lib/chatDirectories';
 import { PROJECT_ICON_MAP } from '@/lib/projectMeta';
-import { CHAT_ZONE_PROJECT, canTrackSessionWork, chatZoneProject, chatZoneProjectLabel, isZoneCandidate } from './zoneCandidates';
+import { CHAT_ZONE_PROJECT, canTrackSessionWork, chatZoneProject, chatZoneProjectLabel, isWorkZoneSession, isZoneCandidate } from './zoneCandidates';
 
 const CHAT_DIR = '/srv/chats/2026-10-13/session-1';
 const PROJECT_DIR = '/repo';
@@ -37,6 +37,20 @@ describe('zone candidates', () => {
     expect(isZoneCandidate(session(PROJECT_DIR))).toBe(true);
     expect(isZoneCandidate(session(CHAT_DIR, { parentID: 'ses_0' }))).toBe(false);
     expect(isZoneCandidate(session(CHAT_DIR, { time: { created: 1, updated: 1, archived: 2 } }))).toBe(false);
+  });
+
+  test('In work lists a candidate with open work unless the Pinned zone lists it', () => {
+    const open = { openchamber: { work: { state: 'open' } } } as Session['metadata'];
+    const inWork = session(PROJECT_DIR, { metadata: open });
+    const none = new Set<string>();
+    expect(isWorkZoneSession(inWork, none)).toBe(true);
+    expect(isWorkZoneSession(inWork, new Set(['ses_other']))).toBe(true);
+    expect(isWorkZoneSession(inWork, new Set(['ses_1']))).toBe(false);
+    expect(isWorkZoneSession(session(CHAT_DIR, { metadata: open }), none)).toBe(true);
+    expect(isWorkZoneSession(session(PROJECT_DIR), none)).toBe(false);
+    expect(isWorkZoneSession(session(PROJECT_DIR, { metadata: { openchamber: { work: { state: 'done' } } } as Session['metadata'] }), none)).toBe(false);
+    expect(isWorkZoneSession(session(PROJECT_DIR, { metadata: open, parentID: 'ses_0' }), none)).toBe(false);
+    expect(isWorkZoneSession(session(PROJECT_DIR, { metadata: open, time: { created: 1, updated: 1, archived: 2 } }), none)).toBe(false);
   });
 
   test('Track / Done applies to a chat session under the same rules as a project session', () => {

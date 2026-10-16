@@ -713,17 +713,20 @@ describe('buildSessionSidebarRowModel attention and pinned zones', () => {
     expect(placementsOf(input).sort()).toEqual(['project:pinned', 'project:urgent']);
   });
 
-  test('a pinned session in work appears under Pinned and Work and stays in its project group', () => {
-    const both = node('both');
-    const input = args([project([group([both, node('other')])])]);
-    input.pinnedItems = [timelineItem('both')];
-    input.workItems = [timelineItem('both')];
-    input.workSessionIds = new Set(['both']);
+  test('a pinned session in work appears under Pinned, not Work, and stays in its project group', () => {
+    // The collection keeps a session the Pinned zone lists out of the work set
+    // (fork: lib/fork/zoneCandidates isWorkZoneSession); the row model sees it
+    // only as a pinned item and in its group.
+    const pinned = node('pinned');
+    const input = args([project([group([pinned, node('working'), node('other')])])]);
+    input.pinnedItems = [timelineItem('pinned')];
+    input.workItems = [timelineItem('working')];
+    input.workSessionIds = new Set(['working']);
 
     expect(headersOf(input)).toEqual(['pinned', 'work', 'projects']);
     const placements = placementsOf(input);
-    expect(placements.slice(0, 2)).toEqual(['pinned:both', 'work:both']);
-    expect(placements.slice(2).sort()).toEqual(['project:both', 'project:other']);
+    expect(placements.slice(0, 2)).toEqual(['pinned:pinned', 'work:working']);
+    expect(placements.slice(2).sort()).toEqual(['project:other', 'project:pinned', 'project:working']);
   });
 });
 
