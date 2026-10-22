@@ -51,6 +51,8 @@ import { isSessionBusyNow } from '@/sync/session-actions';
 import { useSessionUIStore } from '@/sync/session-ui-store';
 import { isSessionInWork } from '@/lib/sessionWorkMetadata';
 import { useOpenProjectOnBoard } from '@/components/sourceBoard/openTrackerItem';
+import { storeProjectIndices } from '@/lib/fork/projectPins';
+import { useProjectsStore } from '@/stores/useProjectsStore';
 
 type SessionProjectScrollerState = Pick<SessionGroupSectionProps,
   | 'editingId'
@@ -535,11 +537,9 @@ function SessionProjectScrollerComponent({ model, view, actions }: Props): React
           if (view.hasSessionSearchQuery || model.state.editingId !== null || event.active.id === event.over.id) return;
           const activeId = String(event.active.id);
           const overId = String(event.over.id);
-          const projectIds = model.sectionsForRender.map((section) => section.project.id);
-          const projectFrom = projectIds.indexOf(activeId);
-          const projectTo = projectIds.indexOf(overId);
-          if (projectFrom >= 0 && projectTo >= 0 && view.projectSortOrder === 'manual') {
-            actions.reorderProjects(projectFrom, projectTo);
+          const projectMove = storeProjectIndices(useProjectsStore.getState().projects, activeId, overId);
+          if (projectMove && view.projectSortOrder === 'manual') {
+            actions.reorderProjects(projectMove.from, projectMove.to);
             return;
           }
           const activeRow = model.rowModel.rows.find((row): row is Extract<SessionSidebarRow, { kind: 'group-header' }> => row.kind === 'group-header' && row.groupKey === activeId);

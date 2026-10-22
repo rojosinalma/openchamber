@@ -13,6 +13,7 @@ import { createSessionOwnershipIndex } from '../sessions/sessionOwnership';
 import { normalizePath } from '../utils';
 import { partitionSidebarSessions } from './sessionCollection';
 import { orderByProjectRank, rankByLatestActivity, sortProjectsByOrder } from './projectSort';
+import { pinnedProjectsFirst } from '@/lib/fork/projectPins';
 
 const NO_PROJECTS: ProjectEntry[] = [];
 const NO_IDS: string[] = [];
@@ -57,7 +58,7 @@ export const useProjectsInSidebarOrder = <T extends { id: string }>(
   const orderKey = React.useMemo(() => {
     const sorted = sortProjectsByOrder(projects, order, manualOrder);
     const ranked = recent
-      ? rankByLatestActivity(sorted, order, (project) => project.id, createSessionOwnershipIndex(
+      ? pinnedProjectsFirst(rankByLatestActivity(sorted, order, (project) => project.id, createSessionOwnershipIndex(
         partitionSidebarSessions(sessions, isVSCode).projectSessions,
         sorted.flatMap((project) => {
           const normalizedPath = normalizePath(project.path);
@@ -68,7 +69,7 @@ export const useProjectsInSidebarOrder = <T extends { id: string }>(
         archivedSessions,
         openCodeProjects,
         spaces,
-      ).sessionsByProject)
+      ).sessionsByProject), (project) => project.pinned === true)
       : sorted;
     return ranked.map((project) => project.id).join('\n');
   }, [archivedSessions, isVSCode, manualOrder, openCodeProjects, order, projects, recent, sessions, spaces, worktrees]);

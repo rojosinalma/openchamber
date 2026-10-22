@@ -1364,6 +1364,8 @@ export interface ProjectEntry {
   addedAt?: number;
   lastOpenedAt?: number;
   sidebarCollapsed?: boolean;
+  /** Fork: listed at the top of every project list (`lib/fork/projectPins`). */
+  pinned?: boolean;
 }
 
 /**

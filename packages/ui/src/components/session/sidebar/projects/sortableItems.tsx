@@ -17,6 +17,7 @@ import { useThemeSystem } from '@/contexts/useThemeSystem';
 import { useI18n } from '@/lib/i18n';
 import { CrossfadeZoneHeader } from './CrossfadeZoneHeaders';
 import { useProjectFolderMissing } from './useProjectFolderMissing';
+import { useProjectsStore } from '@/stores/useProjectsStore';
 
 export type SortableDragHandleProps = {
   listeners: ReturnType<typeof useSortable>['listeners'];
@@ -175,6 +176,11 @@ export const SortableProjectItem: React.FC<SortableProjectItemProps> = ({
 }) => {
   const { t } = useI18n();
   const folderMissing = useProjectFolderMissing(projectDirectory);
+  // Fork: pinned projects (lib/fork/projectPins).
+  const isPinned = useProjectsStore((state) => state.projects.some((project) => project.id === id && project.pinned === true));
+  const togglePinned = React.useCallback(() => {
+    useProjectsStore.getState().setProjectPinned(id, !isPinned);
+  }, [id, isPinned]);
   // Project headers only exist in the projects view, which always pins them.
   const stickyZoneHeaders = true;
   const {
@@ -227,6 +233,12 @@ export const SortableProjectItem: React.FC<SortableProjectItemProps> = ({
         <Item onClick={onOpenFolder}>
           <Icon name="folder-received" className="me-1.5 h-4 w-4" />
           {t(getRevealLabelKey())}
+        </Item>
+      )}
+      {!hideDirectoryControls && (
+        <Item onClick={togglePinned}>
+          <Icon name={isPinned ? 'unpin' : 'pushpin'} className="me-1.5 h-4 w-4" />
+          {t(isPinned ? 'sessions.sidebar.project.actions.unpin' : 'sessions.sidebar.project.actions.pin')}
         </Item>
       )}
       <Item onClick={onRenameStart}>
@@ -389,6 +401,15 @@ export const SortableProjectItem: React.FC<SortableProjectItemProps> = ({
                       // The label starts past the 14px icon and the 6px gap.
                       labelClassName={cn('[--oc-actions-inset:20px]', headerLabelMaskClass)}
                     />
+                    {isPinned ? (
+                      <span
+                        className={cn('inline-flex flex-shrink-0 items-center text-muted-foreground', headerCoveredFadeClass)}
+                        title={t('sessions.sidebar.project.pinned')}
+                        aria-label={t('sessions.sidebar.project.pinned')}
+                      >
+                        <Icon name="pushpin" className="h-3 w-3" />
+                      </span>
+                    ) : null}
                     {folderMissing ? (
                       <span
                         className={cn('inline-flex flex-shrink-0 items-center text-status-warning', headerCoveredFadeClass)}

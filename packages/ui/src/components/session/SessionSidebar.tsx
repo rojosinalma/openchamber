@@ -434,6 +434,7 @@ const SessionSidebarComponent: React.FC<SessionSidebarProps> = ({
         addedAt: project.addedAt,
         lastOpenedAt: project.lastOpenedAt,
         sidebarCollapsed: project.sidebarCollapsed,
+        pinned: project.pinned,
       }];
     });
   }, [projects]);

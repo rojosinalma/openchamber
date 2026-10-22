@@ -339,6 +339,129 @@ Tree unless detailed rows are on. VS Code
 shows no section toggles, so it has no Pinned zone and its In work rows stay on
 one line.
 
+## Pinned projects (fork)
+
+A project header's menu offers Pin project / Unpin project
+(`useProjectsStore.setProjectPinned`); a pinned header shows a pin marker that
+the hover actions cover like the folder-missing alert. The pin is a `pinned:
+true` flag on the project entry in settings, kept by the client parser
+(`lib/settings/parsers.ts`), the projects store and the server's
+`settings-normalization-runtime.js`, so every client of the server sees it.
+VS Code hides the item, as its projects are the workspace folders.
+
+Pinned projects sit at the top of every project list, whatever the project
+sort; among themselves, and below them the unpinned projects, keep the sort's
+order (`lib/fork/projectPins.ts` `pinnedProjectsFirst`). `sortProjectsByOrder`
+applies it, and so does every caller of `rankByLatestActivity` after the
+`recent` ranking: the sidebar's sections (after the held order under the
+pointer), `useProjectsInSidebarOrder` and the mobile sheet. In the Manual
+sort, dragging maps the ids to store positions (`storeProjectIndices`), so a
+project dragged above a pinned one lands there in the saved order but still
+shows below the pinned projects.
+
+## Zone order (`sidebarZoneOrder`)
+
+The zones (Pinned, Needs attention, In work, Chats, Projects) render in the order of
+`useSessionDisplayStore.sidebarZoneOrder` (default `DEFAULT_SIDEBAR_ZONE_ORDER`: pinned, attention,
+work, chats, projects; the same order in the Tree and the List view, where the `projects` slot holds
+the project tree or the per-project timeline lists). The row model iterates that order; hidden or
+empty zones are skipped. `normalizeSidebarZoneOrder` drops unknown or duplicate keys and appends
+missing ones, so a partial or stale value never loses a zone. The user reorders by dragging a zone
+header (its own dnd-kit sortable context, disabled during search or a rename), with "Move up / Move
+down" in the header menu or context menu, or "Reset section order" in the Display mode menu. The
+preference is the `sidebarZoneOrder` settings-registry field (profile scope, display store v11) and
+the mobile sheet renders its cross-project sections in the same order. Zones and projects are
+sections of equal weight, so the gap between them is the same whatever the order.
+
+## Zone appearance (`sidebarZoneAppearance`)
+
+Every zone header paints a glyph in a tint: defaults per zone in
+`lib/fork/zoneAppearance.ts` (`DEFAULT_ZONE_APPEARANCE`: pinned `pushpin`/warning, attention
+`notification-3`/error, work `eye`/info, chats `chat-4`/success, projects `folders`/primary). The
+header's `⋯` menu carries, under Move up / Move down, an inline Appearance group
+(`SessionSidebarZoneAppearance.tsx`, no dialog): a row of twelve tint swatches (theme tokens —
+status, accent and syntax colours — stored by key, never hex, so a pick survives a theme change) and a
+grid of sixteen sprite glyphs, the current pick marked, plus "Reset to default". A pick applies at
+once and the menu stays open; the map `zone → { icon?, color? }` is the `sidebarZoneAppearance`
+settings-registry field (profile scope, one map for every surface, display store v14). Only fields
+that differ from the default are stored; `normalizeSidebarZoneAppearance` (and the server's
+sanitizer, which mirrors the two key sets) drops unknown zones, icons and colours, so a stale value
+falls back to the default. The mobile sheet's Pinned / Needs attention / In work sections follow the
+same picks.
+
+## Needs attention
+
+An optional `attention` zone ("Needs attention") sits with Pinned, In work
+and Chats above the projects (as a tree or as the List view's project lists),
+in the user's zone order (see "Zone order"; by default second, under Pinned). It is a DUPLICATE zone: a session listed there keeps
+its row in its project group, folder, the List view and in Pinned or In work,
+so `zoneSessionIds` never carries it and its rows add nothing to the search
+match count (the project group already counts the session). An empty zone
+renders no header. Rows use the same `renderContext` as Pinned and In work
+(two lines with the project's icon in List or with Detailed rows, one line in
+Tree; never expanded, subsessions feeding the badges); collapse and spacing
+come for free from the `activity:` key prefix, and the display menu's Collapse
+all / Expand all drive it with the other zones (`SIDEBAR_ACTIVITY_KEYS`). The
+row model takes `attentionItems` (`SessionSidebarRowModelArgs`); the header
+icon and title live in `sessionSidebarHeaderPresentation.tsx`
+(`notification-3` / `sessions.sidebar.attention.title`). The zone is gated by
+its own display-store flag (`showAttentionSection` in
+`stores/useSessionDisplayStore.ts`, `sidebarShowAttentionSection` per surface,
+off by default; the display menu's Show needs attention section).
+
+Needs attention lists root project sessions that need the user right now,
+most urgent first: a pending permission, then a pending form, then a finished
+turn the user has not looked at yet. `hooks/useAttentionSessions.ts` derives
+the ordered list from the cross-directory request index
+(`sync/global-blocking-requests.ts`; a request under a subagent surfaces its
+root, resolved through the global sessions store) and from the global sessions
+list, where `lib/sessionAttention.ts` `isSessionUnseen(session, now)` reads
+OpenCode's own stamps: a root, unarchived session whose `time.idle` is newer
+than `time.viewed` (never viewed = 0) and inside the attention window, 48 h
+by default (`sidebarAttentionWindowHours`). The window is a setting: whole
+hours, 1 to 720, profile scope and per surface like the zone toggles, held in
+`useSessionDisplayStore` (`lib/sidebarTimeWindows.ts` has the default, the
+limits and the normaliser shared by the store, the settings registry and the
+input). Settings → Sessions → Needs attention window
+(`components/sections/openchamber/SidebarWindowsSettings.tsx`) edits it; the
+Display mode menu only toggles the zones. `isSessionUnseen` takes the window in
+milliseconds and defaults to the shipped constant (`SESSION_ATTENTION_WINDOW_MS`);
+the hook, `SessionNodeItem.tsx` and `sync/attention-sticky.ts` pass the store
+value. A session whose
+turn is still open (running, a subagent below it running, or a background
+command, see `useSessionTurnActivity`) is not unseen; it reappears once the
+turn ends. Within a kind the newest need comes first (`time.idle` for unseen,
+the record's recency for requests, which carry no request time). The hook
+returns the same array while membership and order are unchanged.
+`list/SessionProjectCollection.tsx` turns the ids into items the way Pinned
+and In work do (`buildZoneItems`: same location resolver, flat rows with badge
+scopes, search keeps a root whose subsession matches). The mobile sessions
+sheet lists the zone above Chats with the Pinned and In work sections' header
+and rows (`renderZoneSection`; one line in Tree unless Detailed rows is on),
+and its display menu offers Show needs attention section. The selected
+session stays listed: selecting
+a row records the view in the same tick, so `sync/attention-sticky.ts` keeps
+the session that was unseen at selection time, with the `time.idle` it owed a
+look at (captured in `setCurrentSession` before `markSessionViewedRemote`,
+from the record about to be patched, never from a previous render), and the
+hook lists it as the active row while it is still the current, unarchived
+root with that same `idle`. Selecting a different session or a draft, turning
+the zone off, a runtime switch, or a newer turn in the session releases it;
+coming back does not re-add it unless it qualifies again. Pending permissions
+and forms never need this: they stay until answered.
+
+The sidebar's green unread check (`SessionNodeItem.tsx`) derives from the same
+signal: `isSessionUnseen(session) || unseenCount > 0`. The in-memory
+notification (`sync/notification-store.ts`) is the fast path for the seconds
+before the record's `time.idle` lands and the only one that survives when the
+app was unfocused at turn end; the record's stamps are the one that survives
+reloads and other clients. Every place that marks a session viewed locally
+also calls `sync/session-viewed.ts` `markSessionViewedRemote`, which writes
+`time.viewed` through `session.view` (see `sync/DOCUMENTATION.md`), so the
+two signals cannot disagree for long. `notifyOnSubtasks` keeps working:
+`isSessionUnseen` is false for subsessions, so a subtask row lights only
+through the in-memory count, as before.
+
 ## Timeline view
 
 `sidebarViewMode` (profile-scoped, per surface) switches the desktop and web

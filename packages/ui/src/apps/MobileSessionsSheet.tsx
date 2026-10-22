@@ -76,6 +76,7 @@ import { useMobileSessionExpansionStore } from '@/stores/useMobileSessionExpansi
 import { useMobileSessionTreeStore } from '@/stores/useMobileSessionTreeStore';
 import { useProjectsStore } from '@/stores/useProjectsStore';
 import { useSessionDisplayStore, type ProjectSortOrder } from '@/stores/useSessionDisplayStore';
+import { pinnedProjectsFirst, storeProjectIndices } from '@/lib/fork/projectPins';
 import { useSessionPinnedStore } from '@/stores/useSessionPinnedStore';
 import { useSessionFoldersStore, type SessionFolder } from '@/stores/useSessionFoldersStore';
 import { isSessionPinned } from '@/lib/sessionPins';
@@ -204,6 +205,7 @@ type ProjectMeta = {
   /** Read by the 'date-added' / 'recent' project orders. */
   addedAt?: number;
   lastOpenedAt?: number;
+  pinned?: boolean;
 };
 
 type WorktreeBucket = {
@@ -1012,6 +1014,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
           ),
           addedAt: project.addedAt,
           lastOpenedAt: project.lastOpenedAt,
+          pinned: project.pinned,
         })),
         projectSortOrder,
         manualProjectOrder,
@@ -1213,7 +1216,7 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   }, [open]);
 
   const projectNodes = React.useMemo<ProjectNode[]>(() => {
-    const nodes: ProjectNode[] = rankByLatestActivity(projectsMeta, projectSortOrder, (project) => project.id, sessionOwnership.sessionsByProject).map((project) => ({
+    const nodes: ProjectNode[] = pinnedProjectsFirst(rankByLatestActivity(projectsMeta, projectSortOrder, (project) => project.id, sessionOwnership.sessionsByProject), (project) => project.pinned === true).map((project) => ({
       project,
       buckets: [] as WorktreeBucket[],
       isActive: project.id === activeProjectId,
@@ -1726,10 +1729,9 @@ export const MobileSessionsSheet: React.FC<MobileSessionsSheetProps> = ({ open, 
   const handleReorderDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const fromIndex = projectsMeta.findIndex((p) => p.id === active.id);
-    const toIndex = projectsMeta.findIndex((p) => p.id === over.id);
-    if (fromIndex < 0 || toIndex < 0) return;
-    reorderProjects(fromIndex, toIndex);
+    const indices = storeProjectIndices(projects, String(active.id), String(over.id));
+    if (!indices) return;
+    reorderProjects(indices.from, indices.to);
   };
 
   const toggleReorderProjectExpanded = (projectId: string) => {

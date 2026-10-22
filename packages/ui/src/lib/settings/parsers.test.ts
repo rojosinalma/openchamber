@@ -17,4 +17,20 @@ describe('parseProjects', () => {
     ]);
     expect(parseProjects(parsed, { projects: parsed })).toEqual(parsed);
   });
+
+  test('keeps a project pin across a settings round trip and drops anything but true', () => {
+    const projects = [
+      { path: '/repo/pinned', pinned: true },
+      { path: '/repo/off', pinned: false },
+      { path: '/repo/bad', pinned: 'yes' },
+    ];
+    const parsed = parseProjects(projects, { projects });
+
+    expect(parsed?.map((project) => [project.path, project.pinned])).toEqual([
+      ['/repo/pinned', true],
+      ['/repo/off', undefined],
+      ['/repo/bad', undefined],
+    ]);
+    expect(parseProjects(parsed, { projects: parsed })).toEqual(parsed);
+  });
 });

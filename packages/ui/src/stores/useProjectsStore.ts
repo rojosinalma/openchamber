@@ -62,6 +62,8 @@ interface ProjectsStore {
   setActiveProject: (id: string) => void;
   setActiveProjectIdOnly: (id: string) => void;
   renameProject: (id: string, label: string) => void;
+  /** Fork: pin or unpin a project (`lib/fork/projectPins`). */
+  setProjectPinned: (id: string, pinned: boolean) => void;
   updateProjectMeta: (id: string, meta: {
     label?: string;
     icon?: string | null;
@@ -323,6 +325,9 @@ const sanitizeProjects = (value: unknown): ProjectEntry[] => {
     if (typeof candidate.sidebarCollapsed === 'boolean') {
       project.sidebarCollapsed = candidate.sidebarCollapsed;
     }
+    if (candidate.pinned === true) {
+      project.pinned = true;
+    }
     result.push(project);
   }
 
@@ -543,6 +548,7 @@ const vscodeWorkspaceProjectsEqual = (left: ProjectEntry[], right: ProjectEntry[
       && leftProject.addedAt === rightProject.addedAt
       && leftProject.lastOpenedAt === rightProject.lastOpenedAt
       && leftProject.sidebarCollapsed === rightProject.sidebarCollapsed
+      && leftProject.pinned === rightProject.pinned
       && projectIconImagesEqual(leftProject.iconImage, rightProject.iconImage);
   });
 };
@@ -826,6 +832,26 @@ export const useProjectsStore = create<ProjectsStore>()(
       const nextProjects = projects.map((project) =>
         project.id === id ? { ...project, label: trimmed } : project
       );
+      set({ projects: nextProjects });
+      persistProjects(nextProjects, activeProjectId, get().manualProjectOrder);
+    },
+
+    setProjectPinned: (id: string, pinned: boolean) => {
+      if (isVSCodeProjectsRuntime) {
+        return;
+      }
+      const { projects, activeProjectId } = get();
+      const target = projects.find((project) => project.id === id);
+      if (!target || (target.pinned === true) === pinned) {
+        return;
+      }
+      const nextProjects = projects.map((project) => {
+        if (project.id !== id) return project;
+        const updated = { ...project };
+        if (pinned) updated.pinned = true;
+        else delete updated.pinned;
+        return updated;
+      });
       set({ projects: nextProjects });
       persistProjects(nextProjects, activeProjectId, get().manualProjectOrder);
     },

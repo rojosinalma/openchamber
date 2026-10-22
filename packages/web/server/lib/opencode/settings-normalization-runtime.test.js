@@ -135,6 +135,21 @@ describe('settings normalization runtime - symlink resolution', () => {
       expect(result[0].defaultAgent).toBe('plan');
     });
 
+    it('keeps a project pin and drops anything but true', () => {
+      const runtime = createTestRuntime({
+        realpathSync: (p) => p,
+        path: { resolve: (p) => p, sep: '/', dirname: (p) => p.split('/').slice(0, -1).join('/') || '/' },
+      });
+
+      const result = runtime.sanitizeProjects([
+        { id: 'proj1', path: '/a', pinned: true },
+        { id: 'proj2', path: '/b', pinned: 'yes' },
+        { id: 'proj3', path: '/c', pinned: false },
+      ]);
+
+      expect(result.map((project) => project.pinned)).toEqual([true, undefined, undefined]);
+    });
+
     it('deduplicates projects that resolve to the same realpath', () => {
       const runtime = createTestRuntime({
         realpathSync: (p) => p.startsWith('/symlink') ? '/real/project' : p,

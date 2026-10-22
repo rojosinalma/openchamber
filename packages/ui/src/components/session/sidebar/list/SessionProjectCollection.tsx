@@ -64,6 +64,8 @@ import { useSidebarSpaces, type SpaceMark } from '@/lib/spaces/spaces-store';
 import { useUIStore } from '@/stores/useUIStore';
 import { isSessionInWork } from '@/lib/sessionWorkMetadata';
 import { isSessionPinned } from '@/lib/sessionPins';
+import { pinnedProjectIds, pinnedProjectsFirst } from '@/lib/fork/projectPins';
+import { useProjectsStore } from '@/stores/useProjectsStore';
 import { buildMultiRunIndex } from '@/lib/multirun/runs';
 import { selectBlockingBadgeSessionScopes } from '../sessions/sessionNodeItemUtils';
 
@@ -389,6 +391,8 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
   React.useEffect(() => {
     if (!holdsProjectOrder) setHeldProjectOrder(null);
   }, [holdsProjectOrder]);
+  const storedProjects = useProjectsStore((state) => state.projects);
+  const pinnedIds = React.useMemo(() => pinnedProjectIds(storedProjects), [storedProjects]);
   const orderedSectionsForRender = React.useMemo(() => {
     // The saved drag order belongs to the manual worktree sort only.
     const sections = worktreeSortOrder !== 'manual' ? sectionsForSidebarRender : sectionsForSidebarRender.map((section) => {
@@ -397,8 +401,9 @@ const VisibleSessionProjects: React.FC<SessionProjectCollectionProps> = ({ topol
     });
     // "Recent" needs the sessions, which only exist from here on.
     const ranked = rankByLatestActivity(sections, view.projectSortOrder, (section) => section.project.id, ownership.sessionsByProject);
-    return [...(heldProjectOrder && holdsProjectOrder ? holdOrder(ranked, heldProjectOrder, (section) => section.project.id) : ranked)];
-  }, [getOrderedGroups, heldProjectOrder, holdsProjectOrder, ownership.sessionsByProject, sectionsForSidebarRender, view.projectSortOrder, worktreeSortOrder]);
+    const shown = heldProjectOrder && holdsProjectOrder ? holdOrder(ranked, heldProjectOrder, (section) => section.project.id) : ranked;
+    return [...pinnedProjectsFirst(shown, (section) => pinnedIds.has(section.project.id))];
+  }, [getOrderedGroups, heldProjectOrder, holdsProjectOrder, ownership.sessionsByProject, pinnedIds, sectionsForSidebarRender, view.projectSortOrder, worktreeSortOrder]);
   React.useEffect(() => {
     shownProjectOrderRef.current = orderedSectionsForRender.map((section) => section.project.id);
   }, [orderedSectionsForRender]);

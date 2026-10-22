@@ -1,4 +1,5 @@
 import type { ProjectSortOrder } from '@/stores/useSessionDisplayStore';
+import { pinnedProjectsFirst } from '@/lib/fork/projectPins';
 
 /** The fields any project list needs to be sortable. Both the desktop sidebar
     and the mobile sessions drawer build their own richer project shapes on top
@@ -9,6 +10,7 @@ type SortableProject = {
   path: string;
   addedAt?: number | null;
   lastOpenedAt?: number | null;
+  pinned?: boolean;
 };
 
 const compareLabels = (left: SortableProject, right: SortableProject): number =>
@@ -17,7 +19,8 @@ const compareLabels = (left: SortableProject, right: SortableProject): number =>
 /** One ordering for every surface that lists projects, so the sidebar and the
     mobile drawer answer the same setting the same way. `manualOrder` is the
     user's drag order (`useProjectsStore.manualProjectOrder`); projects missing
-    from it keep their incoming position at the end. */
+    from it keep their incoming position at the end. Pinned projects come
+    first in that order (fork: lib/fork/projectPins). */
 export const sortProjectsByOrder = <T extends SortableProject>(
   projects: readonly T[],
   order: ProjectSortOrder,
@@ -45,7 +48,7 @@ export const sortProjectsByOrder = <T extends SortableProject>(
     }
   }
 
-  return sorted;
+  return [...pinnedProjectsFirst(sorted, (project) => project.pinned === true)];
 };
 
 /**

@@ -269,6 +269,10 @@ export const createSettingsNormalizationRuntime = (dependencies) => {
         project.sidebarCollapsed = candidate.sidebarCollapsed;
       }
 
+      if (candidate.pinned === true) {
+        project.pinned = true;
+      }
+
       result.push(project);
     }
 
